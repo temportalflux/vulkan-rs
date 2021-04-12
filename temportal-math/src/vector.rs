@@ -13,6 +13,10 @@ impl<T, const N: usize> Vector<T, N> {
 	pub fn new(data: [T; N]) -> Vector<T, N> {
 		Vector { data }
 	}
+
+	pub fn capacity(&self) -> usize {
+		N
+	}
 }
 
 impl<T, const N: usize> Vector<T, N>
@@ -173,29 +177,29 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Copy,
 {
-	pub fn x(&self) -> &T {
-		&self.data[0]
+	pub fn x(&self) -> T {
+		self.data[0]
 	}
 	pub fn x_mut(&mut self, val: T) {
 		self.data[0] = val;
 	}
 
-	pub fn y(&self) -> &T {
-		&self.data[1]
+	pub fn y(&self) -> T {
+		self.data[1]
 	}
 	pub fn y_mut(&mut self, val: T) {
 		self.data[1] = val;
 	}
 
-	pub fn z(&self) -> &T {
-		&self.data[2]
+	pub fn z(&self) -> T {
+		self.data[2]
 	}
 	pub fn z_mut(&mut self, val: T) {
 		self.data[2] = val;
 	}
 
-	pub fn w(&self) -> &T {
-		&self.data[3]
+	pub fn w(&self) -> T {
+		self.data[3]
 	}
 	pub fn w_mut(&mut self, val: T) {
 		self.data[3] = val;
@@ -234,10 +238,10 @@ mod indexing {
 	#[test]
 	fn accessors_work() {
 		let vec = Vector::new([0, 1, 2, 3]);
-		assert_eq!(vec.x(), &0);
-		assert_eq!(vec.y(), &1);
-		assert_eq!(vec.z(), &2);
-		assert_eq!(vec.w(), &3);
+		assert_eq!(vec.x(), 0);
+		assert_eq!(vec.y(), 1);
+		assert_eq!(vec.z(), 2);
+		assert_eq!(vec.w(), 3);
 	}
 
 	#[test]
@@ -247,10 +251,10 @@ mod indexing {
 		vec.y_mut(1);
 		vec.z_mut(2);
 		vec.w_mut(3);
-		assert_eq!(vec.x(), &0);
-		assert_eq!(vec.y(), &1);
-		assert_eq!(vec.z(), &2);
-		assert_eq!(vec.w(), &3);
+		assert_eq!(vec.x(), 0);
+		assert_eq!(vec.y(), 1);
+		assert_eq!(vec.z(), 2);
+		assert_eq!(vec.w(), 3);
 	}
 }
 
@@ -485,6 +489,16 @@ where
 	}
 }
 
+impl<const N: usize> Vector<f64, N> {
+	pub fn rem_euclid(&self, rhs: f64) -> Self {
+		let mut vret = self.clone();
+		for i in 0..N {
+			vret.data[i] = vret.data[i].rem_euclid(rhs);
+		}
+		vret
+	}
+}
+
 #[cfg(test)]
 mod operations {
 	use super::*;
@@ -602,7 +616,7 @@ mod operations {
 		assert_eq!(v1.data, [4, 3, 3, 0]);
 		assert_eq!(v2.data, [0, 15, -10, 5]);
 	}
-	
+
 	#[test]
 	fn negate() {
 		let v1 = Vector::new([1, 7, 3]);
@@ -676,13 +690,9 @@ mod cross_tests {
 
 	#[test]
 	fn x_axis_with_y_axis() {
-		let z_axis = Vector::cross(
-			&Vector::new([1, 0, 0]),
-			&Vector::new([0, 1, 0])
-		);
+		let z_axis = Vector::cross(&Vector::new([1, 0, 0]), &Vector::new([0, 1, 0]));
 		assert_eq!(z_axis.data, [0, 0, 1]);
 	}
-
 }
 
 // #endregion
@@ -739,7 +749,10 @@ mod property_tests {
 		assert_eq!(Vector::new([5.0, 0.0, 0.0]).normal().data, [1.0, 0.0, 0.0]);
 		assert_eq!(Vector::new([0.0, 2.0, 0.0]).normal().data, [0.0, 1.0, 0.0]);
 		assert_eq!(Vector::new([0.0, 0.0, 8.0]).normal().data, [0.0, 0.0, 1.0]);
-		assert_eq!(Vector::new([2.0, 2.0, 1.0]).normal().data, [2.0 / 3.0, 2.0 / 3.0, 1.0 / 3.0]);
+		assert_eq!(
+			Vector::new([2.0, 2.0, 1.0]).normal().data,
+			[2.0 / 3.0, 2.0 / 3.0, 1.0 / 3.0]
+		);
 	}
 
 	#[test]
@@ -760,7 +773,6 @@ mod property_tests {
 		vec.normalize();
 		assert_eq!(vec.data, [2.0 / 3.0, 2.0 / 3.0, 1.0 / 3.0]);
 	}
-
 }
 
 // #endregion
