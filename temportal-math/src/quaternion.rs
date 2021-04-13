@@ -7,11 +7,13 @@ impl Quaternion {
 		Quaternion::new([0.0, 0.0, 0.0, 1.0])
 	}
 
+	/// Creates a quaternion from an quantity of radians to rotate around an axis.
 	pub fn from_axis_angle(axis: Vector<f64, 3>, radians: f64) -> Quaternion {
 		(axis * f64::sin(radians * 0.5)).subvec(None)
 			+ (Quaternion::identity() * f64::cos(radians * 0.5))
 	}
 
+	/// Returns the euler representation of the quaternion.
 	pub fn to_euler(&self) -> Vector<f64, 3> {
 		// See https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Quaternion_to_Euler_Angles_Conversion
 		let sinp = 2.0 * (self.w() * self.z() - self.y() * self.x());
@@ -72,6 +74,8 @@ impl Quaternion {
 		vec.subvec::<4>(None) + (Quaternion::identity() * w)
 	}
 
+	/// Rotates a vector by the rotation `self`, returning the result.
+	/// Does not modify the provided vector.
 	pub fn rotate(&self, vec: &Vector<f64, 3>) -> Vector<f64, 3> {
 		let real = self.subvec::<3>(None);
 		let a = real * 2.0 * Vector::dot(&real, &vec);

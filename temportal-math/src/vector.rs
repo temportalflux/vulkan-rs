@@ -10,9 +10,8 @@ pub struct Vector<T, const N: usize> {
 // #region Initialization
 
 impl<T, const N: usize> Vector<T, N> {
-
 	/// Creates a new vector with the provided components.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -24,7 +23,7 @@ impl<T, const N: usize> Vector<T, N> {
 	}
 
 	/// Returns the amount of dimensions of the vector (i.e. the `N` const-generic).
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -37,10 +36,11 @@ impl<T, const N: usize> Vector<T, N> {
 }
 
 impl<T, const N: usize> Vector<T, N>
-where T: Clone
+where
+	T: Clone,
 {
 	/// Converts the mathemtical Vector into a collection Vec containing the n-dimensional data.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -57,7 +57,7 @@ where
 	T: Sized + Copy,
 {
 	/// Creates a vector with `N` dimensions, where each dimensional component has the value `fill`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -93,13 +93,12 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Default + Copy,
 {
-
 	/// Creates a vector populated with some data from `iter`.
 	/// If `offset` is provided, the `iter` will `iter.skip` with the provided offset before being read from.
 	/// The returned vector will contain up to `N` components populated from `iter` (after skipping).
 	/// If the length of `iter` after skipping is less than `N`, the remaining components of the vector will
 	/// be `T::default()`.
-	/// 
+	///
 	/// # Examples
 	/// Creating a 2-dimensional integer vector from an array of 2 integers.
 	/// ```
@@ -136,7 +135,7 @@ where
 
 	/// An ease-of-access wrapper for `partial` when working directly with Vectors.
 	/// Creates a new vector with a different dimensional constraint which has some or all of the same values as `self`.
-	/// 
+	///
 	/// # Examples
 	/// Create a 2-dimensional vector from the second-two dimensions of a 3-dimensional vector.
 	/// ```
@@ -262,10 +261,9 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Copy,
 {
-
 	/// Returns a copy of first-dimensional `x` component.
 	/// Will panic if `N < 1`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -278,7 +276,7 @@ where
 
 	/// Returns a mutatable reference to the first-dimensional `x` component.
 	/// Will panic if `N < 1`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -292,7 +290,7 @@ where
 
 	/// Returns a copy of second-dimensional `y` component.
 	/// Will panic if `N < 2`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -305,7 +303,7 @@ where
 
 	/// Returns a mutatable reference to the second-dimensional `y` component.
 	/// Will panic if `N < 2`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -319,7 +317,7 @@ where
 
 	/// Returns a copy of third-dimensional `z` component.
 	/// Will panic if `N < 3`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -329,10 +327,10 @@ where
 	pub fn z(&self) -> T {
 		self.data[2]
 	}
-	
+
 	/// Returns a mutatable reference to the third-dimensional `z` component.
 	/// Will panic if `N < 3`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -346,7 +344,7 @@ where
 
 	/// Returns a copy of fourth-dimensional `w` component.
 	/// Will panic if `N < 4`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -356,10 +354,10 @@ where
 	pub fn w(&self) -> T {
 		self.data[3]
 	}
-	
+
 	/// Returns a mutatable reference to the fourth-dimensional `w` component.
 	/// Will panic if `N < 4`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -370,7 +368,6 @@ where
 	pub fn w_mut(&mut self) -> &mut T {
 		&mut self.data[3]
 	}
-
 }
 
 #[cfg(test)]
@@ -430,13 +427,12 @@ mod indexing {
 // #region Conversions
 
 impl<T, const N: usize> Vector<T, N> {
-
 	/// Converts between vectors of different types with the same dimensional count.
 	/// This is the opposite of `partial` and `subvec`.
 	/// As long as `U` implements the trait `Into<T>`,
 	/// `Vector<U, _>` can be converted into `Vector<T, _>`,
 	/// as long as their `Vector::capacity` is the same.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -456,7 +452,6 @@ impl<T, const N: usize> Vector<T, N> {
 		}
 		vret
 	}
-
 }
 
 #[cfg(test)]
@@ -478,7 +473,6 @@ mod conversions {
 		let expected: Vector<i32, 2> = Vector::new([1, 2]);
 		assert_eq!(calculated, expected);
 	}
-
 }
 
 // #endregion
@@ -651,6 +645,20 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Default + Copy + AddAssign + SubAssign + PartialOrd,
 {
+	/// Mutates the vector such that no dimension is greater than `step` or less than `0`.
+	/// The returned vector contains the multiples of `step` that were removed for each dimension.
+	/// The returned vector can be added with the modified `self` to return the vector to its original state.
+	/// 
+	/// # Examples
+	/// ```
+	/// use temportal_math::Vector;
+	/// let vec = Vector::new([ 8.0, -5.0, 3.0 ]);
+	/// let mut v_reduced = vec.clone();
+	/// let remainder = v_reduced.mod_reduce(3.0);
+	/// assert_eq!(v_reduced.to_vec(), vec![ 2.0, 1.0, 0.0 ]);
+	/// assert_eq!(remainder.to_vec(), vec![ 6.0, -6.0, 3.0 ]);
+	/// assert_eq!((v_reduced + remainder).to_vec(), vec.to_vec());
+	/// ```
 	pub fn mod_reduce(&mut self, step: T) -> Self {
 		let mut removed: Self = Vector::filled(T::default());
 		for i in 0..N {
@@ -682,6 +690,9 @@ where
 }
 
 impl<const N: usize> Vector<f64, N> {
+	
+	/// Returns the euclidian remainder of the vector for a modulus `rhs`.
+	/// See `f64::rem_euclid` for how `rhs` is applied to each dimension.
 	pub fn rem_euclid(&self, rhs: f64) -> Self {
 		let mut vret = self.clone();
 		for i in 0..N {
@@ -827,7 +838,7 @@ where
 {
 	/// Calculates the dot product between this and another vector.
 	/// This operation is commuative.
-	/// 
+	///
 	/// # Examples
 	/// Calculate the dot product between the x axis and a vector at 45 degrees.
 	/// ```
@@ -908,7 +919,7 @@ where
 	/// resulting in a third three-dimensional vector.
 	/// Its recommend this be only used with floating-point types (`f32`, `f64`, etc).
 	/// The cross-product of two vectors is NOT COMMUTATIVE, so the order of `left` and `right` matters.
-	/// 
+	///
 	/// # Examples
 	/// Crossing two vectors which are perpendicular will result in a third vector which is perpendicular to them both,
 	/// and orthogonal to the plane which the inputs create.
@@ -952,10 +963,9 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Sized + Copy + Mul<Output = T> + Add<Output = T> + Sum + Into<f64>,
 {
-
 	/// Calculates the magnitude^2 for the vector, as a float.
 	/// Equivalent to calling dot with itself.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -985,9 +995,8 @@ where
 }
 
 impl<const N: usize> Vector<f64, N> {
-
 	/// Mutates the vector so that its length is one, but maintains its direction.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -1001,7 +1010,7 @@ impl<const N: usize> Vector<f64, N> {
 	}
 
 	/// Returns a vector with the same direction as `self`, but with a length of `1.0`.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
