@@ -14,15 +14,18 @@ macro_rules! assert_vec_approx {
 			let eps = 1.0e-6;
 			let (a, b) = (&$a[i], &$b[i]);
 			assert!(
-					(*a - *b).abs() < eps,
-					"(left !== right)':\n\
+				(*a - *b).abs() < eps,
+				"(left !== right)':\n\
 						index={}\n\
 						left=`{:?}`\n\
 						right=`{:?}`\n\
 						expect diff=`{:?}`\n\
 						real diff=`{:?}`\n",
-					i, $a, $b,
-					eps, (*a - *b).abs()
+				i,
+				$a,
+				$b,
+				eps,
+				(*a - *b).abs()
 			);
 		}
 	};
@@ -31,15 +34,18 @@ macro_rules! assert_vec_approx {
 		for i in 0..$a.capacity() {
 			let (a, b) = (&$a[i], &$b[i]);
 			assert!(
-					(*a - *b).abs() < $eps,
-					"(left !== right)':\n\
+				(*a - *b).abs() < $eps,
+				"(left !== right)':\n\
 						index={}\n\
 						left=`{:?}`\n\
 						right=`{:?}`\n\
 						expect diff=`{:?}`\n\
 						real diff=`{:?}`\n",
-					i, $a, $b,
-					$eps, (*a - *b).abs()
+				i,
+				$a,
+				$b,
+				$eps,
+				(*a - *b).abs()
 			);
 		}
 	};
@@ -48,15 +54,18 @@ macro_rules! assert_vec_approx {
 		for i in 0..$a.capacity() {
 			let (a, b) = (&$a[i].rem_euclid($modulus), &$b[i]);
 			assert!(
-					(*a - *b).abs() < $eps,
-					"(left !== right)':\n\
+				(*a - *b).abs() < $eps,
+				"(left !== right)':\n\
 						index={}\n\
 						left=`{:?}`\n\
 						right=`{:?}`\n\
 						expect diff=`{:?}`\n\
 						real diff=`{:?}`\n",
-					i, $a, $b,
-					$eps, (*a - *b).abs()
+				i,
+				$a,
+				$b,
+				$eps,
+				(*a - *b).abs()
 			);
 		}
 	};

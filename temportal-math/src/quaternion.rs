@@ -3,9 +3,8 @@ use super::*;
 pub type Quaternion = Vector<f64, 4>;
 
 impl Quaternion {
-
 	pub fn identity() -> Self {
-		Quaternion::new([ 0.0, 0.0, 0.0, 1.0 ])
+		Quaternion::new([0.0, 0.0, 0.0, 1.0])
 	}
 
 	pub fn from_axis_angle(axis: Vector<f64, 3>, radians: f64) -> Quaternion {
@@ -80,7 +79,6 @@ impl Quaternion {
 		let c = Vector::cross(&real, &vec) * 2.0 * self.w();
 		a + b + c
 	}
-
 }
 
 #[cfg(test)]
@@ -99,7 +97,8 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::from_axis_angle(Vector::new([1.0, 0.0, 0.0]), angle),
 			Vector::new([half_sin, 0.0, 0.0, half_cos]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
@@ -109,7 +108,8 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::from_axis_angle(Vector::new([0.0, 1.0, 0.0]), angle),
 			Vector::new([0.0, half_sin, 0.0, half_cos]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
@@ -119,7 +119,8 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::from_axis_angle(Vector::new([0.0, 0.0, 1.0]), angle),
 			Vector::new([0.0, 0.0, half_sin, half_cos]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
@@ -129,7 +130,8 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::new([half_sin, 0.0, 0.0, half_cos]).to_euler(),
 			Vector::new([angle, 0.0, 0.0]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
@@ -139,7 +141,8 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::new([0.0, half_sin, 0.0, half_cos]).to_euler(),
 			Vector::new([0.0, angle, 0.0]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
@@ -149,32 +152,35 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::new([0.0, 0.0, half_sin, half_cos]).to_euler(),
 			Vector::new([0.0, 0.0, angle]),
-			1.0e-6, std::f64::consts::PI
+			1.0e-6,
+			std::f64::consts::PI
 		);
 	}
 
 	#[test]
 	fn conjugate() {
 		assert_eq!(
-			Quaternion::new([ 1.0, 2.0, 3.0, 1.5 ]).conjugate(),
-			Quaternion::new([ -1.0, -2.0, -3.0, 1.5 ])
+			Quaternion::new([1.0, 2.0, 3.0, 1.5]).conjugate(),
+			Quaternion::new([-1.0, -2.0, -3.0, 1.5])
 		);
 		assert_eq!(
-			Quaternion::new([ -3.0, -2.0, -3.0, 1.0 ]).conjugate(),
-			Quaternion::new([ 3.0, 2.0, 3.0, 1.0 ])
+			Quaternion::new([-3.0, -2.0, -3.0, 1.0]).conjugate(),
+			Quaternion::new([3.0, 2.0, 3.0, 1.0])
 		);
 	}
 
 	#[test]
 	fn inverse() {
-		let quat = [ -2.0, -3.0, -4.0, 1.0 ];
+		let quat = [-2.0, -3.0, -4.0, 1.0];
 		let quat_dot: f64 = 30.0;
 		let quat_mag = quat_dot.sqrt();
-		let result = [ 2.0 / quat_mag, 3.0 / quat_mag, 4.0 / quat_mag, 1.0 / quat_mag ];
-		assert_vec_approx!(
-			Quaternion::new(quat).inverse(),
-			Quaternion::new(result)
-		);
+		let result = [
+			2.0 / quat_mag,
+			3.0 / quat_mag,
+			4.0 / quat_mag,
+			1.0 / quat_mag,
+		];
+		assert_vec_approx!(Quaternion::new(quat).inverse(), Quaternion::new(result));
 	}
 
 	#[test]
@@ -182,7 +188,10 @@ mod tests {
 		let (angle, _, _) = right_angle();
 		let quat_x = Quaternion::from_axis_angle(Vector::new([1.0, 0.0, 0.0]), angle);
 		let quat_y = Quaternion::from_axis_angle(Vector::new([0.0, 1.0, 0.0]), angle);
-		assert_vec_approx!(Quaternion::concat(&quat_x, &quat_y), Quaternion::new([0.5; 4]));
+		assert_vec_approx!(
+			Quaternion::concat(&quat_x, &quat_y),
+			Quaternion::new([0.5; 4])
+		);
 	}
 
 	#[test]
@@ -190,7 +199,10 @@ mod tests {
 		let (angle, _, _) = right_angle();
 		let quat_x = Quaternion::from_axis_angle(Vector::new([1.0, 0.0, 0.0]), angle);
 		let quat_z = Quaternion::from_axis_angle(Vector::new([0.0, 0.0, 1.0]), angle);
-		assert_vec_approx!(Quaternion::concat(&quat_x, &quat_z), Quaternion::new([0.5, -0.5, 0.5, 0.5]));
+		assert_vec_approx!(
+			Quaternion::concat(&quat_x, &quat_z),
+			Quaternion::new([0.5, -0.5, 0.5, 0.5])
+		);
 	}
 
 	#[test]
@@ -222,6 +234,4 @@ mod tests {
 			Vector::new([0.0, -1.0, 0.0])
 		);
 	}
-
-
 }
