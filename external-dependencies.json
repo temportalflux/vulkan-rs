@@ -1,0 +1,8 @@
+[
+	{
+		"name": "Simple DirectMedia Layer 2",
+		"alias": "sdl2",
+		"url": "https://www.libsdl.org/",
+		"download": "https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip"
+	}
+]
