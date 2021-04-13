@@ -1,4 +1,3 @@
-use super::product::*;
 use std::iter::Sum;
 use std::ops::*;
 
@@ -629,12 +628,11 @@ mod operations {
 
 // #region Dot Product
 
-impl<T, const N: usize> DotProduct<Vector<T, N>> for Vector<T, N>
+impl<T, const N: usize> Vector<T, N>
 where
 	T: Sized + Copy + Mul<Output = T> + Add<Output = T> + Sum,
 {
-	type Output = <<T as Mul>::Output as Add>::Output;
-	fn dot(&self, right: &Vector<T, N>) -> Self::Output {
+	pub fn dot(&self, right: &Self) -> T {
 		self.data
 			.iter()
 			.zip(right.data.iter())
@@ -671,11 +669,11 @@ mod dot_tests {
 
 // #region Cross Product
 
-impl<T> CrossProduct for Vector<T, 3>
+impl<T> Vector<T, 3>
 where
 	T: Default + Sized + Copy + Mul<Output = T> + Add<Output = T> + Sub<Output = T>,
 {
-	fn cross(left: &Self, right: &Self) -> Self {
+	pub fn cross(left: &Self, right: &Self) -> Self {
 		let mut vret: Self = Vector::filled(T::default());
 		vret[0] = left[1] * right[2] - left[2] * right[1];
 		vret[1] = left[2] * right[0] - left[0] * right[2];

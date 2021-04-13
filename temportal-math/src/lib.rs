@@ -1,8 +1,6 @@
-mod product;
 mod quaternion;
 mod vector;
 
-pub use product::*;
 pub use quaternion::*;
 pub use vector::*;
 
