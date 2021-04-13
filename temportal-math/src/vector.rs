@@ -648,7 +648,7 @@ where
 	/// Mutates the vector such that no dimension is greater than `step` or less than `0`.
 	/// The returned vector contains the multiples of `step` that were removed for each dimension.
 	/// The returned vector can be added with the modified `self` to return the vector to its original state.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_math::Vector;
@@ -690,7 +690,6 @@ where
 }
 
 impl<const N: usize> Vector<f64, N> {
-	
 	/// Returns the euclidian remainder of the vector for a modulus `rhs`.
 	/// See `f64::rem_euclid` for how `rhs` is applied to each dimension.
 	pub fn rem_euclid(&self, rhs: f64) -> Self {

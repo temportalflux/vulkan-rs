@@ -1,8 +1,10 @@
-[workspace]
 
+[workspace]
 members = [
 	"extern-reader",
 	"install-externs",
 	"temportal-math",
+	"temportal-graphics",
 	"temportal-engine"
 ]
+default-members = ["temportal-engine"]

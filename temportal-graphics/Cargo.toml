@@ -1,0 +1,14 @@
+[package]
+name = "temportal-graphics"
+version = "0.1.0"
+authors = ["Dustin Yost <dustin.yost.t@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+temportal-math = { path = "../temportal-math" }
+sdl2 = "0.34"
+erupt = "0.18.0"
+structopt = "0.3"
+raw-window-handle = "0.3.3"
