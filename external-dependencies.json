@@ -3,6 +3,24 @@
 		"name": "Simple DirectMedia Layer 2",
 		"alias": "sdl2",
 		"url": "https://www.libsdl.org/",
-		"download": "https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip"
+		"download": "https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip",
+		"download-contents": [
+			{
+				"zip-path": "SDL2-2.0.14/lib/x64/SDL2.dll",
+				"dest-path": "x64/SDL2.dll"
+			},
+			{
+				"zip-path": "SDL2-2.0.14/lib/x64/SDL2.lib",
+				"dest-path": "x64/SDL2.lib"
+			},
+			{
+				"zip-path": "SDL2-2.0.14/lib/x86/SDL2.dll",
+				"dest-path": "x32/SDL2.dll"
+			},
+			{
+				"zip-path": "SDL2-2.0.14/lib/x86/SDL2.lib",
+				"dest-path": "x32/SDL2.lib"
+			}
+		]
 	}
 ]
