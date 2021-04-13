@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+	"install-externs",
 	"temportal-math",
 	"temportal-engine"
 ]
