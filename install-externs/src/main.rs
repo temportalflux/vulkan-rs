@@ -52,7 +52,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 						.into_iter()
 						.map(|matched_index| extern_zip.contents[matched_index].clone());
 					for artifact_glob in matched_globs {
-						let dest_file_path = artifact_glob.to_path(&ext_reader, &external, &artifact_path);
+						let dest_file_path =
+							artifact_glob.to_path(&ext_reader, &external, &artifact_path);
 						println!("  Extracting {:?} to {:?}", artifact_path, dest_file_path);
 
 						fs::create_dir_all(&dest_file_path.parent().unwrap())?;

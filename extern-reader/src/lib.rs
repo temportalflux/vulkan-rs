@@ -30,11 +30,16 @@ pub struct ExternReader {
 
 impl ExternReader {
 	pub fn new() -> ExternReader {
-		ExternReader { path_to_root: PathBuf::new() }
+		ExternReader {
+			path_to_root: PathBuf::new(),
+		}
 	}
 
 	pub fn set_root(&mut self, path_to_root: Option<String>) {
-		self.path_to_root = match path_to_root { Some(path) => PathBuf::from(path), None => PathBuf::new() };
+		self.path_to_root = match path_to_root {
+			Some(path) => PathBuf::from(path),
+			None => PathBuf::new(),
+		};
 	}
 
 	pub fn get_externs(&self) -> Result<Vec<Extern>, Box<dyn Error>> {
@@ -52,7 +57,6 @@ impl ExternReader {
 	}
 }
 
-
 impl Artifact {
 	pub fn to_path(&self, reader: &ExternReader, external: &Extern) -> PathBuf {
 		let mut path = reader.extern_dir();
@@ -63,7 +67,12 @@ impl Artifact {
 }
 
 impl ArtifactGlob {
-	pub fn to_path(&self, reader: &ExternReader, external: &Extern, path_in_archive: &PathBuf) -> PathBuf {
+	pub fn to_path(
+		&self,
+		reader: &ExternReader,
+		external: &Extern,
+		path_in_archive: &PathBuf,
+	) -> PathBuf {
 		let mut path = reader.extern_dir();
 		path.push(&external.alias);
 		path.push(&self.destination);
