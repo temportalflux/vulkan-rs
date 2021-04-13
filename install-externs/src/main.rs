@@ -1,64 +1,20 @@
 use curl::easy::Easy;
+use extern_reader;
 use regex::RegexSet;
-use serde::Deserialize;
-use serde_json;
 use std::error::Error;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
 use zip;
 
-#[derive(Deserialize, Debug)]
-struct ExternZipArtifact {
-	glob: String,
-	destination: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ExternZip {
-	url: String,
-	contents: Vec<ExternZipArtifact>,
-}
-
-#[derive(Deserialize, Debug)]
-struct ExternDownload {
-	alias: String,
-	downloads: Vec<ExternZip>,
-}
-
-#[derive(Debug)]
-struct MatchedArtifact {
-	path_in_zip: PathBuf,
-	destination: String,
-}
-
-fn make_destination_path(external: &ExternDownload, extern_zip: &ExternZip) -> PathBuf {
-	let mut path = PathBuf::from("externs");
-	path.push(&external.alias);
-	path.push(PathBuf::from(&extern_zip.url).file_name().unwrap());
-	path
-}
-
-fn make_artifact_path(
-	external: &ExternDownload,
-	extern_dest: &String,
-	path_in_zip: &PathBuf,
-) -> PathBuf {
-	let mut path = PathBuf::from("externs");
-	path.push(&external.alias);
-	path.push(extern_dest);
-	path.push(path_in_zip.file_name().unwrap());
-	path
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
-	let ext_deps_file = fs::read_to_string("externs.json")?;
-	let externs: Vec<ExternDownload> = serde_json::from_str(ext_deps_file.as_str())?;
+	let ext_reader = extern_reader::ExternReader::new();
+	let externs = ext_reader.get_externs()?;
 
 	// Download all files in all externs
 	for external in externs.iter() {
 		for extern_zip in external.downloads.iter() {
-			let download_dest = make_destination_path(&external, &extern_zip);
+			let download_dest = extern_zip.to_path(&ext_reader, &external);
 
 			println!("Removing any existing {:?}", download_dest);
 			if let Err(err) = fs::remove_file(&download_dest) {
@@ -78,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 			let artifact_globs = extern_zip.contents.iter().map(|item| item.glob.as_str());
 			let artifact_globs = RegexSet::new(artifact_globs).unwrap();
 
-			let downloaded_zip = make_destination_path(&external, &extern_zip);
+			let downloaded_zip = extern_zip.to_path(&ext_reader, &external);
 			println!("Processing contents of {:?}", downloaded_zip);
 
 			{
@@ -91,15 +47,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 						None => continue,
 					};
 
-					let matched_dest_paths = artifact_globs
+					let matched_globs = artifact_globs
 						.matches(artifact_path.to_str().unwrap())
 						.into_iter()
-						.map(|matched_index| {
-							extern_zip.contents[matched_index].destination.clone()
-						});
-					for destination_path in matched_dest_paths {
-						let dest_file_path =
-							make_artifact_path(&external, &destination_path, &artifact_path);
+						.map(|matched_index| extern_zip.contents[matched_index].clone());
+					for artifact_glob in matched_globs {
+						let dest_file_path = artifact_glob.to_path(&ext_reader, &external, &artifact_path);
 						println!("  Extracting {:?} to {:?}", artifact_path, dest_file_path);
 
 						fs::create_dir_all(&dest_file_path.parent().unwrap())?;

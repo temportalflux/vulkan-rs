@@ -1,5 +1,5 @@
 [package]
-name = "install-externs"
+name = "extern-reader"
 version = "0.1.0"
 authors = ["Dustin Yost <dustin.yost.t@gmail.com>"]
 edition = "2018"
@@ -7,7 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-extern-reader = { path = "../extern-reader" }
-curl = "0.4.35"
-zip = "0.5.11"
-regex = "1.4.5"
+serde_json = "1.0.64"
+serde = { version = "1.0", features = ["derive"] }
