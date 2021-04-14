@@ -1,8 +1,13 @@
 extern crate sdl2;
+extern crate vk_mem;
 
+use erupt;
+use erupt::utils::surface::enumerate_required_extensions;
 use std::error::Error;
 use structopt::StructOpt;
 
+mod context;
+pub use context::*;
 mod instance;
 pub use instance::*;
 
@@ -21,13 +26,14 @@ macro_rules! version {
 }
 
 pub fn create_instance(
+	ctx: &Context,
 	app_info: &AppInfo,
-	window_extensions: Vec<&'static str>,
+	window_handle: &impl raw_window_handle::HasRawWindowHandle,
 ) -> Result<Instance, Box<dyn Error>> {
 	let mut instance_info = InstanceInfo::new().app_info(app_info.clone());
-	for name_slice in window_extensions.iter() {
-		instance_info.add_extension(name_slice);
-	}
+
+	let window_extensions = enumerate_required_extensions(window_handle).unwrap();
+	instance_info.append_raw_extensions(window_extensions);
 
 	let opt = Opt::from_args();
 	if opt.validation_layers {
@@ -35,5 +41,5 @@ pub fn create_instance(
 		instance_info.add_layer("VK_LAYER_KHRONOS_validation");
 	}
 
-	Instance::new(&mut instance_info)
+	Instance::new(&ctx, &mut instance_info)
 }

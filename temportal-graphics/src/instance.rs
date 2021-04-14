@@ -1,7 +1,8 @@
+use super::context::Context;
 use erupt;
 use raw_window_handle;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AppInfo {
 	api_version: u32,
 
@@ -24,10 +25,9 @@ impl AppInfo {
 		erupt::vk::make_version(major, minor, patch)
 	}
 
-	pub fn new() -> AppInfo {
-		let entry_loader = erupt::EntryLoader::new().unwrap();
+	pub fn new(ctx: &Context) -> AppInfo {
 		AppInfo {
-			api_version: entry_loader.instance_version(),
+			api_version: ctx.loader.instance_version(),
 			engine_name: String::new(),
 			engine_name_c: std::ffi::CString::default(),
 			engine_version: 0,
@@ -74,7 +74,7 @@ impl AppInfo {
 
 	pub fn description(&self) -> String {
 		format!(
-			"Vulkan v{} - {} v{} - {} v{}",
+			"Vulkan(v{}) for {}(v{}) running {}(v{})",
 			self.api_version(),
 			self.engine_name,
 			self.engine_version(),
@@ -94,19 +94,21 @@ impl AppInfo {
 	}
 }
 
+#[derive(Debug)]
 pub struct InstanceInfo {
 	app_info: AppInfo,
-	app_info_raw: erupt::vk::ApplicationInfo,
 	extensions: Vec<String>,
-	extensions_raw: Vec<CStrPtr>,
 	layers: Vec<String>,
+	
+	app_info_raw: erupt::vk::ApplicationInfo,
+	extensions_raw: Vec<CStrPtr>,
 	layers_raw: Vec<CStrPtr>,
 }
 
 impl InstanceInfo {
 	pub fn new() -> InstanceInfo {
 		InstanceInfo {
-			app_info: AppInfo::new(),
+			app_info: AppInfo::default(),
 			app_info_raw: erupt::vk::ApplicationInfo::default(),
 			extensions: Vec::new(),
 			extensions_raw: Vec::new(),
@@ -120,12 +122,36 @@ impl InstanceInfo {
 		self
 	}
 
+	pub fn append_raw_extensions(&mut self, exts: Vec<CStrPtr>) {
+		for ext in exts.into_iter() {
+			self.add_raw_extension(ext);
+		}
+	}
+
+	pub fn add_raw_extension(&mut self, raw: CStrPtr) {
+		self.extensions.push(
+			unsafe { std::ffi::CStr::from_ptr(raw) }
+				.to_owned()
+				.into_string()
+				.unwrap(),
+		);
+	}
+
+	pub fn add_raw_layer(&mut self, raw: CStrPtr) {
+		self.layers.push(
+			unsafe { std::ffi::CStr::from_ptr(raw) }
+				.to_owned()
+				.into_string()
+				.unwrap(),
+		);
+	}
+
 	pub fn add_extension(&mut self, name: &str) {
-		self.extensions.push(String::from(name));
+		self.extensions.push(std::ffi::CString::new(name.as_bytes()).unwrap().into_string().unwrap());
 	}
 
 	pub fn add_layer(&mut self, name: &str) {
-		self.layers.push(String::from(name));
+		self.layers.push(std::ffi::CString::new(name.as_bytes()).unwrap().into_string().unwrap());
 	}
 
 	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
@@ -133,10 +159,13 @@ impl InstanceInfo {
 		self.extensions_raw = self
 			.extensions
 			.iter()
-			.map(|name| to_cstr_ptr(&name))
+			.map(|owned| to_cstr_ptr(&owned))
 			.collect();
-		self.layers_raw = self.layers.iter().map(|name| to_cstr_ptr(&name)).collect();
-
+		self.layers_raw = self
+			.layers
+			.iter()
+			.map(|owned| to_cstr_ptr(&owned))
+			.collect();
 		erupt::vk::InstanceCreateInfoBuilder::new()
 			.application_info(&self.app_info_raw)
 			.enabled_extension_names(&self.extensions_raw)
@@ -145,22 +174,62 @@ impl InstanceInfo {
 	}
 }
 
+#[derive(Debug)]
+pub enum InstanceError {
+	InvalidInstanceLayer(String),
+}
+
+impl std::fmt::Display for InstanceError {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		match *self {
+			InstanceError::InvalidInstanceLayer(ref layer_name) => {
+				write!(f, "Invalid vulkan instance layer: {}", layer_name)
+			}
+		}
+	}
+}
+
+impl std::error::Error for InstanceError {
+	fn description(&self) -> &str {
+		match *self {
+			InstanceError::InvalidInstanceLayer(ref layer_name) => layer_name.as_str(),
+		}
+	}
+}
+
 pub struct Instance {
 	internal: erupt::InstanceLoader,
 }
 
 impl Instance {
-	pub fn new(info: &mut InstanceInfo) -> Result<Instance, Box<dyn std::error::Error>> {
-		let entry_loader = erupt::EntryLoader::new()?;
+	pub fn new(
+		ctx: &Context,
+		info: &mut InstanceInfo,
+	) -> Result<Instance, Box<dyn std::error::Error>> {
+		println!(
+			"Initializing {} with extensions {:?} and layers {:?}",
+			info.app_info.description(),
+			info.extensions,
+			info.layers
+		);
+		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
+		println!("Available layers: {:?}", ctx.valid_instance_layers);
+		for layer in info.layers.iter() {
+			if !ctx.is_valid_instance_layer(&layer) {
+				return Result::Err(Box::new(InstanceError::InvalidInstanceLayer(layer.clone())));
+			}
+		}
 		let instance_create_info: erupt::vk::InstanceCreateInfo = info.to_vk();
-		let instance_loader = erupt::InstanceLoader::new(&entry_loader, &instance_create_info, None)?;
+		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &instance_create_info, None)?;
 		Ok(Instance {
 			internal: instance_loader,
 		})
 	}
 
-	pub fn create_surface(&self, handle: &impl raw_window_handle::HasRawWindowHandle) -> erupt::vk::SurfaceKHR {
+	pub fn create_surface(
+		&self,
+		handle: &impl raw_window_handle::HasRawWindowHandle,
+	) -> erupt::vk::SurfaceKHR {
 		unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap()
 	}
-
 }
