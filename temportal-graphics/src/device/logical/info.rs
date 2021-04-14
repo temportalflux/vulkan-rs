@@ -65,10 +65,10 @@ impl Info {
 
 	pub fn add_queue(mut self, queue: DeviceQueue) -> Self {
 		self.queues.push(
-				erupt::vk::DeviceQueueCreateInfoBuilder::new()
-					.queue_family_index(queue.queue_family_index as u32)
-					.queue_priorities(&queue.priorities)
-					.build()
+			erupt::vk::DeviceQueueCreateInfoBuilder::new()
+				.queue_family_index(queue.queue_family_index as u32)
+				.queue_priorities(&queue.priorities)
+				.build(),
 		);
 		self
 	}
@@ -98,7 +98,7 @@ impl VulkanInfo<erupt::vk::DeviceCreateInfo> for Info {
 			.iter()
 			.map(|owned| utility::to_cstr_ptr(&owned))
 			.collect();
-		
+
 		let mut info = erupt::vk::DeviceCreateInfo::default();
 
 		info.pp_enabled_extension_names = self.extension_names_raw.as_ptr() as _;
