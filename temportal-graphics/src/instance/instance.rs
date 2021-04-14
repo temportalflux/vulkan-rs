@@ -1,7 +1,7 @@
 use erupt;
 use raw_window_handle;
 
-use crate::{context::Context, physical, instance};
+use crate::{device::physical};
 
 pub struct Instance {
 	internal: erupt::InstanceLoader,
@@ -10,25 +10,15 @@ pub struct Instance {
 
 impl Instance {
 	pub fn new(
-		ctx: &Context,
-		info: &mut instance::Info,
-		is_validation_enabled: bool,
+		internal: erupt::InstanceLoader,
+		enable_validation: bool,
 	) -> Result<Instance, Box<dyn std::error::Error>> {
-		println!("Initializing {}", info.description());
-		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
-		println!("Available layers: {:?}", ctx.valid_instance_layers);
-		if let Some(layer) = info.has_invalid_layer(&ctx) {
-			return Result::Err(Box::new(instance::Error::InvalidInstanceLayer(layer)));
-		}
-		let instance_create_info: erupt::vk::InstanceCreateInfo = info.to_vk();
-		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &instance_create_info, None)?;
-
 		let mut instance = Instance {
-			internal: instance_loader,
+			internal,
 			debug_messenger: None,
 		};
 
-		if is_validation_enabled {
+		if enable_validation {
 			let messenger_info = erupt::vk::DebugUtilsMessengerCreateInfoEXTBuilder::new()
 				.message_severity(
 					erupt::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT

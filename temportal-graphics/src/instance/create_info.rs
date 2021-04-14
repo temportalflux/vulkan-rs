@@ -1,11 +1,13 @@
 use erupt;
-use crate::{utility, AppInfo, context::Context};
+use crate::{utility, AppInfo, context::Context, instance};
 
 #[derive(Debug)]
 pub struct Info {
 	app_info: AppInfo,
 	extensions: Vec<String>,
 	layers: Vec<String>,
+	validation_enabled: bool,
+
 	app_info_raw: erupt::vk::ApplicationInfo,
 	extensions_raw: Vec<utility::CStrPtr>,
 	layers_raw: Vec<utility::CStrPtr>,
@@ -15,10 +17,12 @@ impl Info {
 	pub fn new() -> Info {
 		Info {
 			app_info: AppInfo::default(),
-			app_info_raw: erupt::vk::ApplicationInfo::default(),
 			extensions: Vec::new(),
-			extensions_raw: Vec::new(),
 			layers: Vec::new(),
+			validation_enabled: false,
+
+			app_info_raw: erupt::vk::ApplicationInfo::default(),
+			extensions_raw: Vec::new(),
 			layers_raw: Vec::new(),
 		}
 	}
@@ -106,6 +110,33 @@ impl Info {
 			.enabled_layer_names(&self.layers_raw)
 			.build()
 	}
+
+	pub fn set_window(mut self, window_handle: &impl raw_window_handle::HasRawWindowHandle) -> Self {
+		use erupt::utils::surface::enumerate_required_extensions;
+		let window_extensions = enumerate_required_extensions(window_handle).unwrap();
+		self.append_raw_extensions(window_extensions);
+		self
+	}
+
+	pub fn set_use_validation(mut self, enable_validation: bool) -> Self {
+		self.validation_enabled = enable_validation;
+		self.add_extension("VK_EXT_debug_utils");
+		self.add_layer("VK_LAYER_KHRONOS_validation");
+		self
+	}
+
+	pub fn create_object(mut self, ctx: &Context) -> Result<instance::Instance, Box<dyn std::error::Error>> {
+		println!("Initializing {}", self.description());
+		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
+		println!("Available layers: {:?}", ctx.valid_instance_layers);
+		if let Some(layer) = self.has_invalid_layer(&ctx) {
+			return Result::Err(Box::new(instance::Error::InvalidInstanceLayer(layer)));
+		}
+		let create_info = self.to_vk();
+		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
+		instance::Instance::new(instance_loader, self.validation_enabled)
+	}
+
 }
 
 #[derive(Debug)]

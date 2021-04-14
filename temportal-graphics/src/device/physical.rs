@@ -1,4 +1,4 @@
-use crate::{physical, utility, ColorSpace, Format, Instance, PresentMode, QueueFlags};
+use crate::{utility, device::physical, ColorSpace, Format, instance::Instance, PresentMode, QueueFlags};
 use std::collections::hash_map::HashMap;
 
 pub use erupt::vk::PhysicalDeviceType as Kind;
