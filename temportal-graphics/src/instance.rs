@@ -99,7 +99,6 @@ pub struct InstanceInfo {
 	app_info: AppInfo,
 	extensions: Vec<String>,
 	layers: Vec<String>,
-	
 	app_info_raw: erupt::vk::ApplicationInfo,
 	extensions_raw: Vec<CStrPtr>,
 	layers_raw: Vec<CStrPtr>,
@@ -147,11 +146,21 @@ impl InstanceInfo {
 	}
 
 	pub fn add_extension(&mut self, name: &str) {
-		self.extensions.push(std::ffi::CString::new(name.as_bytes()).unwrap().into_string().unwrap());
+		self.extensions.push(
+			std::ffi::CString::new(name.as_bytes())
+				.unwrap()
+				.into_string()
+				.unwrap(),
+		);
 	}
 
 	pub fn add_layer(&mut self, name: &str) {
-		self.layers.push(std::ffi::CString::new(name.as_bytes()).unwrap().into_string().unwrap());
+		self.layers.push(
+			std::ffi::CString::new(name.as_bytes())
+				.unwrap()
+				.into_string()
+				.unwrap(),
+		);
 	}
 
 	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
@@ -199,12 +208,14 @@ impl std::error::Error for InstanceError {
 
 pub struct Instance {
 	internal: erupt::InstanceLoader,
+	debug_messenger: Option<erupt::extensions::ext_debug_utils::DebugUtilsMessengerEXT>,
 }
 
 impl Instance {
 	pub fn new(
 		ctx: &Context,
 		info: &mut InstanceInfo,
+		is_validation_enabled: bool,
 	) -> Result<Instance, Box<dyn std::error::Error>> {
 		println!(
 			"Initializing {} with extensions {:?} and layers {:?}",
@@ -221,9 +232,29 @@ impl Instance {
 		}
 		let instance_create_info: erupt::vk::InstanceCreateInfo = info.to_vk();
 		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &instance_create_info, None)?;
-		Ok(Instance {
+
+		let mut instance = Instance {
 			internal: instance_loader,
-		})
+			debug_messenger: None,
+		};
+
+		if is_validation_enabled {
+			let messenger_info = erupt::vk::DebugUtilsMessengerCreateInfoEXTBuilder::new()
+				.message_severity(
+					erupt::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
+						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING_EXT
+						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR_EXT,
+				)
+				.message_type(
+					erupt::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT
+						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION_EXT
+						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT,
+				)
+				.pfn_user_callback(Some(debug_callback));
+			instance.debug_messenger = Some(unsafe { instance.internal.create_debug_utils_messenger_ext(&messenger_info, None, None) }.unwrap());
+		}
+
+		Ok(instance)
 	}
 
 	pub fn create_surface(
@@ -232,4 +263,18 @@ impl Instance {
 	) -> erupt::vk::SurfaceKHR {
 		unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap()
 	}
+}
+
+unsafe extern "system" fn debug_callback(
+	_message_severity: erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT,
+	_message_types: erupt::vk::DebugUtilsMessageTypeFlagsEXT,
+	p_callback_data: *const erupt::vk::DebugUtilsMessengerCallbackDataEXT,
+	_p_user_data: *mut std::ffi::c_void,
+) -> erupt::vk::Bool32 {
+	eprintln!(
+		"{}",
+		std::ffi::CStr::from_ptr((*p_callback_data).p_message).to_string_lossy()
+	);
+
+	erupt::vk::FALSE
 }

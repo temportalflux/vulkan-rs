@@ -41,5 +41,5 @@ pub fn create_instance(
 		instance_info.add_layer("VK_LAYER_KHRONOS_validation");
 	}
 
-	Instance::new(&ctx, &mut instance_info)
+	Instance::new(&ctx, &mut instance_info, opt.validation_layers)
 }
