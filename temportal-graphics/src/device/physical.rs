@@ -21,6 +21,7 @@ pub struct Device {
 	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
 	present_modes: Vec<erupt::vk::PresentModeKHR>,
 	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
+	surface_capabilities: erupt::vk::SurfaceCapabilitiesKHR,
 }
 
 impl Device {
@@ -58,6 +59,7 @@ impl Device {
 					)
 				})
 				.collect(),
+			surface_capabilities: instance.get_physical_device_surface_capabilities(&vk, &surface),
 		}
 	}
 
@@ -107,6 +109,11 @@ impl Device {
 		// The device supports all required constraints if the leftover_constraints are empty
 		leftover_constraints.formats.is_empty() && leftover_constraints.color_spaces.is_empty()
 	}
+
+	pub fn image_count_range(&self) -> std::ops::Range<u32> {
+		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
+	}
+
 }
 
 impl VulkanObject<erupt::vk::PhysicalDevice> for Device {

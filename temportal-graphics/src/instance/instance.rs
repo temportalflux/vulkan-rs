@@ -155,6 +155,18 @@ impl Instance {
 		}
 		.unwrap()
 	}
+
+	pub fn get_physical_device_surface_capabilities(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+		surface: &erupt::vk::SurfaceKHR,
+	) -> erupt::vk::SurfaceCapabilitiesKHR {
+		unsafe {
+			self.internal
+				.get_physical_device_surface_capabilities_khr(*device, *surface, None)
+		}
+		.unwrap()
+	}
 }
 
 unsafe extern "system" fn debug_callback(
