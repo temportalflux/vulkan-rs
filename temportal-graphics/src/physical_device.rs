@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::hash_map::HashMap;
 
 struct QueueFamily {
 	index: usize,
@@ -12,7 +13,7 @@ pub struct PhysicalDevice {
 	queue_families: Vec<QueueFamily>,
 	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
 	present_modes: Vec<erupt::vk::PresentModeKHR>,
-	extension_properties: Vec<erupt::vk::ExtensionProperties>,
+	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
 }
 
 impl PhysicalDevice {
@@ -37,7 +38,19 @@ impl PhysicalDevice {
 				.collect(),
 			surface_formats: instance.get_physical_device_surface_formats(&vk, &surface),
 			present_modes: instance.get_physical_device_surface_present_modes(&vk, &surface),
-			extension_properties: instance.enumerate_device_extension_properties(&vk),
+			extension_properties: instance
+				.enumerate_device_extension_properties(&vk)
+				.into_iter()
+				.map(|prop| {
+					(
+						unsafe { std::ffi::CStr::from_ptr(&prop.extension_name as *const i8) }
+							.to_owned()
+							.into_string()
+							.unwrap(),
+						prop,
+					)
+				})
+				.collect(),
 		}
 	}
 
@@ -119,6 +132,7 @@ pub enum PhysicalDeviceConstraint {
 	HasSurfaceFormats(SurfaceConstraints),
 	CanPresentWith(PresentMode, /*score*/ Option<u32>),
 	IsDeviceType(PhysicalDeviceKind, /*score*/ Option<u32>),
+	HasExtension(String),
 	PrioritizedSet(Vec<PhysicalDeviceConstraint>, /*set_is_optional*/ bool),
 }
 
@@ -178,6 +192,17 @@ impl PhysicalDevice {
 						Some(_) => Ok(0),
 						None => Err(constraint.clone()),
 					}
+				}
+			}
+			PhysicalDeviceConstraint::HasExtension(ext_name) => {
+				let ext_prop = self
+					.extension_properties
+					.iter()
+					.find(|(name, _)| *name == ext_name);
+				if ext_prop.is_some() {
+					Ok(0)
+				} else {
+					Err(constraint.clone())
 				}
 			}
 			PhysicalDeviceConstraint::PrioritizedSet(constraint_list, set_is_optional) => {
