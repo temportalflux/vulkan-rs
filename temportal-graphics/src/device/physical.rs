@@ -1,5 +1,7 @@
-use super::*;
+use crate::{physical, utility, ColorSpace, Format, Instance, PresentMode, QueueFlags};
 use std::collections::hash_map::HashMap;
+
+pub use erupt::vk::PhysicalDeviceType as Kind;
 
 struct QueueFamily {
 	index: usize,
@@ -7,7 +9,7 @@ struct QueueFamily {
 	supports_surface: bool,
 }
 
-pub struct PhysicalDevice {
+pub struct Device {
 	_internal: erupt::vk::PhysicalDevice,
 	properties: erupt::vk::PhysicalDeviceProperties,
 	queue_families: Vec<QueueFamily>,
@@ -16,13 +18,13 @@ pub struct PhysicalDevice {
 	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
 }
 
-impl PhysicalDevice {
+impl Device {
 	pub fn new(
 		instance: &Instance,
 		vk: erupt::vk::PhysicalDevice,
 		surface: &erupt::vk::SurfaceKHR,
-	) -> PhysicalDevice {
-		PhysicalDevice {
+	) -> Device {
+		Device {
 			_internal: vk,
 			properties: instance.get_physical_device_properties(&vk),
 			queue_families: instance
@@ -54,7 +56,7 @@ impl PhysicalDevice {
 		}
 	}
 
-	pub fn device_type(&self) -> PhysicalDeviceKind {
+	pub fn device_type(&self) -> physical::Kind {
 		self.properties.device_type
 	}
 
@@ -66,11 +68,11 @@ impl PhysicalDevice {
 	}
 
 	pub fn api_version(&self) -> String {
-		as_version_string(&self.properties.api_version)
+		utility::as_version_string(&self.properties.api_version)
 	}
 
 	pub fn driver_version(&self) -> String {
-		as_version_string(&self.properties.driver_version)
+		utility::as_version_string(&self.properties.driver_version)
 	}
 
 	pub fn get_queue_index(&self, flags: QueueFlags, requires_surface: bool) -> Option<usize> {
@@ -83,7 +85,7 @@ impl PhysicalDevice {
 		}
 	}
 
-	pub fn contains_all_surface_constraints(&self, constraints: &SurfaceConstraints) -> bool {
+	pub fn contains_all_surface_constraints(&self, constraints: &SurfaceConstraint) -> bool {
 		// the constraints which are not fullfilled after surface_formats is scanned
 		let mut leftover_constraints = constraints.clone();
 		for supported_format in self.surface_formats.iter() {
@@ -102,13 +104,13 @@ impl PhysicalDevice {
 	}
 }
 
-impl std::fmt::Debug for PhysicalDevice {
+impl std::fmt::Debug for Device {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{:?}", self.properties)
 	}
 }
 
-impl std::fmt::Display for PhysicalDevice {
+impl std::fmt::Display for Device {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(
 			f,
@@ -121,28 +123,28 @@ impl std::fmt::Display for PhysicalDevice {
 }
 
 #[derive(Clone, Debug)]
-pub struct SurfaceConstraints {
+pub struct SurfaceConstraint {
 	pub formats: Vec<Format>,
 	pub color_spaces: Vec<ColorSpace>,
 }
 
 #[derive(Debug, Clone)]
-pub enum PhysicalDeviceConstraint {
+pub enum Constraint {
 	HasQueueFamily(QueueFlags, /*requires_surface*/ bool),
-	HasSurfaceFormats(SurfaceConstraints),
+	HasSurfaceFormats(SurfaceConstraint),
 	CanPresentWith(PresentMode, /*score*/ Option<u32>),
-	IsDeviceType(PhysicalDeviceKind, /*score*/ Option<u32>),
+	IsDeviceType(physical::Kind, /*score*/ Option<u32>),
 	HasExtension(String),
-	PrioritizedSet(Vec<PhysicalDeviceConstraint>, /*set_is_optional*/ bool),
+	PrioritizedSet(Vec<Constraint>, /*set_is_optional*/ bool),
 }
 
-impl PhysicalDevice {
+impl Device {
 	/// Determines if the device can support all the desired rules/properties.
 	/// Returns `None` if some constraint failed, otherwise returns the score of the support.
 	pub fn score_against_constraints(
 		&self,
-		constraints: &Vec<PhysicalDeviceConstraint>,
-	) -> Result<u32, PhysicalDeviceConstraint> {
+		constraints: &Vec<Constraint>,
+	) -> Result<u32, Constraint> {
 		let mut total_score = 0;
 		for constraint in constraints {
 			total_score += self.score_constraint(&constraint)?;
@@ -150,25 +152,22 @@ impl PhysicalDevice {
 		Ok(total_score)
 	}
 
-	pub fn score_constraint(
-		&self,
-		constraint: &PhysicalDeviceConstraint,
-	) -> Result<u32, PhysicalDeviceConstraint> {
+	pub fn score_constraint(&self, constraint: &Constraint) -> Result<u32, Constraint> {
 		match constraint {
-			PhysicalDeviceConstraint::HasQueueFamily(flags, requires_surface) => {
+			Constraint::HasQueueFamily(flags, requires_surface) => {
 				match self.get_queue_index(*flags, *requires_surface) {
 					Some(_queue_family_index) => Ok(0),
 					None => Err(constraint.clone()),
 				}
 			}
-			PhysicalDeviceConstraint::HasSurfaceFormats(format_constraints) => {
+			Constraint::HasSurfaceFormats(format_constraints) => {
 				if self.contains_all_surface_constraints(format_constraints) {
 					Ok(0)
 				} else {
 					Err(constraint.clone())
 				}
 			}
-			PhysicalDeviceConstraint::CanPresentWith(mode, score_or_required) => {
+			Constraint::CanPresentWith(mode, score_or_required) => {
 				if self.present_modes.contains(mode) {
 					Ok(match score_or_required {
 						Some(score) => *score,
@@ -181,7 +180,7 @@ impl PhysicalDevice {
 					}
 				}
 			}
-			PhysicalDeviceConstraint::IsDeviceType(kind, score_or_required) => {
+			Constraint::IsDeviceType(kind, score_or_required) => {
 				if self.device_type() == *kind {
 					Ok(match score_or_required {
 						Some(score) => *score,
@@ -194,7 +193,7 @@ impl PhysicalDevice {
 					}
 				}
 			}
-			PhysicalDeviceConstraint::HasExtension(ext_name) => {
+			Constraint::HasExtension(ext_name) => {
 				let ext_prop = self
 					.extension_properties
 					.iter()
@@ -205,7 +204,7 @@ impl PhysicalDevice {
 					Err(constraint.clone())
 				}
 			}
-			PhysicalDeviceConstraint::PrioritizedSet(constraint_list, set_is_optional) => {
+			Constraint::PrioritizedSet(constraint_list, set_is_optional) => {
 				match self.score_against_constraints(constraint_list) {
 					Ok(total_score_for_set) => Ok(total_score_for_set),
 					Err(subconstraint) => {

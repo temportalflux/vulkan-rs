@@ -6,17 +6,26 @@ use erupt::utils::surface::enumerate_required_extensions;
 use std::error::Error;
 use structopt::StructOpt;
 
-mod context;
-pub use context::*;
-mod instance;
-pub use instance::*;
-mod physical_device;
+#[path = "context.rs"]
+pub mod context;
+#[path = "device/lib.rs"]
+pub mod device;
+#[path = "general/lib.rs"]
+pub mod general;
+#[path = "instance/lib.rs"]
+pub mod instance;
+#[path = "utility.rs"]
+pub mod utility;
+
+use context::*;
+use device::*;
+pub use general::AppInfo;
+use instance::*;
+
 pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 pub use erupt::vk::Format;
-pub use erupt::vk::PhysicalDeviceType as PhysicalDeviceKind;
 pub use erupt::vk::PresentModeKHR as PresentMode;
 pub use erupt::vk::QueueFlags;
-pub use physical_device::*;
 
 #[derive(Debug, StructOpt)]
 struct Opt {
@@ -28,7 +37,7 @@ struct Opt {
 #[macro_export]
 macro_rules! version {
 	($major:expr, $minor:expr, $patch:expr) => {
-		temportal_graphics::AppInfo::make_version($major, $minor, $patch)
+		temportal_graphics::utility::make_version($major, $minor, $patch)
 	};
 }
 
@@ -37,7 +46,7 @@ pub fn create_instance(
 	app_info: &AppInfo,
 	window_handle: &impl raw_window_handle::HasRawWindowHandle,
 ) -> Result<Instance, Box<dyn Error>> {
-	let mut instance_info = InstanceInfo::new().app_info(app_info.clone());
+	let mut instance_info = instance::Info::new().app_info(app_info.clone());
 
 	let window_extensions = enumerate_required_extensions(window_handle).unwrap();
 	instance_info.append_raw_extensions(window_extensions);
