@@ -1,4 +1,4 @@
-#[path = "logical.rs"]
+#[path = "logical/lib.rs"]
 pub mod logical;
 
 #[path = "physical.rs"]

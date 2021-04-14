@@ -11,7 +11,7 @@ pub mod device;
 pub mod general;
 #[path = "instance/lib.rs"]
 pub mod instance;
-#[path = "utility.rs"]
+#[path = "utility/lib.rs"]
 pub mod utility;
 
 pub use context::Context;

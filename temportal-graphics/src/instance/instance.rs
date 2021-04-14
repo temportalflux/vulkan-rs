@@ -1,7 +1,7 @@
 use erupt;
 use raw_window_handle;
 
-use crate::device::physical;
+use crate::{device::physical, utility::VulkanObject};
 
 pub struct Instance {
 	internal: erupt::InstanceLoader,
@@ -74,6 +74,15 @@ impl Instance {
 			},
 			None => Err(None),
 		}
+	}
+}
+
+impl VulkanObject<erupt::InstanceLoader> for Instance {
+	fn unwrap(&self) -> &erupt::InstanceLoader {
+		&self.internal
+	}
+	fn unwrap_mut(&mut self) -> &mut erupt::InstanceLoader {
+		&mut self.internal
 	}
 }
 

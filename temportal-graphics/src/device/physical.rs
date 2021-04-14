@@ -1,5 +1,8 @@
 use crate::{
-	device::physical, instance::Instance, utility, ColorSpace, Format, PresentMode, QueueFlags,
+	device::physical,
+	instance::Instance,
+	utility::{self, VulkanObject},
+	ColorSpace, Format, PresentMode, QueueFlags,
 };
 use std::collections::hash_map::HashMap;
 
@@ -103,6 +106,15 @@ impl Device {
 		}
 		// The device supports all required constraints if the leftover_constraints are empty
 		leftover_constraints.formats.is_empty() && leftover_constraints.color_spaces.is_empty()
+	}
+}
+
+impl VulkanObject<erupt::vk::PhysicalDevice> for Device {
+	fn unwrap(&self) -> &erupt::vk::PhysicalDevice {
+		&self._internal
+	}
+	fn unwrap_mut(&mut self) -> &mut erupt::vk::PhysicalDevice {
+		&mut self._internal
 	}
 }
 

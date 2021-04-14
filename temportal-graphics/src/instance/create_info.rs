@@ -1,4 +1,9 @@
-use crate::{context::Context, instance, utility, AppInfo};
+use crate::{
+	context::Context,
+	instance,
+	utility::{self, VulkanInfo},
+	AppInfo,
+};
 use erupt;
 
 #[derive(Debug)]
@@ -92,25 +97,6 @@ impl Info {
 		None
 	}
 
-	pub fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
-		self.app_info_raw = self.app_info.to_vk();
-		self.extensions_raw = self
-			.extensions
-			.iter()
-			.map(|owned| utility::to_cstr_ptr(&owned))
-			.collect();
-		self.layers_raw = self
-			.layers
-			.iter()
-			.map(|owned| utility::to_cstr_ptr(&owned))
-			.collect();
-		erupt::vk::InstanceCreateInfoBuilder::new()
-			.application_info(&self.app_info_raw)
-			.enabled_extension_names(&self.extensions_raw)
-			.enabled_layer_names(&self.layers_raw)
-			.build()
-	}
-
 	pub fn set_window(
 		mut self,
 		window_handle: &impl raw_window_handle::HasRawWindowHandle,
@@ -123,8 +109,10 @@ impl Info {
 
 	pub fn set_use_validation(mut self, enable_validation: bool) -> Self {
 		self.validation_enabled = enable_validation;
-		self.add_extension("VK_EXT_debug_utils");
-		self.add_layer("VK_LAYER_KHRONOS_validation");
+		if enable_validation {
+			self.add_extension("VK_EXT_debug_utils");
+			self.add_layer("VK_LAYER_KHRONOS_validation");
+		}
 		self
 	}
 
@@ -141,6 +129,27 @@ impl Info {
 		let create_info = self.to_vk();
 		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
 		instance::Instance::new(instance_loader, self.validation_enabled)
+	}
+}
+
+impl utility::VulkanInfo<erupt::vk::InstanceCreateInfo> for Info {
+	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
+		self.app_info_raw = self.app_info.to_vk();
+		self.extensions_raw = self
+			.extensions
+			.iter()
+			.map(|owned| utility::to_cstr_ptr(&owned))
+			.collect();
+		self.layers_raw = self
+			.layers
+			.iter()
+			.map(|owned| utility::to_cstr_ptr(&owned))
+			.collect();
+		erupt::vk::InstanceCreateInfoBuilder::new()
+			.application_info(&self.app_info_raw)
+			.enabled_extension_names(&self.extensions_raw)
+			.enabled_layer_names(&self.layers_raw)
+			.build()
 	}
 }
 
