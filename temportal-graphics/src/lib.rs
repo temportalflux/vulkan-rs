@@ -2,7 +2,6 @@ extern crate sdl2;
 extern crate vk_mem;
 
 use erupt;
-use structopt::StructOpt;
 
 #[path = "context.rs"]
 mod context;
@@ -21,14 +20,3 @@ pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 pub use erupt::vk::Format;
 pub use erupt::vk::PresentModeKHR as PresentMode;
 pub use erupt::vk::QueueFlags;
-
-#[derive(Debug, StructOpt)]
-struct Opt {
-	/// Use validation layers
-	#[structopt(short, long)]
-	validation_layers: bool,
-}
-
-pub fn should_enable_validation() -> bool {
-	Opt::from_args().validation_layers
-}

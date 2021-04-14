@@ -10,6 +10,5 @@ edition = "2018"
 temportal-math = { path = "../temportal-math" }
 sdl2 = "0.34"
 erupt = "0.18.0"
-structopt = "0.3"
 raw-window-handle = "0.3.3"
 vk-mem = "0.2.0"
