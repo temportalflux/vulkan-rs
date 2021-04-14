@@ -2,7 +2,7 @@ use crate::{
 	device::physical,
 	instance::Instance,
 	utility::{self, VulkanObject},
-	ColorSpace, Format, PresentMode, QueueFlags,
+	ColorSpace, Extent2D, Format, PresentMode, QueueFlags, SurfaceTransform,
 };
 use std::collections::hash_map::HashMap;
 
@@ -16,12 +16,15 @@ struct QueueFamily {
 
 pub struct Device {
 	_internal: erupt::vk::PhysicalDevice,
+
 	properties: erupt::vk::PhysicalDeviceProperties,
 	queue_families: Vec<QueueFamily>,
 	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
-	present_modes: Vec<erupt::vk::PresentModeKHR>,
+	present_modes: Vec<PresentMode>,
 	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
 	surface_capabilities: erupt::vk::SurfaceCapabilitiesKHR,
+
+	pub selected_present_mode: PresentMode,
 }
 
 impl Device {
@@ -60,6 +63,7 @@ impl Device {
 				})
 				.collect(),
 			surface_capabilities: instance.get_physical_device_surface_capabilities(&vk, &surface),
+			selected_present_mode: PresentMode::FIFO_KHR,
 		}
 	}
 
@@ -114,6 +118,13 @@ impl Device {
 		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
 	}
 
+	pub fn image_extent(&self) -> Extent2D {
+		self.surface_capabilities.current_extent
+	}
+
+	pub fn current_transform(&self) -> SurfaceTransform {
+		self.surface_capabilities.current_transform
+	}
 }
 
 impl VulkanObject<erupt::vk::PhysicalDevice> for Device {
@@ -163,7 +174,7 @@ impl Device {
 	/// Determines if the device can support all the desired rules/properties.
 	/// Returns `None` if some constraint failed, otherwise returns the score of the support.
 	pub fn score_against_constraints(
-		&self,
+		&mut self,
 		constraints: &Vec<Constraint>,
 	) -> Result<u32, Constraint> {
 		let mut total_score = 0;
@@ -173,7 +184,7 @@ impl Device {
 		Ok(total_score)
 	}
 
-	pub fn score_constraint(&self, constraint: &Constraint) -> Result<u32, Constraint> {
+	pub fn score_constraint(&mut self, constraint: &Constraint) -> Result<u32, Constraint> {
 		match constraint {
 			Constraint::HasQueueFamily(flags, requires_surface) => {
 				match self.get_queue_index(*flags, *requires_surface) {
@@ -190,6 +201,7 @@ impl Device {
 			}
 			Constraint::CanPresentWith(mode, score_or_required) => {
 				if self.present_modes.contains(mode) {
+					self.selected_present_mode = *mode;
 					Ok(match score_or_required {
 						Some(score) => *score,
 						None => 0,

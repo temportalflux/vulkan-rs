@@ -21,3 +21,12 @@ impl VulkanObject<erupt::DeviceLoader> for Device {
 		&mut self._internal
 	}
 }
+
+impl Device {
+	pub fn create_swapchain(
+		&self,
+		info: erupt::vk::SwapchainCreateInfoKHR,
+	) -> erupt::vk::SwapchainKHR {
+		unsafe { self._internal.create_swapchain_khr(&info, None, None) }.unwrap()
+	}
+}

@@ -1,7 +1,7 @@
 use erupt;
 use raw_window_handle;
 
-use crate::{device::physical, utility::VulkanObject};
+use crate::{device::physical, general::Surface, utility::VulkanObject};
 
 pub struct Instance {
 	internal: erupt::InstanceLoader,
@@ -44,24 +44,25 @@ impl Instance {
 		Ok(instance)
 	}
 
-	pub fn create_surface(
-		&self,
-		handle: &impl raw_window_handle::HasRawWindowHandle,
-	) -> erupt::vk::SurfaceKHR {
-		unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap()
+	pub fn create_surface(&self, handle: &impl raw_window_handle::HasRawWindowHandle) -> Surface {
+		Surface::from(
+			unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap(),
+		)
 	}
 
 	pub fn find_physical_device(
 		&self,
 		constraints: &Vec<physical::Constraint>,
-		surface: &erupt::vk::SurfaceKHR,
+		surface: &Surface,
 	) -> Result<physical::Device, Option<physical::Constraint>> {
 		match unsafe { self.internal.enumerate_physical_devices(None) }
 			.unwrap()
 			.into_iter()
-			.map(|vk_physical_device| physical::Device::new(self, vk_physical_device, &surface))
+			.map(|vk_physical_device| {
+				physical::Device::new(self, vk_physical_device, &surface.unwrap())
+			})
 			.map(
-				|physical_device| match physical_device.score_against_constraints(&constraints) {
+				|mut physical_device| match physical_device.score_against_constraints(&constraints) {
 					Ok(score) => (physical_device, score, None),
 					Err(failed_constraint) => (physical_device, 0, Some(failed_constraint)),
 				},
