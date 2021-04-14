@@ -29,4 +29,11 @@ impl Device {
 	) -> erupt::vk::SwapchainKHR {
 		unsafe { self._internal.create_swapchain_khr(&info, None, None) }.unwrap()
 	}
+
+	pub fn get_swapchain_images(
+		&self,
+		swapchain: &erupt::vk::SwapchainKHR,
+	) -> Vec<erupt::vk::Image> {
+		unsafe { self._internal.get_swapchain_images_khr(*swapchain, None) }.unwrap()
+	}
 }

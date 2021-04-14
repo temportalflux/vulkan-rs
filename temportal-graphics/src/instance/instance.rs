@@ -61,12 +61,12 @@ impl Instance {
 			.map(|vk_physical_device| {
 				physical::Device::new(self, vk_physical_device, &surface.unwrap())
 			})
-			.map(
-				|mut physical_device| match physical_device.score_against_constraints(&constraints) {
+			.map(|mut physical_device| {
+				match physical_device.score_against_constraints(&constraints) {
 					Ok(score) => (physical_device, score, None),
 					Err(failed_constraint) => (physical_device, 0, Some(failed_constraint)),
-				},
-			)
+				}
+			})
 			.max_by_key(|(_, score, _)| *score)
 		{
 			Some((device, _, failed_constraint)) => match failed_constraint {

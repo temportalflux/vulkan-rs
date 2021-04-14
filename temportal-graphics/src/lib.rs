@@ -14,6 +14,10 @@ pub mod instance;
 #[path = "utility/lib.rs"]
 pub mod utility;
 
+#[path = "image.rs"]
+mod image;
+pub use image::Image;
+
 pub use context::Context;
 pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
