@@ -15,8 +15,8 @@ pub mod instance;
 pub mod utility;
 
 pub use context::Context;
-pub use general::AppInfo;
 pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 pub use erupt::vk::Format;
 pub use erupt::vk::PresentModeKHR as PresentMode;
 pub use erupt::vk::QueueFlags;
+pub use general::AppInfo;

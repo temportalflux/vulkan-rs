@@ -1,7 +1,7 @@
 use erupt;
 use raw_window_handle;
 
-use crate::{device::physical};
+use crate::device::physical;
 
 pub struct Instance {
 	internal: erupt::InstanceLoader,

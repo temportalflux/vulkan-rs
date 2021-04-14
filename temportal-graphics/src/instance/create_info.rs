@@ -1,5 +1,5 @@
+use crate::{context::Context, instance, utility, AppInfo};
 use erupt;
-use crate::{utility, AppInfo, context::Context, instance};
 
 #[derive(Debug)]
 pub struct Info {
@@ -111,7 +111,10 @@ impl Info {
 			.build()
 	}
 
-	pub fn set_window(mut self, window_handle: &impl raw_window_handle::HasRawWindowHandle) -> Self {
+	pub fn set_window(
+		mut self,
+		window_handle: &impl raw_window_handle::HasRawWindowHandle,
+	) -> Self {
 		use erupt::utils::surface::enumerate_required_extensions;
 		let window_extensions = enumerate_required_extensions(window_handle).unwrap();
 		self.append_raw_extensions(window_extensions);
@@ -125,7 +128,10 @@ impl Info {
 		self
 	}
 
-	pub fn create_object(mut self, ctx: &Context) -> Result<instance::Instance, Box<dyn std::error::Error>> {
+	pub fn create_object(
+		mut self,
+		ctx: &Context,
+	) -> Result<instance::Instance, Box<dyn std::error::Error>> {
 		println!("Initializing {}", self.description());
 		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
 		println!("Available layers: {:?}", ctx.valid_instance_layers);
@@ -136,7 +142,6 @@ impl Info {
 		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
 		instance::Instance::new(instance_loader, self.validation_enabled)
 	}
-
 }
 
 #[derive(Debug)]
