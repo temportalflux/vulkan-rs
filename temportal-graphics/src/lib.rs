@@ -10,6 +10,13 @@ mod context;
 pub use context::*;
 mod instance;
 pub use instance::*;
+mod physical_device;
+pub use erupt::vk::ColorSpaceKHR as ColorSpace;
+pub use erupt::vk::Format;
+pub use erupt::vk::PhysicalDeviceType as PhysicalDeviceKind;
+pub use erupt::vk::PresentModeKHR as PresentMode;
+pub use erupt::vk::QueueFlags;
+pub use physical_device::*;
 
 #[derive(Debug, StructOpt)]
 struct Opt {

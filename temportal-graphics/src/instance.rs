@@ -1,4 +1,5 @@
 use super::context::Context;
+use super::*;
 use erupt;
 use raw_window_handle;
 
@@ -20,6 +21,15 @@ pub fn to_cstr_ptr(name: &String) -> CStrPtr {
 	name.as_str() as *const str as CStrPtr
 }
 
+pub fn as_version_string(version: &u32) -> String {
+	format!(
+		"{}.{}.{}",
+		erupt::vk::version_major(*version),
+		erupt::vk::version_minor(*version),
+		erupt::vk::version_patch(*version)
+	)
+}
+
 impl AppInfo {
 	pub fn make_version(major: u32, minor: u32, patch: u32) -> u32 {
 		erupt::vk::make_version(major, minor, patch)
@@ -37,17 +47,8 @@ impl AppInfo {
 		}
 	}
 
-	fn as_version_string(&self, version: &u32) -> String {
-		format!(
-			"{}.{}.{}",
-			erupt::vk::version_major(*version),
-			erupt::vk::version_minor(*version),
-			erupt::vk::version_patch(*version)
-		)
-	}
-
 	pub fn api_version(&self) -> String {
-		self.as_version_string(&self.api_version)
+		as_version_string(&self.api_version)
 	}
 
 	pub fn engine(mut self, name: &str, version: u32) -> AppInfo {
@@ -58,7 +59,7 @@ impl AppInfo {
 	}
 
 	pub fn engine_version(&self) -> String {
-		self.as_version_string(&self.engine_version)
+		as_version_string(&self.engine_version)
 	}
 
 	pub fn application(mut self, name: &str, version: u32) -> AppInfo {
@@ -69,7 +70,7 @@ impl AppInfo {
 	}
 
 	pub fn app_version(&self) -> String {
-		self.as_version_string(&self.app_version)
+		as_version_string(&self.app_version)
 	}
 
 	pub fn description(&self) -> String {
@@ -251,7 +252,14 @@ impl Instance {
 						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT,
 				)
 				.pfn_user_callback(Some(debug_callback));
-			instance.debug_messenger = Some(unsafe { instance.internal.create_debug_utils_messenger_ext(&messenger_info, None, None) }.unwrap());
+			instance.debug_messenger = Some(
+				unsafe {
+					instance
+						.internal
+						.create_debug_utils_messenger_ext(&messenger_info, None, None)
+				}
+				.unwrap(),
+			);
 		}
 
 		Ok(instance)
@@ -262,6 +270,102 @@ impl Instance {
 		handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> erupt::vk::SurfaceKHR {
 		unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap()
+	}
+
+	pub fn find_physical_device(
+		&self,
+		constraints: &Vec<PhysicalDeviceConstraint>,
+		surface: &erupt::vk::SurfaceKHR,
+	) -> Result<PhysicalDevice, Option<PhysicalDeviceConstraint>> {
+		match unsafe { self.internal.enumerate_physical_devices(None) }
+			.unwrap()
+			.into_iter()
+			.map(|vk_physical_device| PhysicalDevice::new(self, vk_physical_device, &surface))
+			.map(
+				|physical_device| match physical_device.score_against_constraints(&constraints) {
+					Ok(score) => (physical_device, score, None),
+					Err(failed_constraint) => (physical_device, 0, Some(failed_constraint)),
+				},
+			)
+			.max_by_key(|(_, score, _)| *score)
+		{
+			Some((device, _, failed_constraint)) => match failed_constraint {
+				None => Ok(device),
+				Some(constraint_that_failed) => Err(Some(constraint_that_failed)),
+			},
+			None => Err(None),
+		}
+	}
+}
+
+impl Instance {
+	pub fn get_physical_device_properties(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+	) -> erupt::vk::PhysicalDeviceProperties {
+		unsafe { self.internal.get_physical_device_properties(*device, None) }
+	}
+
+	pub fn get_physical_device_queue_family_properties(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+	) -> Vec<erupt::vk::QueueFamilyProperties> {
+		unsafe {
+			self.internal
+				.get_physical_device_queue_family_properties(*device, None)
+		}
+	}
+
+	pub fn does_physical_device_surface_support_khr(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+		queue_family_index: usize,
+		surface: &erupt::vk::SurfaceKHR,
+	) -> bool {
+		unsafe {
+			self.internal.get_physical_device_surface_support_khr(
+				*device,
+				queue_family_index as u32,
+				*surface,
+				None,
+			)
+		}
+		.unwrap()
+	}
+
+	pub fn get_physical_device_surface_formats(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+		surface: &erupt::vk::SurfaceKHR,
+	) -> Vec<erupt::vk::SurfaceFormatKHR> {
+		unsafe {
+			self.internal
+				.get_physical_device_surface_formats_khr(*device, *surface, None)
+		}
+		.unwrap()
+	}
+
+	pub fn get_physical_device_surface_present_modes(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+		surface: &erupt::vk::SurfaceKHR,
+	) -> Vec<erupt::vk::PresentModeKHR> {
+		unsafe {
+			self.internal
+				.get_physical_device_surface_present_modes_khr(*device, *surface, None)
+		}
+		.unwrap()
+	}
+
+	pub fn enumerate_device_extension_properties(
+		&self,
+		device: &erupt::vk::PhysicalDevice,
+	) -> Vec<erupt::vk::ExtensionProperties> {
+		unsafe {
+			self.internal
+				.enumerate_device_extension_properties(*device, None, None)
+		}
+		.unwrap()
 	}
 }
 
