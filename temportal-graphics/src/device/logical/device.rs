@@ -46,4 +46,8 @@ impl Device {
 	pub fn create_image_view(&self, info: erupt::vk::ImageViewCreateInfo) -> erupt::vk::ImageView {
 		unsafe { self._internal.create_image_view(&info, None, None) }.unwrap()
 	}
+
+	pub fn create_shader_module(&self, info: erupt::vk::ShaderModuleCreateInfo) -> erupt::vk::ShaderModule {
+		unsafe { self._internal.create_shader_module(&info, None, None) }.unwrap()
+	}
 }

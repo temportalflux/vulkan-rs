@@ -46,3 +46,7 @@ pub mod device;
 /// General-use traits and macros.
 #[path = "utility/lib.rs"]
 pub mod utility;
+
+#[path = "shader/shader.rs"]
+mod shader;
+pub use shader::*;
