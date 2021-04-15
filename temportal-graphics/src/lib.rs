@@ -3,13 +3,17 @@ extern crate vk_mem;
 
 /// Various forwarded/exposed enumerations from Vulkan/Erupt
 pub mod flags {
+	pub use erupt::vk::ColorComponentFlags as ColorComponent;
 	pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 	pub use erupt::vk::ComponentSwizzle;
 	pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
+	pub use erupt::vk::CullModeFlags as CullMode;
 	pub use erupt::vk::Format;
+	pub use erupt::vk::FrontFace;
 	pub use erupt::vk::ImageAspectFlags as ImageAspect;
 	pub use erupt::vk::ImageUsageFlags;
 	pub use erupt::vk::ImageViewType;
+	pub use erupt::vk::PolygonMode;
 	pub use erupt::vk::PresentModeKHR as PresentMode;
 	pub use erupt::vk::QueueFlags;
 	pub use erupt::vk::ShaderStageFlagBits as ShaderStageKind;

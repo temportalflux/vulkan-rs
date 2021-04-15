@@ -53,7 +53,7 @@ impl ViewInfo {
 impl VulkanInfo<erupt::vk::ImageViewCreateInfo> for ViewInfo {
 	/// Converts the [`ViewInfo`] into the [`erupt::vk::ImageViewCreateInfo`] struct
 	/// used to create a [`image::View`].
-	fn to_vk(&mut self) -> erupt::vk::ImageViewCreateInfo {
+	fn to_vk(&self) -> erupt::vk::ImageViewCreateInfo {
 		erupt::vk::ImageViewCreateInfoBuilder::new()
 			.view_type(self.view_type)
 			.format(self.format)

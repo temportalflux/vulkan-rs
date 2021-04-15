@@ -1,7 +1,7 @@
 use crate::{
 	device::{logical, physical},
 	instance::Instance,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfoMut, VulkanObject},
 };
 use erupt;
 
@@ -96,7 +96,7 @@ impl Info {
 	}
 }
 
-impl VulkanInfo<erupt::vk::DeviceCreateInfo> for Info {
+impl VulkanInfoMut<erupt::vk::DeviceCreateInfo> for Info {
 	/// Converts the [`Info`] into the [`erupt::vk::DeviceCreateInfo`] struct
 	/// used to create a [`logical::Device`].
 	fn to_vk(&mut self) -> erupt::vk::DeviceCreateInfo {

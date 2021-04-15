@@ -1,9 +1,14 @@
-use crate::{device::logical, flags::ShaderStageKind, shader, utility::VulkanObject};
+use crate::{
+	device::logical,
+	flags::ShaderStageKind,
+	shader,
+	utility::{VulkanInfo, VulkanObject},
+};
 use erupt;
 
 pub struct Module {
 	_internal: erupt::vk::ShaderModule,
-	entry_point: String,
+	entry_point: std::ffi::CString,
 	kind: ShaderStageKind,
 }
 
@@ -29,27 +34,19 @@ impl Module {
 			.build();
 		Ok(Module {
 			_internal: device.create_shader_module(info),
-			entry_point: String::default(),
+			entry_point: std::ffi::CString::default(),
 			kind: ShaderStageKind::VERTEX,
 		})
 	}
 
 	pub fn set_entry_point(mut self, entry_point: String) -> Self {
-		self.entry_point = entry_point;
+		self.entry_point = std::ffi::CString::new(entry_point).unwrap();
 		self
-	}
-
-	pub fn entry_point(&self) -> String {
-		self.entry_point.clone()
 	}
 
 	pub fn set_kind(mut self, kind: ShaderStageKind) -> Self {
 		self.kind = kind;
 		self
-	}
-
-	pub fn kind(&self) -> ShaderStageKind {
-		self.kind
 	}
 }
 
@@ -61,5 +58,15 @@ impl VulkanObject<erupt::vk::ShaderModule> for Module {
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::vk::ShaderModule {
 		&mut self._internal
+	}
+}
+
+impl VulkanInfo<erupt::vk::PipelineShaderStageCreateInfo> for Module {
+	fn to_vk(&self) -> erupt::vk::PipelineShaderStageCreateInfo {
+		erupt::vk::PipelineShaderStageCreateInfoBuilder::new()
+			.stage(self.kind)
+			.module(*self.unwrap())
+			.name(&self.entry_point)
+			.build()
 	}
 }

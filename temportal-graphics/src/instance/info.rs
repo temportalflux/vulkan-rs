@@ -1,7 +1,7 @@
 use crate::{
 	context::Context,
 	instance,
-	utility::{self, VulkanInfo},
+	utility::{self, VulkanInfo, VulkanInfoMut},
 	AppInfo,
 };
 use erupt;
@@ -134,7 +134,7 @@ impl Info {
 	}
 }
 
-impl utility::VulkanInfo<erupt::vk::InstanceCreateInfo> for Info {
+impl utility::VulkanInfoMut<erupt::vk::InstanceCreateInfo> for Info {
 	/// Converts the [`Info`] into the [`erupt::vk::InstanceCreateInfo`] struct
 	/// used to create a [`instance::Instance`].
 	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {

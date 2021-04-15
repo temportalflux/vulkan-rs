@@ -53,4 +53,15 @@ impl Device {
 	) -> erupt::vk::ShaderModule {
 		unsafe { self._internal.create_shader_module(&info, None, None) }.unwrap()
 	}
+
+	pub fn create_graphics_pipelines(
+		&self,
+		infos: Vec<erupt::vk::GraphicsPipelineCreateInfoBuilder>,
+	) -> Vec<erupt::vk::Pipeline> {
+		unsafe {
+			self._internal
+				.create_graphics_pipelines(None, &infos[..], None)
+		}
+		.unwrap()
+	}
 }

@@ -87,7 +87,7 @@ impl AppInfo {
 
 impl VulkanInfo<erupt::vk::ApplicationInfo> for AppInfo {
 	/// Converts the [`AppInfo`] into the [`erupt::vk::ApplicationInfo`] struct
-	fn to_vk(&mut self) -> erupt::vk::ApplicationInfo {
+	fn to_vk(&self) -> erupt::vk::ApplicationInfo {
 		erupt::vk::ApplicationInfoBuilder::new()
 			.api_version(self.api_version)
 			.engine_name(&self.engine_name_c)
