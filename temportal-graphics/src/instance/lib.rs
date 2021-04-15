@@ -1,4 +1,4 @@
-#[path = "create_info.rs"]
+#[path = "info.rs"]
 mod create_info;
 #[path = "instance.rs"]
 mod instance;

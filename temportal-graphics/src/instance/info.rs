@@ -6,6 +6,7 @@ use crate::{
 };
 use erupt;
 
+/// Information used to construct a [`Vulkan Instance`](instance::Instance).
 #[derive(Debug)]
 pub struct Info {
 	app_info: AppInfo,
@@ -32,18 +33,21 @@ impl Info {
 		}
 	}
 
-	pub fn app_info(mut self, info: AppInfo) -> Self {
+	/// Set information about the application creating the instance.
+	pub fn set_app_info(mut self, info: AppInfo) -> Self {
 		self.app_info = info;
 		self
 	}
 
-	pub fn append_raw_extensions(&mut self, exts: Vec<utility::CStrPtr>) {
+	#[doc(hidden)]
+	fn append_raw_extensions(&mut self, exts: Vec<utility::CStrPtr>) {
 		for ext in exts.into_iter() {
 			self.add_raw_extension(ext);
 		}
 	}
 
-	pub fn add_raw_extension(&mut self, raw: utility::CStrPtr) {
+	#[doc(hidden)]
+	fn add_raw_extension(&mut self, raw: utility::CStrPtr) {
 		self.extensions.push(
 			unsafe { std::ffi::CStr::from_ptr(raw) }
 				.to_owned()
@@ -52,15 +56,7 @@ impl Info {
 		);
 	}
 
-	pub fn add_raw_layer(&mut self, raw: utility::CStrPtr) {
-		self.layers.push(
-			unsafe { std::ffi::CStr::from_ptr(raw) }
-				.to_owned()
-				.into_string()
-				.unwrap(),
-		);
-	}
-
+	/// Adds the name of an extension to the list of required extensions for the instance.
 	pub fn add_extension(&mut self, name: &str) {
 		self.extensions.push(
 			std::ffi::CString::new(name.as_bytes())
@@ -70,6 +66,7 @@ impl Info {
 		);
 	}
 
+	/// Adds the name of an layer to the list of required layers for the instance.
 	pub fn add_layer(&mut self, name: &str) {
 		self.layers.push(
 			std::ffi::CString::new(name.as_bytes())
@@ -79,6 +76,7 @@ impl Info {
 		);
 	}
 
+	/// Formats a string with the application info, extension names, and layer names.
 	pub fn description(&self) -> String {
 		format!(
 			"{} with extensions {:?} and layers {:?}",
@@ -88,6 +86,7 @@ impl Info {
 		)
 	}
 
+	/// Returns true if any of the layers in the info are not valid for a given context.
 	pub fn has_invalid_layer(&self, ctx: &Context) -> Option<String> {
 		for layer in self.layers.iter() {
 			if !ctx.is_valid_instance_layer(&layer) {
@@ -97,6 +96,7 @@ impl Info {
 		None
 	}
 
+	/// Sets the window 
 	pub fn set_window(
 		mut self,
 		window_handle: &impl raw_window_handle::HasRawWindowHandle,
@@ -107,6 +107,7 @@ impl Info {
 		self
 	}
 
+	/// Sets if the instance uses validation.
 	pub fn set_use_validation(mut self, enable_validation: bool) -> Self {
 		self.validation_enabled = enable_validation;
 		if enable_validation {
@@ -116,6 +117,7 @@ impl Info {
 		self
 	}
 
+	/// Creates the vulkan instance object, thereby consuming the info.
 	pub fn create_object(
 		mut self,
 		ctx: &Context,
@@ -133,6 +135,8 @@ impl Info {
 }
 
 impl utility::VulkanInfo<erupt::vk::InstanceCreateInfo> for Info {
+	/// Converts the [`Info`] into the [`erupt::vk::InstanceCreateInfo`] struct
+	/// used to create a [`instance::Instance`].
 	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
 		self.app_info_raw = self.app_info.to_vk();
 		self.extensions_raw = self
