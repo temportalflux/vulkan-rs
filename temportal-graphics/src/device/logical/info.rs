@@ -10,6 +10,8 @@ pub struct DeviceQueue {
 	pub priorities: Vec<f32>,
 }
 
+/// Collects together information about a [`logical::Device`] that is used by the hardware
+/// to construct the logical device to send commands to the hardware.
 pub struct Info {
 	extension_names: Vec<String>,
 	layer_names: Vec<String>,
@@ -22,6 +24,8 @@ pub struct Info {
 }
 
 impl Info {
+
+	/// User-called constructor to put together the relevant constraints and information.
 	pub fn new() -> Info {
 		Info {
 			extension_names: Vec::new(),
@@ -35,6 +39,9 @@ impl Info {
 		}
 	}
 
+	/// Adds the name of a device extension that is required for the logical device.
+	/// Users should ensure that this name is present in the constraints passed to
+	/// [`Instance.find_physical_device`](../../instance/struct.Instance.html#method.find_physical_device).
 	pub fn add_extension(mut self, name: &str) -> Self {
 		self.extension_names.push(
 			std::ffi::CString::new(name.as_bytes())
@@ -55,6 +62,7 @@ impl Info {
 		self
 	}
 
+	/// Marks that validation is enabled or disabled for the logical device.
 	pub fn set_validation_enabled(self, enabled: bool) -> Self {
 		if enabled {
 			self.add_layer("VK_LAYER_KHRONOS_validation")
@@ -63,6 +71,7 @@ impl Info {
 		}
 	}
 
+	/// Ensures that the created device contains a given queue family so transfer queues can be created for it.
 	pub fn add_queue(mut self, queue: DeviceQueue) -> Self {
 		self.queues.push(
 			erupt::vk::DeviceQueueCreateInfoBuilder::new()
@@ -73,13 +82,15 @@ impl Info {
 		self
 	}
 
+	/// Creates the [`Logical Device`](logical::Device) vulkan object using the provided information.
+	/// Consumes the info object data.
 	pub fn create_object(
 		&mut self,
 		instance: &Instance,
 		physical_device: &physical::Device,
 	) -> logical::Device {
 		let info = self.to_vk();
-		logical::Device::new(
+		logical::Device::from(
 			erupt::DeviceLoader::new(&instance.unwrap(), *physical_device.unwrap(), &info, None)
 				.unwrap(),
 		)
@@ -87,6 +98,8 @@ impl Info {
 }
 
 impl VulkanInfo<erupt::vk::DeviceCreateInfo> for Info {
+	/// Converts the [`Info`] into the [`erupt::vk::DeviceCreateInfo`] struct
+	/// used to create a [`logical::Device`].
 	fn to_vk(&mut self) -> erupt::vk::DeviceCreateInfo {
 		self.extension_names_raw = self
 			.extension_names

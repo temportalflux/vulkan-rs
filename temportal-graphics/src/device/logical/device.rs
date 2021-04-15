@@ -1,18 +1,23 @@
 use crate::utility::VulkanObject;
 use erupt;
 
+/// A wrapper for a [`Vulkan LogicalDevice`](erupt::DeviceLoader),
+/// which can send logical commands to the hardware.
 pub struct Device {
 	_internal: erupt::DeviceLoader,
 }
 
 impl Device {
-	pub fn new(internal: erupt::DeviceLoader) -> Device {
+	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
+	pub fn from(internal: erupt::DeviceLoader) -> Device {
 		Device {
 			_internal: internal,
 		}
 	}
 }
 
+/// A trait exposing the internal value for the wrapped [`erupt::DeviceLoader`].
+/// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<erupt::DeviceLoader> for Device {
 	fn unwrap(&self) -> &erupt::DeviceLoader {
 		&self._internal
@@ -22,6 +27,7 @@ impl VulkanObject<erupt::DeviceLoader> for Device {
 	}
 }
 
+#[doc(hidden)]
 impl Device {
 	pub fn create_swapchain(
 		&self,

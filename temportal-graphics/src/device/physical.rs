@@ -14,6 +14,8 @@ struct QueueFamily {
 	supports_surface: bool,
 }
 
+/// The wrapper for [`Vulkan PhysicalDevice`](erupt::vk::PhysicalDevice) objects.
+/// Represents a literal GPU.
 pub struct Device {
 	_internal: erupt::vk::PhysicalDevice,
 
@@ -28,7 +30,9 @@ pub struct Device {
 }
 
 impl Device {
-	pub fn new(
+	
+	/// The internal constructor. Users should use [`Instance.find_physical_device`](../../instance/struct.Instance.html#method.find_physical_device) to create a vulkan instance.
+	pub fn from(
 		instance: &Instance,
 		vk: erupt::vk::PhysicalDevice,
 		surface: &erupt::vk::SurfaceKHR,
@@ -67,10 +71,12 @@ impl Device {
 		}
 	}
 
+	/// Returns the kind of graphics processor unit this is (i.e. dedicated, integrated, etc).
 	pub fn device_type(&self) -> physical::Kind {
 		self.properties.device_type
 	}
 
+	/// Returns the descriptive name of the device (i.e. "GeForce RTX 2070").
 	pub fn name(&self) -> String {
 		unsafe { std::ffi::CStr::from_ptr(&self.properties.device_name as *const i8) }
 			.to_owned()
@@ -78,14 +84,17 @@ impl Device {
 			.unwrap()
 	}
 
+	/// Returns the stringified (i.e. `major.minor.patch`) representation of the devices's api version.
 	pub fn api_version(&self) -> String {
 		utility::as_version_string(&self.properties.api_version)
 	}
 
+	/// Returns the stringified (i.e. `major.minor.patch`) representation of the devices's driver version.
 	pub fn driver_version(&self) -> String {
 		utility::as_version_string(&self.properties.driver_version)
 	}
 
+	/// Returns an optional index representing a queue family which supports specific flags and possibly the surface.
 	pub fn get_queue_index(&self, flags: QueueFlags, requires_surface: bool) -> Option<usize> {
 		match self.queue_families.iter().find(|family| {
 			family.properties.queue_flags.contains(flags)
@@ -96,24 +105,17 @@ impl Device {
 		}
 	}
 
-	pub fn contains_all_surface_constraints(&self, constraints: &SurfaceConstraint) -> bool {
-		// the constraints which are not fullfilled after surface_formats is scanned
-		let mut leftover_constraints = constraints.clone();
+	#[doc(hidden)]
+	fn contains_all_surface_constraints(&self, format: Format, color_space: ColorSpace) -> bool {
 		for supported_format in self.surface_formats.iter() {
-			// For each format supported by the device, remove the format from the constraints (if it is in there).
-			// Its fine if the format does not exist in the constraints, that just means the device supports more formats than the user requires.
-			leftover_constraints
-				.formats
-				.retain(|fmt| *fmt != supported_format.format);
-			// Also remove the supportted color space format for the same reasons
-			leftover_constraints
-				.color_spaces
-				.retain(|fmt| *fmt != supported_format.color_space);
+			if supported_format.format == format && supported_format.color_space == color_space {
+				return true;
+			}
 		}
-		// The device supports all required constraints if the leftover_constraints are empty
-		leftover_constraints.formats.is_empty() && leftover_constraints.color_spaces.is_empty()
+		false
 	}
 
+	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](../swapchain/struct.Swapchain.html).
 	pub fn image_count_range(&self) -> std::ops::Range<u32> {
 		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
 	}
@@ -127,6 +129,8 @@ impl Device {
 	}
 }
 
+/// A trait exposing the internal value for the wrapped [`erupt::vk::PhysicalDevice`].
+/// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<erupt::vk::PhysicalDevice> for Device {
 	fn unwrap(&self) -> &erupt::vk::PhysicalDevice {
 		&self._internal
@@ -154,32 +158,46 @@ impl std::fmt::Display for Device {
 	}
 }
 
-#[derive(Clone, Debug)]
-pub struct SurfaceConstraint {
-	pub formats: Vec<Format>,
-	pub color_spaces: Vec<ColorSpace>,
-}
-
+/// Various properties that a physical device needs
+/// to have or would be beneficial to have for a given application.
 #[derive(Debug, Clone)]
 pub enum Constraint {
+	/// A set of [`QueueFlags`] (and if a surface is required).
+	/// Always required when provided.
 	HasQueueFamily(QueueFlags, /*requires_surface*/ bool),
-	HasSurfaceFormats(SurfaceConstraint),
+	/// A required pair of [`Format`] and [`ColorSpace`].
+	/// Always required when provided.
+	HasSurfaceFormats(Format, ColorSpace),
+	/// An optional or required constraint on a mode of presentation.
+	/// Allows for an optional score. If the score is `None`, the constraint is required.
 	CanPresentWith(PresentMode, /*score*/ Option<u32>),
+	/// An optional or required constraint that the device be of a specific kind.
+	/// Allows for an optional score. If the score is `None`, the constraint is required.
 	IsDeviceType(physical::Kind, /*score*/ Option<u32>),
+	/// The name of a specific device extension.
+	/// Always required when provided.
 	HasExtension(String),
+	/// A collector of constraints which are applied as a group.
+	/// Will check member constraints, until one of them passes. Then stops checking.
+	/// If the second param is true, then if none of the constraints need to be successful
+	/// for the device to be applicable.
 	PrioritizedSet(Vec<Constraint>, /*set_is_optional*/ bool),
 }
 
+#[doc(hidden)]
 impl Device {
+	
 	/// Determines if the device can support all the desired rules/properties.
 	/// Returns `None` if some constraint failed, otherwise returns the score of the support.
 	pub fn score_against_constraints(
 		&mut self,
 		constraints: &Vec<Constraint>,
+		break_on_first_success: bool
 	) -> Result<u32, Constraint> {
 		let mut total_score = 0;
 		for constraint in constraints {
 			total_score += self.score_constraint(&constraint)?;
+			if break_on_first_success { break; }
 		}
 		Ok(total_score)
 	}
@@ -192,8 +210,8 @@ impl Device {
 					None => Err(constraint.clone()),
 				}
 			}
-			Constraint::HasSurfaceFormats(format_constraints) => {
-				if self.contains_all_surface_constraints(format_constraints) {
+			Constraint::HasSurfaceFormats(format, color_space) => {
+				if self.contains_all_surface_constraints(*format, *color_space) {
 					Ok(0)
 				} else {
 					Err(constraint.clone())
@@ -238,7 +256,7 @@ impl Device {
 				}
 			}
 			Constraint::PrioritizedSet(constraint_list, set_is_optional) => {
-				match self.score_against_constraints(constraint_list) {
+				match self.score_against_constraints(constraint_list, true) {
 					Ok(total_score_for_set) => Ok(total_score_for_set),
 					Err(subconstraint) => {
 						if *set_is_optional {

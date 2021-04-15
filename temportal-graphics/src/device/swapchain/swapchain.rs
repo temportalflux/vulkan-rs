@@ -1,4 +1,4 @@
-use crate::{device::logical, Image};
+use crate::{device::logical, Image, utility::VulkanObject};
 use erupt;
 
 pub struct Swapchain {
@@ -16,5 +16,16 @@ impl Swapchain {
 			.into_iter()
 			.map(|image| Image::from(image))
 			.collect()
+	}
+}
+
+/// A trait exposing the internal value for the wrapped [`erupt::vk::SwapchainKHR`].
+/// Crates using `temportal_graphics` should NOT use this.
+impl VulkanObject<erupt::vk::SwapchainKHR> for Swapchain {
+	fn unwrap(&self) -> &erupt::vk::SwapchainKHR {
+		&self._internal
+	}
+	fn unwrap_mut(&mut self) -> &mut erupt::vk::SwapchainKHR {
+		&mut self._internal
 	}
 }

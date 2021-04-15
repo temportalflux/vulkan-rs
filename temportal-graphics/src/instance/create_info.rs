@@ -128,7 +128,7 @@ impl Info {
 		}
 		let create_info = self.to_vk();
 		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
-		instance::Instance::new(instance_loader, self.validation_enabled)
+		instance::Instance::from(instance_loader, self.validation_enabled)
 	}
 }
 

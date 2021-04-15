@@ -1,6 +1,5 @@
 extern crate sdl2;
 extern crate vk_mem;
-
 use erupt;
 
 #[path = "context.rs"]

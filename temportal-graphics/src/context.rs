@@ -1,6 +1,7 @@
 use erupt;
 use std::error::Error;
 
+/// A user-owned singleton which holds data about allocators and api-level availability.
 pub struct Context {
 	pub loader: erupt::DefaultEntryLoader,
 	pub valid_instance_extensions: Vec<String>,
@@ -10,7 +11,16 @@ pub struct Context {
 impl Context {
 	pub fn new() -> Result<Context, Box<dyn Error>> {
 		let loader = erupt::EntryLoader::new()?;
+		let valid_instance_extensions = Context::get_instance_extensions(&loader);
+		let valid_instance_layers = Context::get_instance_layers(&loader);
+		Ok(Context {
+			loader,
+			valid_instance_extensions,
+			valid_instance_layers,
+		})
+	}
 
+	fn get_instance_extensions(loader: &erupt::DefaultEntryLoader) -> Vec<String> {
 		let mut valid_instance_extensions: Vec<String> = Vec::new();
 		unsafe {
 			let ext_props = loader
@@ -26,7 +36,10 @@ impl Context {
 				);
 			}
 		}
+		valid_instance_extensions
+	}
 
+	fn get_instance_layers<T>(loader: &erupt::EntryLoader<T>) -> Vec<String> {
 		let mut valid_instance_layers: Vec<String> = Vec::new();
 		unsafe {
 			let layer_props = loader.enumerate_instance_layer_properties(None).unwrap();
@@ -40,13 +53,10 @@ impl Context {
 				);
 			}
 		}
-		Ok(Context {
-			loader,
-			valid_instance_extensions,
-			valid_instance_layers,
-		})
+		valid_instance_layers
 	}
 
+	///! Returns true if the provided layer name is in the list of valid layers for the vulkan instance.
 	pub fn is_valid_instance_layer(&self, name: &String) -> bool {
 		self.valid_instance_layers.contains(&name)
 	}

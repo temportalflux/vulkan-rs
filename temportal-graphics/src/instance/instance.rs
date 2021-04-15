@@ -3,13 +3,16 @@ use raw_window_handle;
 
 use crate::{device::physical, general::Surface, utility::VulkanObject};
 
+/// A user-owned singleton for the [`Vulkan Instance`](erupt::InstanceLoader)
 pub struct Instance {
 	internal: erupt::InstanceLoader,
 	debug_messenger: Option<erupt::extensions::ext_debug_utils::DebugUtilsMessengerEXT>,
 }
 
 impl Instance {
-	pub fn new(
+
+	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
+	pub fn from(
 		internal: erupt::InstanceLoader,
 		enable_validation: bool,
 	) -> Result<Instance, Box<dyn std::error::Error>> {
@@ -44,12 +47,14 @@ impl Instance {
 		Ok(instance)
 	}
 
+	/// Creates a vulkan [`Surface`] using a window handle the user provides.
 	pub fn create_surface(&self, handle: &impl raw_window_handle::HasRawWindowHandle) -> Surface {
 		Surface::from(
 			unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap(),
 		)
 	}
 
+	/// Searches for an applicable [`Device`](../device/physical/struct.Device.html) that fits the provided constraints and surface.
 	pub fn find_physical_device(
 		&self,
 		constraints: &Vec<physical::Constraint>,
@@ -59,10 +64,10 @@ impl Instance {
 			.unwrap()
 			.into_iter()
 			.map(|vk_physical_device| {
-				physical::Device::new(self, vk_physical_device, &surface.unwrap())
+				physical::Device::from(self, vk_physical_device, &surface.unwrap())
 			})
 			.map(|mut physical_device| {
-				match physical_device.score_against_constraints(&constraints) {
+				match physical_device.score_against_constraints(&constraints, false) {
 					Ok(score) => (physical_device, score, None),
 					Err(failed_constraint) => (physical_device, 0, Some(failed_constraint)),
 				}
@@ -78,6 +83,8 @@ impl Instance {
 	}
 }
 
+/// A trait exposing the internal value for the wrapped [`erupt::InstanceLoader`].
+/// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<erupt::InstanceLoader> for Instance {
 	fn unwrap(&self) -> &erupt::InstanceLoader {
 		&self.internal
@@ -87,7 +94,9 @@ impl VulkanObject<erupt::InstanceLoader> for Instance {
 	}
 }
 
+#[doc(hidden)]
 impl Instance {
+
 	pub fn get_physical_device_properties(
 		&self,
 		device: &erupt::vk::PhysicalDevice,
@@ -170,6 +179,7 @@ impl Instance {
 	}
 }
 
+#[doc(hidden)]
 unsafe extern "system" fn debug_callback(
 	_message_severity: erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT,
 	_message_types: erupt::vk::DebugUtilsMessageTypeFlagsEXT,
