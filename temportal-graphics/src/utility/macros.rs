@@ -3,7 +3,11 @@ use erupt;
 pub type CStrPtr = *const ::std::os::raw::c_char;
 
 pub fn to_cstr_ptr(name: &String) -> CStrPtr {
-	name.as_str() as *const str as CStrPtr
+	to_cstr(name.as_str())
+}
+
+pub fn to_cstr(name: &str) -> CStrPtr {
+	name as *const str as CStrPtr
 }
 
 pub fn make_version(major: u32, minor: u32, patch: u32) -> u32 {

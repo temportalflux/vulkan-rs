@@ -12,6 +12,7 @@ pub mod flags {
 	pub use erupt::vk::ImageViewType;
 	pub use erupt::vk::PresentModeKHR as PresentMode;
 	pub use erupt::vk::QueueFlags;
+	pub use erupt::vk::ShaderStageFlagBits as ShaderStageKind;
 	pub use erupt::vk::SharingMode;
 	pub use erupt::vk::SurfaceTransformFlagBitsKHR as SurfaceTransform;
 }
@@ -47,6 +48,8 @@ pub mod device;
 #[path = "utility/lib.rs"]
 pub mod utility;
 
-#[path = "shader/shader.rs"]
-mod shader;
-pub use shader::*;
+#[path = "shader/lib.rs"]
+pub mod shader;
+
+#[path = "pipeline/lib.rs"]
+pub mod pipeline;
