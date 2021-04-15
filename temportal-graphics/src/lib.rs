@@ -8,14 +8,15 @@ mod context;
 pub mod device;
 #[path = "general/lib.rs"]
 pub mod general;
+pub use general::AppInfo;
 #[path = "instance/lib.rs"]
 pub mod instance;
 #[path = "utility/lib.rs"]
 pub mod utility;
 
-#[path = "image.rs"]
-mod image;
-pub use image::Image;
+#[path = "object/lib.rs"]
+mod object;
+pub use object::*;
 
 pub use context::Context;
 pub use erupt::vk::ColorSpaceKHR as ColorSpace;
@@ -27,4 +28,3 @@ pub use erupt::vk::PresentModeKHR as PresentMode;
 pub use erupt::vk::QueueFlags;
 pub use erupt::vk::SharingMode;
 pub use erupt::vk::SurfaceTransformFlagBitsKHR as SurfaceTransform;
-pub use general::AppInfo;

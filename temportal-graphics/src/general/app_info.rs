@@ -1,4 +1,7 @@
-use crate::{context::Context, utility::{self, VulkanInfo}};
+use crate::{
+	context::Context,
+	utility::{self, VulkanInfo},
+};
 
 /// Information about the engine and the application using Vulkan.
 #[derive(Debug, Clone, Default)]
@@ -15,9 +18,8 @@ pub struct AppInfo {
 }
 
 impl AppInfo {
-
 	/// Creates an application info struct based on the current context.
-	/// 
+	///
 	/// # Examples
 	/// ```
 	/// use temportal_graphics::{Context, AppInfo};
@@ -81,7 +83,6 @@ impl AppInfo {
 			self.app_version()
 		)
 	}
-
 }
 
 impl VulkanInfo<erupt::vk::ApplicationInfo> for AppInfo {

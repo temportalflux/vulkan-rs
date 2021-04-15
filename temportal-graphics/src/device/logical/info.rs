@@ -24,7 +24,6 @@ pub struct Info {
 }
 
 impl Info {
-
 	/// User-called constructor to put together the relevant constraints and information.
 	pub fn new() -> Info {
 		Info {

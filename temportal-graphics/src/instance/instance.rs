@@ -10,7 +10,6 @@ pub struct Instance {
 }
 
 impl Instance {
-
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
 	pub fn from(
 		internal: erupt::InstanceLoader,
@@ -96,7 +95,6 @@ impl VulkanObject<erupt::InstanceLoader> for Instance {
 
 #[doc(hidden)]
 impl Instance {
-
 	pub fn get_physical_device_properties(
 		&self,
 		device: &erupt::vk::PhysicalDevice,

@@ -1,4 +1,4 @@
-use crate::{device::logical, Image, utility::VulkanObject};
+use crate::{device::logical, image::Image, utility::VulkanObject};
 use erupt;
 
 pub struct Swapchain {

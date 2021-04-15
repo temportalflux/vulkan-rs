@@ -30,7 +30,6 @@ pub struct Device {
 }
 
 impl Device {
-	
 	/// The internal constructor. Users should use [`Instance.find_physical_device`](../../instance/struct.Instance.html#method.find_physical_device) to create a vulkan instance.
 	pub fn from(
 		instance: &Instance,
@@ -186,18 +185,19 @@ pub enum Constraint {
 
 #[doc(hidden)]
 impl Device {
-	
 	/// Determines if the device can support all the desired rules/properties.
 	/// Returns `None` if some constraint failed, otherwise returns the score of the support.
 	pub fn score_against_constraints(
 		&mut self,
 		constraints: &Vec<Constraint>,
-		break_on_first_success: bool
+		break_on_first_success: bool,
 	) -> Result<u32, Constraint> {
 		let mut total_score = 0;
 		for constraint in constraints {
 			total_score += self.score_constraint(&constraint)?;
-			if break_on_first_success { break; }
+			if break_on_first_success {
+				break;
+			}
 		}
 		Ok(total_score)
 	}

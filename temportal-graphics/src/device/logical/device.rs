@@ -42,4 +42,9 @@ impl Device {
 	) -> Vec<erupt::vk::Image> {
 		unsafe { self._internal.get_swapchain_images_khr(*swapchain, None) }.unwrap()
 	}
+
+	pub fn create_image_view(&self, info: erupt::vk::ImageViewCreateInfo) -> erupt::vk::ImageView {
+		unsafe { self._internal.create_image_view(&info, None, None) }.unwrap()
+	}
+
 }
