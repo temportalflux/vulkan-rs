@@ -1,4 +1,3 @@
-
 /// Image-related structs (for storing, editting, and viewing textures or render-pass results on the GPU).
 #[path = "image/lib.rs"]
 pub mod image;

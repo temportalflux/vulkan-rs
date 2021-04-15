@@ -96,7 +96,7 @@ impl Info {
 		None
 	}
 
-	/// Sets the window 
+	/// Sets the window
 	pub fn set_window(
 		mut self,
 		window_handle: &impl raw_window_handle::HasRawWindowHandle,

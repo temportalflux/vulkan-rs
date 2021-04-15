@@ -8,7 +8,6 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-
 	/// The internal constructor. Users should use [`create_object`](crate::device::swapchain::Info::create_object) to create a surface.
 	pub fn from(_internal: erupt::vk::SwapchainKHR) -> Swapchain {
 		Swapchain { _internal }

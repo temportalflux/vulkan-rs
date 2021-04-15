@@ -1,18 +1,13 @@
+use crate::{device::logical, image, utility::VulkanInfo};
 use erupt;
-use crate::{utility::VulkanInfo, image, device::logical};
 
-pub struct ViewInfo {
+pub struct ViewInfo {}
 
-}
-
-impl ViewInfo {
-
-}
+impl ViewInfo {}
 
 impl VulkanInfo<erupt::vk::ImageViewCreateInfo> for ViewInfo {
 	fn to_vk(&mut self) -> erupt::vk::ImageViewCreateInfo {
-		erupt::vk::ImageViewCreateInfoBuilder::new()
-			.build()
+		erupt::vk::ImageViewCreateInfoBuilder::new().build()
 	}
 }
 

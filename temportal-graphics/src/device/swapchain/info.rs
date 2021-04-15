@@ -1,9 +1,12 @@
 use crate::{
 	device::{logical, swapchain::*},
+	flags::{
+		ColorSpace, CompositeAlpha, Format, ImageUsageFlags, PresentMode, SharingMode,
+		SurfaceTransform,
+	},
 	general::Surface,
+	structs::Extent2D,
 	utility::VulkanObject,
-	ColorSpace, CompositeAlpha, Extent2D, Format, ImageUsageFlags, PresentMode, SharingMode,
-	SurfaceTransform,
 };
 use erupt;
 use temportal_math::Vector;

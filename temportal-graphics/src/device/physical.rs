@@ -1,8 +1,9 @@
 use crate::{
 	device::physical,
+	flags::{ColorSpace, Format, PresentMode, QueueFlags, SurfaceTransform},
 	instance::Instance,
+	structs::Extent2D,
 	utility::{self, VulkanObject},
-	ColorSpace, Extent2D, Format, PresentMode, QueueFlags, SurfaceTransform,
 };
 use std::collections::hash_map::HashMap;
 

@@ -1,4 +1,3 @@
-
 /// Physical device related structs (for know about hardware).
 #[path = "physical.rs"]
 pub mod physical;

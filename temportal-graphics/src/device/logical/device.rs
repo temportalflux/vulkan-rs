@@ -46,5 +46,4 @@ impl Device {
 	pub fn create_image_view(&self, info: erupt::vk::ImageViewCreateInfo) -> erupt::vk::ImageView {
 		unsafe { self._internal.create_image_view(&info, None, None) }.unwrap()
 	}
-
 }

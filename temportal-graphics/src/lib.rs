@@ -1,15 +1,22 @@
 extern crate sdl2;
 extern crate vk_mem;
 
-pub use erupt::vk::ColorSpaceKHR as ColorSpace;
-pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
-pub use erupt::vk::Extent2D;
-pub use erupt::vk::Format;
-pub use erupt::vk::ImageUsageFlags;
-pub use erupt::vk::PresentModeKHR as PresentMode;
-pub use erupt::vk::QueueFlags;
-pub use erupt::vk::SharingMode;
-pub use erupt::vk::SurfaceTransformFlagBitsKHR as SurfaceTransform;
+/// Various forwarded/exposed enumerations from Vulkan/Erupt
+pub mod flags {
+	pub use erupt::vk::ColorSpaceKHR as ColorSpace;
+	pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
+	pub use erupt::vk::Format;
+	pub use erupt::vk::ImageUsageFlags;
+	pub use erupt::vk::PresentModeKHR as PresentMode;
+	pub use erupt::vk::QueueFlags;
+	pub use erupt::vk::SharingMode;
+	pub use erupt::vk::SurfaceTransformFlagBitsKHR as SurfaceTransform;
+}
+
+/// Various forwarded/exposed structures from Vulkan/Erupt
+pub mod structs {
+	pub use erupt::vk::Extent2D;
+}
 
 #[path = "context.rs"]
 mod context;
