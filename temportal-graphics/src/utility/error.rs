@@ -17,14 +17,7 @@ impl std::fmt::Display for Error {
 	}
 }
 
-impl std::error::Error for Error {
-	fn description(&self) -> &str {
-		match *self {
-			Error::InvalidInstanceLayer(ref layer_name) => layer_name.as_str(),
-			Error::VulkanError(ref vk_result) => vk_result.description(),
-		}
-	}
-}
+impl std::error::Error for Error {}
 
 pub fn as_vulkan_error<T>(erupt_result: erupt::utils::VulkanResult<T>) -> Result<T, Error> {
 	match erupt_result.result() {

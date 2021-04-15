@@ -24,6 +24,7 @@ pub fn as_version_string(version: &u32) -> String {
 }
 
 #[macro_export]
+#[doc(hidden)]
 macro_rules! into_builders {
 	($a:expr) => {
 		&$a.iter()
