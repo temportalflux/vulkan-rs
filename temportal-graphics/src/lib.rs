@@ -4,9 +4,12 @@ extern crate vk_mem;
 /// Various forwarded/exposed enumerations from Vulkan/Erupt
 pub mod flags {
 	pub use erupt::vk::ColorSpaceKHR as ColorSpace;
+	pub use erupt::vk::ComponentSwizzle;
 	pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
 	pub use erupt::vk::Format;
+	pub use erupt::vk::ImageAspectFlags as ImageAspect;
 	pub use erupt::vk::ImageUsageFlags;
+	pub use erupt::vk::ImageViewType;
 	pub use erupt::vk::PresentModeKHR as PresentMode;
 	pub use erupt::vk::QueueFlags;
 	pub use erupt::vk::SharingMode;
@@ -15,7 +18,9 @@ pub mod flags {
 
 /// Various forwarded/exposed structures from Vulkan/Erupt
 pub mod structs {
+	pub use erupt::vk::ComponentMapping;
 	pub use erupt::vk::Extent2D;
+	pub use erupt::vk::ImageSubresourceRange;
 }
 
 #[path = "context.rs"]
