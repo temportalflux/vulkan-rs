@@ -6,7 +6,7 @@ use crate::{
 	},
 	general::Surface,
 	structs::Extent2D,
-	utility::VulkanObject,
+	utility::{self, VulkanObject},
 };
 use erupt;
 use temportal_math::Vector;
@@ -104,8 +104,12 @@ impl Info {
 		self
 	}
 
-	pub fn create_object(&mut self, device: &logical::Device, surface: &Surface) -> Swapchain {
-		Swapchain::from(
+	pub fn create_object(
+		&mut self,
+		device: &logical::Device,
+		surface: &Surface,
+	) -> Result<Swapchain, utility::Error> {
+		Ok(Swapchain::from(
 			device.create_swapchain(
 				erupt::vk::SwapchainCreateInfoKHRBuilder::new()
 					.surface(*surface.unwrap())
@@ -122,7 +126,7 @@ impl Info {
 					.clipped(self.is_clipped)
 					.old_swapchain(erupt::vk::SwapchainKHR::null())
 					.build(),
-			),
-		)
+			)?,
+		))
 	}
 }

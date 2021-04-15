@@ -1,4 +1,4 @@
-use crate::utility::VulkanObject;
+use crate::utility;
 use erupt;
 
 /// A wrapper for a [`Vulkan LogicalDevice`](erupt::DeviceLoader),
@@ -18,7 +18,7 @@ impl Device {
 
 /// A trait exposing the internal value for the wrapped [`erupt::DeviceLoader`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::DeviceLoader> for Device {
+impl utility::VulkanObject<erupt::DeviceLoader> for Device {
 	fn unwrap(&self) -> &erupt::DeviceLoader {
 		&self._internal
 	}
@@ -32,36 +32,40 @@ impl Device {
 	pub fn create_swapchain(
 		&self,
 		info: erupt::vk::SwapchainCreateInfoKHR,
-	) -> erupt::vk::SwapchainKHR {
-		unsafe { self._internal.create_swapchain_khr(&info, None, None) }.unwrap()
+	) -> Result<erupt::vk::SwapchainKHR, utility::Error> {
+		utility::as_vulkan_error(unsafe { self._internal.create_swapchain_khr(&info, None, None) })
 	}
 
 	pub fn get_swapchain_images(
 		&self,
 		swapchain: &erupt::vk::SwapchainKHR,
-	) -> Vec<erupt::vk::Image> {
-		unsafe { self._internal.get_swapchain_images_khr(*swapchain, None) }.unwrap()
+	) -> Result<Vec<erupt::vk::Image>, utility::Error> {
+		utility::as_vulkan_error(unsafe {
+			self._internal.get_swapchain_images_khr(*swapchain, None)
+		})
 	}
 
-	pub fn create_image_view(&self, info: erupt::vk::ImageViewCreateInfo) -> erupt::vk::ImageView {
-		unsafe { self._internal.create_image_view(&info, None, None) }.unwrap()
+	pub fn create_image_view(
+		&self,
+		info: erupt::vk::ImageViewCreateInfo,
+	) -> Result<erupt::vk::ImageView, utility::Error> {
+		utility::as_vulkan_error(unsafe { self._internal.create_image_view(&info, None, None) })
 	}
 
 	pub fn create_shader_module(
 		&self,
 		info: erupt::vk::ShaderModuleCreateInfo,
-	) -> erupt::vk::ShaderModule {
-		unsafe { self._internal.create_shader_module(&info, None, None) }.unwrap()
+	) -> Result<erupt::vk::ShaderModule, utility::Error> {
+		utility::as_vulkan_error(unsafe { self._internal.create_shader_module(&info, None, None) })
 	}
 
 	pub fn create_graphics_pipelines(
 		&self,
 		infos: Vec<erupt::vk::GraphicsPipelineCreateInfoBuilder>,
-	) -> Vec<erupt::vk::Pipeline> {
-		unsafe {
+	) -> Result<Vec<erupt::vk::Pipeline>, utility::Error> {
+		utility::as_vulkan_error(unsafe {
 			self._internal
 				.create_graphics_pipelines(None, &infos[..], None)
-		}
-		.unwrap()
+		})
 	}
 }

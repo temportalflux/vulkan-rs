@@ -17,3 +17,7 @@ pub use viewport::*;
 #[path = "scissor.rs"]
 mod scissor;
 pub use scissor::*;
+
+#[path = "error.rs"]
+mod error;
+pub use error::*;

@@ -126,7 +126,7 @@ impl Info {
 		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
 		println!("Available layers: {:?}", ctx.valid_instance_layers);
 		if let Some(layer) = self.has_invalid_layer(&ctx) {
-			return Result::Err(Box::new(instance::Error::InvalidInstanceLayer(layer)));
+			return Result::Err(Box::new(utility::Error::InvalidInstanceLayer(layer)));
 		}
 		let create_info = self.to_vk();
 		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
@@ -154,28 +154,5 @@ impl utility::VulkanInfoMut<erupt::vk::InstanceCreateInfo> for Info {
 			.enabled_extension_names(&self.extensions_raw)
 			.enabled_layer_names(&self.layers_raw)
 			.build()
-	}
-}
-
-#[derive(Debug)]
-pub enum Error {
-	InvalidInstanceLayer(String),
-}
-
-impl std::fmt::Display for Error {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		match *self {
-			Error::InvalidInstanceLayer(ref layer_name) => {
-				write!(f, "Invalid vulkan instance layer: {}", layer_name)
-			}
-		}
-	}
-}
-
-impl std::error::Error for Error {
-	fn description(&self) -> &str {
-		match *self {
-			Error::InvalidInstanceLayer(ref layer_name) => layer_name.as_str(),
-		}
 	}
 }

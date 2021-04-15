@@ -1,5 +1,9 @@
 use crate::into_builders;
-use crate::{device::logical, pipeline, shader, utility::VulkanInfo};
+use crate::{
+	device::logical,
+	pipeline, shader,
+	utility::{self, VulkanInfo},
+};
 use erupt;
 
 pub struct Info {
@@ -70,9 +74,12 @@ impl VulkanInfo<erupt::vk::GraphicsPipelineCreateInfo> for Info {
 }
 
 impl Info {
-	pub fn create_object(self, device: &logical::Device) -> pipeline::Pipeline {
+	pub fn create_object(
+		self,
+		device: &logical::Device,
+	) -> Result<pipeline::Pipeline, utility::Error> {
 		let info = self.to_vk().into_builder();
-		let pipelines = device.create_graphics_pipelines(vec![info]);
-		pipeline::Pipeline::from(pipelines[0])
+		let pipelines = device.create_graphics_pipelines(vec![info])?;
+		Ok(pipeline::Pipeline::from(pipelines[0]))
 	}
 }

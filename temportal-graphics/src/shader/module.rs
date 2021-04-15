@@ -33,7 +33,7 @@ impl Module {
 			.code(&decoded_bytes)
 			.build();
 		Ok(Module {
-			_internal: device.create_shader_module(info),
+			_internal: device.create_shader_module(info)?,
 			entry_point: std::ffi::CString::default(),
 			kind: ShaderStageKind::VERTEX,
 		})

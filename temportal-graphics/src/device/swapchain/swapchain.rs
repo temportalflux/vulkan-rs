@@ -1,4 +1,4 @@
-use crate::{device::logical, image::Image, utility::VulkanObject};
+use crate::{device::logical, image::Image, utility};
 use erupt;
 
 /// A wrapper struct for [`erupt::vk::SwapchainKHR`] to handle swapping out
@@ -13,18 +13,18 @@ impl Swapchain {
 		Swapchain { _internal }
 	}
 
-	pub fn get_images(&self, device: &logical::Device) -> Vec<Image> {
-		device
-			.get_swapchain_images(&self._internal)
+	pub fn get_images(&self, device: &logical::Device) -> Result<Vec<Image>, utility::Error> {
+		Ok(device
+			.get_swapchain_images(&self._internal)?
 			.into_iter()
 			.map(|image| Image::from(image))
-			.collect()
+			.collect())
 	}
 }
 
 /// A trait exposing the internal value for the wrapped [`erupt::vk::SwapchainKHR`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::SwapchainKHR> for Swapchain {
+impl utility::VulkanObject<erupt::vk::SwapchainKHR> for Swapchain {
 	fn unwrap(&self) -> &erupt::vk::SwapchainKHR {
 		&self._internal
 	}

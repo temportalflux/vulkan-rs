@@ -3,7 +3,7 @@ use crate::{
 	flags::{ComponentSwizzle, Format, ImageViewType},
 	image,
 	structs::{ComponentMapping, ImageSubresourceRange},
-	utility::{VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
 
@@ -65,9 +65,13 @@ impl VulkanInfo<erupt::vk::ImageViewCreateInfo> for ViewInfo {
 
 impl ViewInfo {
 	/// Creates an [`image::View`] object, thereby consuming the info.
-	pub fn create_object(&mut self, device: &logical::Device, image: &image::Image) -> image::View {
+	pub fn create_object(
+		&mut self,
+		device: &logical::Device,
+		image: &image::Image,
+	) -> Result<image::View, utility::Error> {
 		let mut info = self.to_vk();
 		info.image = *image.unwrap() as _;
-		image::View::from(device.create_image_view(info))
+		Ok(image::View::from(device.create_image_view(info)?))
 	}
 }
