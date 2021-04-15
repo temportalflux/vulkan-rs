@@ -53,7 +53,7 @@ impl Instance {
 		)
 	}
 
-	/// Searches for an applicable [`Device`](../device/physical/struct.Device.html) that fits the provided constraints and surface.
+	/// Searches for an applicable [`Device`](crate::device::physical::Device) that fits the provided constraints and surface.
 	pub fn find_physical_device(
 		&self,
 		constraints: &Vec<physical::Constraint>,

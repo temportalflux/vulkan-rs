@@ -1,12 +1,16 @@
 use crate::{device::logical, image::Image, utility::VulkanObject};
 use erupt;
 
+/// A wrapper struct for [`erupt::vk::SwapchainKHR`] to handle swapping out
+/// displayed images on the [`Surface`](crate::Surface).
 pub struct Swapchain {
 	_internal: erupt::vk::SwapchainKHR,
 }
 
 impl Swapchain {
-	pub fn new(_internal: erupt::vk::SwapchainKHR) -> Swapchain {
+
+	/// The internal constructor. Users should use [`create_object`](crate::device::swapchain::Info::create_object) to create a surface.
+	pub fn from(_internal: erupt::vk::SwapchainKHR) -> Swapchain {
 		Swapchain { _internal }
 	}
 

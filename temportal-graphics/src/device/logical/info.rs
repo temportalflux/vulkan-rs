@@ -40,7 +40,7 @@ impl Info {
 
 	/// Adds the name of a device extension that is required for the logical device.
 	/// Users should ensure that this name is present in the constraints passed to
-	/// [`Instance.find_physical_device`](../../instance/struct.Instance.html#method.find_physical_device).
+	/// [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device).
 	pub fn add_extension(mut self, name: &str) -> Self {
 		self.extension_names.push(
 			std::ffi::CString::new(name.as_bytes())

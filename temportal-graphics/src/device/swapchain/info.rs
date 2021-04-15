@@ -102,7 +102,7 @@ impl Info {
 	}
 
 	pub fn create_object(&mut self, device: &logical::Device, surface: &Surface) -> Swapchain {
-		Swapchain::new(
+		Swapchain::from(
 			device.create_swapchain(
 				erupt::vk::SwapchainCreateInfoKHRBuilder::new()
 					.surface(*surface.unwrap())

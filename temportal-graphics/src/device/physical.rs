@@ -30,7 +30,7 @@ pub struct Device {
 }
 
 impl Device {
-	/// The internal constructor. Users should use [`Instance.find_physical_device`](../../instance/struct.Instance.html#method.find_physical_device) to create a vulkan instance.
+	/// The internal constructor. Users should use [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device) to create a vulkan instance.
 	pub fn from(
 		instance: &Instance,
 		vk: erupt::vk::PhysicalDevice,
@@ -114,7 +114,7 @@ impl Device {
 		false
 	}
 
-	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](../swapchain/struct.Swapchain.html).
+	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](crate::device::swapchain::Swapchain).
 	pub fn image_count_range(&self) -> std::ops::Range<u32> {
 		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
 	}
