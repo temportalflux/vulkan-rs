@@ -33,6 +33,8 @@ pub mod structs {
 	pub use erupt::vk::ComponentMapping;
 	pub use erupt::vk::Extent2D;
 	pub use erupt::vk::ImageSubresourceRange;
+	pub use erupt::vk::Offset2D;
+	pub use erupt::vk::Rect2D;
 }
 
 #[path = "context.rs"]

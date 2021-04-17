@@ -261,6 +261,10 @@ impl<T, const N: usize> Vector<T, N>
 where
 	T: Copy,
 {
+	pub fn data(&self) -> &[T; N] {
+		&self.data
+	}
+
 	/// Returns a copy of first-dimensional `x` component.
 	/// Will panic if `N < 1`.
 	///
