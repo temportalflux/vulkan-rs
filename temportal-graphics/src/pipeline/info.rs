@@ -6,6 +6,7 @@ use crate::{
 };
 use erupt;
 
+/// Information used to construct a [`Pipeline`](pipeline::Pipeline).
 pub struct Info {
 	shaders: Vec<erupt::vk::PipelineShaderStageCreateInfo>,
 	vertex_input: erupt::vk::PipelineVertexInputStateCreateInfo,
@@ -16,8 +17,8 @@ pub struct Info {
 	color_blending: pipeline::ColorBlendState,
 }
 
-impl Info {
-	pub fn new() -> Info {
+impl Default for Info {
+	fn default() -> Info {
 		Info {
 			shaders: Vec::new(),
 			vertex_input: erupt::vk::PipelineVertexInputStateCreateInfo::default(),
@@ -25,16 +26,18 @@ impl Info {
 				.topology(erupt::vk::PrimitiveTopology::TRIANGLE_LIST)
 				.primitive_restart_enable(false)
 				.build(),
-			viewport_state: pipeline::ViewportState::new(),
-			rasterization_state: pipeline::RasterizationState::new(),
+			viewport_state: pipeline::ViewportState::default(),
+			rasterization_state: pipeline::RasterizationState::default(),
 			multisampling: erupt::vk::PipelineMultisampleStateCreateInfoBuilder::new()
 				.sample_shading_enable(false)
 				.rasterization_samples(erupt::vk::SampleCountFlagBits::_1)
 				.build(),
-			color_blending: pipeline::ColorBlendState::new(),
+			color_blending: pipeline::ColorBlendState::default(),
 		}
 	}
+}
 
+impl Info {
 	pub fn add_shader(mut self, shader: &shader::Module) -> Self {
 		self.shaders.push(shader.to_vk());
 		self
@@ -57,6 +60,8 @@ impl Info {
 }
 
 impl Info {
+	/// Creates the actual [`Pipeline`](pipeline::Pipeline) object,
+	/// with respect to a specific [`Render Pass`](crate::renderpass::Pass).
 	pub fn create_object(
 		self,
 		device: &logical::Device,

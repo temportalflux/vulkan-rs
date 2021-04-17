@@ -1,18 +1,21 @@
 use crate::utility::{Scissor, Viewport, VulkanInfo};
 
+/// Information about the portion of the viewport a [`Pipeline`](crate::pipeline::Pipeline) should render to.
 pub struct ViewportState {
 	viewports: Vec<erupt::vk::Viewport>,
 	scissors: Vec<erupt::vk::Rect2D>,
 }
 
-impl ViewportState {
-	pub fn new() -> ViewportState {
+impl Default for ViewportState {
+	fn default() -> ViewportState {
 		ViewportState {
 			viewports: Vec::new(),
 			scissors: Vec::new(),
 		}
 	}
+}
 
+impl ViewportState {
 	pub fn add_viewport(mut self, viewport: Viewport) -> Self {
 		self.viewports.push(viewport.into());
 		self

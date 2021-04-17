@@ -40,6 +40,8 @@ impl Info {
 	}
 }
 
+/// Information about a [`Subpass`](renderpass::Subpass) that is dependent on
+/// or is a dependecy of another [`Subpass`](renderpass::Subpass).
 #[derive(Copy, Clone, Debug)]
 pub struct Dependency {
 	subpass_index: Option<usize>,
@@ -68,6 +70,8 @@ impl Dependency {
 }
 
 impl Info {
+	/// Denotes that a given subpass is dependent on some other subpass,
+	/// with the relevant stage and access flags.
 	pub fn add_dependency(&mut self, requirement: Dependency, required_by: Dependency) {
 		self.dependencies.push((requirement, required_by));
 	}

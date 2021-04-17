@@ -59,11 +59,13 @@ pub mod device;
 #[path = "utility/lib.rs"]
 pub mod utility;
 
-#[path = "shader/lib.rs"]
-pub mod shader;
+/// Structs used in the creation or representation of Pipelines and Pipeline Layouts.
+#[path = "pipeline/lib.rs"]
+pub mod pipeline;
 
+/// Structs used in the creation or representation of a Render Pass.
 #[path = "renderpass/lib.rs"]
 pub mod renderpass;
 
-#[path = "pipeline/lib.rs"]
-pub mod pipeline;
+#[path = "shader/lib.rs"]
+pub mod shader;

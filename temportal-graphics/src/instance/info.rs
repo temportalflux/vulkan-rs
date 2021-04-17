@@ -19,8 +19,8 @@ pub struct Info {
 	layers_raw: Vec<utility::CStrPtr>,
 }
 
-impl Info {
-	pub fn new() -> Info {
+impl Default for Info {
+	fn default() -> Info {
 		Info {
 			app_info: AppInfo::default(),
 			extensions: Vec::new(),
@@ -32,7 +32,9 @@ impl Info {
 			layers_raw: Vec::new(),
 		}
 	}
+}
 
+impl Info {
 	/// Set information about the application creating the instance.
 	pub fn set_app_info(mut self, info: AppInfo) -> Self {
 		self.app_info = info;

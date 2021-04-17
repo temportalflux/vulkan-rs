@@ -23,9 +23,8 @@ pub struct Info {
 	features: erupt::vk::PhysicalDeviceFeatures,
 }
 
-impl Info {
-	/// User-called constructor to put together the relevant constraints and information.
-	pub fn new() -> Info {
+impl Default for Info {
+	fn default() -> Info {
 		Info {
 			extension_names: Vec::new(),
 			layer_names: Vec::new(),
@@ -37,7 +36,9 @@ impl Info {
 			features: erupt::vk::PhysicalDeviceFeatures::default(),
 		}
 	}
+}
 
+impl Info {
 	/// Adds the name of a device extension that is required for the logical device.
 	/// Users should ensure that this name is present in the constraints passed to
 	/// [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device).

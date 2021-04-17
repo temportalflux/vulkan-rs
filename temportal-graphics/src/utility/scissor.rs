@@ -1,19 +1,22 @@
 use crate::structs::Extent2D;
 use temportal_math::Vector;
 
+/// A 4-int struct representing a portion of a [`Viewport`](crate::utility::Viewport).
 pub struct Scissor {
 	offset: Vector<i32, 2>,
 	size: Vector<u32, 2>,
 }
 
-impl Scissor {
-	pub fn new() -> Scissor {
+impl Default for Scissor {
+	fn default() -> Scissor {
 		Scissor {
 			offset: Vector::filled(0),
 			size: Vector::filled(0),
 		}
 	}
+}
 
+impl Scissor {
 	pub fn set_size(mut self, extent: Extent2D) -> Self {
 		*self.size.x_mut() = extent.width;
 		*self.size.y_mut() = extent.height;

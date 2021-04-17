@@ -3,12 +3,14 @@ use crate::{
 	utility::VulkanInfo,
 };
 
+/// Bias-information when dealing with depth in a [`Pipeline`](crate::pipeline::Pipeline).
 pub struct DepthBias {
 	constant_factor: f32,
 	clamp: f32,
 	slope_factor: f32,
 }
 
+/// Information about the rasterization of fragments during the execution of a [`Pipeline`](crate::pipeline::Pipeline).
 pub struct RasterizationState {
 	depth_clamp_enabled: bool,
 	depth_bias: Option<DepthBias>,
@@ -19,8 +21,8 @@ pub struct RasterizationState {
 	front_face: FrontFace,
 }
 
-impl RasterizationState {
-	pub fn new() -> RasterizationState {
+impl Default for RasterizationState {
+	fn default() -> RasterizationState {
 		RasterizationState {
 			depth_clamp_enabled: false,
 			depth_bias: None,
@@ -31,7 +33,9 @@ impl RasterizationState {
 			front_face: FrontFace::CLOCKWISE,
 		}
 	}
+}
 
+impl RasterizationState {
 	pub fn set_depth_clamp_enabled(mut self, enabled: bool) -> Self {
 		self.depth_clamp_enabled = enabled;
 		self

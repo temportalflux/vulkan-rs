@@ -11,6 +11,7 @@ use crate::{
 use erupt;
 use temportal_math::Vector;
 
+/// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
 pub struct Info {
 	image_count: u32,
 	image_format: Format,
@@ -25,8 +26,8 @@ pub struct Info {
 	is_clipped: bool,
 }
 
-impl Info {
-	pub fn new() -> Info {
+impl Default for Info {
+	fn default() -> Info {
 		Info {
 			image_count: 0,
 			image_format: Format::UNDEFINED,
@@ -41,7 +42,9 @@ impl Info {
 			is_clipped: true,
 		}
 	}
+}
 
+impl Info {
 	pub fn set_image_count(mut self, count: u32) -> Self {
 		self.image_count = count;
 		self
@@ -104,6 +107,7 @@ impl Info {
 		self
 	}
 
+	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
 	pub fn create_object(
 		&mut self,
 		device: &logical::Device,

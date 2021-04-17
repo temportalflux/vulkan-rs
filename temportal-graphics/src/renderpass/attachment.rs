@@ -2,7 +2,7 @@ use crate::{flags, utility};
 use erupt;
 
 /// The load and store operations that can be performed on an image
-/// that is attached to a ['Render Pass'](crate::renderpass:Pass)
+/// that is attached to a ['Render Pass'](crate::renderpass::Pass)
 /// and its ['Subpasses'](crate::renderpass::Subpass).
 pub struct AttachmentOps {
 	pub load: flags::AttachmentLoadOp,
@@ -18,7 +18,7 @@ impl Default for AttachmentOps {
 	}
 }
 
-/// Information about an image attached to a ['Render Pass'](crate::renderpass:Pass).
+/// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
 /// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
 /// images used for each frame that is shown.
 pub struct Attachment {
@@ -76,8 +76,6 @@ impl Attachment {
 }
 
 impl utility::VulkanInfo<erupt::vk::AttachmentDescription> for Attachment {
-	/// Converts the [`Info`] into the [`erupt::vk::InstanceCreateInfo`] struct
-	/// used to create a [`instance::Instance`].
 	fn to_vk(&self) -> erupt::vk::AttachmentDescription {
 		erupt::vk::AttachmentDescriptionBuilder::new()
 			.format(self.format)

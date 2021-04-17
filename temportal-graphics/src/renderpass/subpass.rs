@@ -1,6 +1,8 @@
 use crate::{flags, utility::VulkanInfo};
 use erupt;
 
+/// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
+/// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
 pub struct Subpass {
 	bind_point: flags::PipelineBindPoint,
 	attachment_refs: Vec<erupt::vk::AttachmentReference>,
