@@ -6,6 +6,8 @@ pub enum Error {
 	VulkanError(erupt::vk::Result),
 }
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 impl std::fmt::Display for Error {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		match *self {
@@ -19,7 +21,7 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn as_vulkan_error<T>(erupt_result: erupt::utils::VulkanResult<T>) -> Result<T, Error> {
+pub fn as_vulkan_error<T>(erupt_result: erupt::utils::VulkanResult<T>) -> Result<T> {
 	match erupt_result.result() {
 		Ok(v) => Ok(v),
 		Err(vk_result) => Err(Error::VulkanError(vk_result)),

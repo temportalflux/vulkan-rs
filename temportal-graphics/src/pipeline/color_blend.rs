@@ -1,8 +1,7 @@
-use crate::into_builders;
-use crate::{flags::ColorComponent, utility::VulkanInfo};
+use crate::{flags::ColorComponent};
 
 pub struct ColorBlendState {
-	attachments: Vec<erupt::vk::PipelineColorBlendAttachmentState>,
+	pub attachments: Vec<erupt::vk::PipelineColorBlendAttachmentState>,
 }
 
 pub struct ColorBlendAttachment {
@@ -24,14 +23,5 @@ impl ColorBlendState {
 				.build(),
 		);
 		self
-	}
-}
-
-impl VulkanInfo<erupt::vk::PipelineColorBlendStateCreateInfo> for ColorBlendState {
-	fn to_vk(&self) -> erupt::vk::PipelineColorBlendStateCreateInfo {
-		erupt::vk::PipelineColorBlendStateCreateInfoBuilder::new()
-			.logic_op_enable(false)
-			.attachments(into_builders!(self.attachments))
-			.build()
 	}
 }

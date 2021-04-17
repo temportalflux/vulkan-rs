@@ -32,14 +32,14 @@ impl Device {
 	pub fn create_swapchain(
 		&self,
 		info: erupt::vk::SwapchainCreateInfoKHR,
-	) -> Result<erupt::vk::SwapchainKHR, utility::Error> {
+	) -> utility::Result<erupt::vk::SwapchainKHR> {
 		utility::as_vulkan_error(unsafe { self._internal.create_swapchain_khr(&info, None, None) })
 	}
 
 	pub fn get_swapchain_images(
 		&self,
 		swapchain: &erupt::vk::SwapchainKHR,
-	) -> Result<Vec<erupt::vk::Image>, utility::Error> {
+	) -> utility::Result<Vec<erupt::vk::Image>> {
 		utility::as_vulkan_error(unsafe {
 			self._internal.get_swapchain_images_khr(*swapchain, None)
 		})
@@ -48,24 +48,36 @@ impl Device {
 	pub fn create_image_view(
 		&self,
 		info: erupt::vk::ImageViewCreateInfo,
-	) -> Result<erupt::vk::ImageView, utility::Error> {
+	) -> utility::Result<erupt::vk::ImageView> {
 		utility::as_vulkan_error(unsafe { self._internal.create_image_view(&info, None, None) })
 	}
 
 	pub fn create_shader_module(
 		&self,
 		info: erupt::vk::ShaderModuleCreateInfo,
-	) -> Result<erupt::vk::ShaderModule, utility::Error> {
+	) -> utility::Result<erupt::vk::ShaderModule> {
 		utility::as_vulkan_error(unsafe { self._internal.create_shader_module(&info, None, None) })
+	}
+
+	pub fn create_pipeline_layout(&self, info: erupt::vk::PipelineLayoutCreateInfo) -> utility::Result<erupt::vk::PipelineLayout> {
+		utility::as_vulkan_error(unsafe {
+			self._internal.create_pipeline_layout(&info, None, None)
+		})
 	}
 
 	pub fn create_graphics_pipelines(
 		&self,
-		infos: Vec<erupt::vk::GraphicsPipelineCreateInfoBuilder>,
-	) -> Result<Vec<erupt::vk::Pipeline>, utility::Error> {
+		infos: &[erupt::vk::GraphicsPipelineCreateInfoBuilder<'_>],
+	) -> utility::Result<Vec<erupt::vk::Pipeline>> {
 		utility::as_vulkan_error(unsafe {
-			self._internal
-				.create_graphics_pipelines(None, &infos[..], None)
+			self._internal.create_graphics_pipelines(None, infos, None)
 		})
 	}
+
+	pub fn create_render_pass(&self, info: erupt::vk::RenderPassCreateInfo) -> utility::Result<erupt::vk::RenderPass> {
+		utility::as_vulkan_error(unsafe {
+			self._internal.create_render_pass(&info, None, None)
+		})
+	}
+
 }
