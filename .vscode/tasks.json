@@ -1,0 +1,65 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Compile",
+			"command": "cargo",
+			"args": [
+				"build"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Format",
+			"command": "cargo",
+			"args": [
+				"fmt"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Generate Docs",
+			"command": "cargo",
+			"args": [
+				"doc"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Tests",
+			"command": "cargo",
+			"args": [
+				"test"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Demo",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--",
+				"-v"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Build Demo",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--",
+				"-b"
+			],
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

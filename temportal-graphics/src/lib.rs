@@ -3,6 +3,9 @@ extern crate vk_mem;
 
 /// Various forwarded/exposed enumerations from Vulkan/Erupt
 pub mod flags {
+	pub use erupt::vk::AccessFlags as Access;
+	pub use erupt::vk::AttachmentLoadOp;
+	pub use erupt::vk::AttachmentStoreOp;
 	pub use erupt::vk::ColorComponentFlags as ColorComponent;
 	pub use erupt::vk::ColorSpaceKHR as ColorSpace;
 	pub use erupt::vk::ComponentSwizzle;
@@ -11,11 +14,15 @@ pub mod flags {
 	pub use erupt::vk::Format;
 	pub use erupt::vk::FrontFace;
 	pub use erupt::vk::ImageAspectFlags as ImageAspect;
+	pub use erupt::vk::ImageLayout;
 	pub use erupt::vk::ImageUsageFlags;
 	pub use erupt::vk::ImageViewType;
+	pub use erupt::vk::PipelineBindPoint;
+	pub use erupt::vk::PipelineStageFlags as PipelineStage;
 	pub use erupt::vk::PolygonMode;
 	pub use erupt::vk::PresentModeKHR as PresentMode;
 	pub use erupt::vk::QueueFlags;
+	pub use erupt::vk::SampleCountFlagBits as SampleCount;
 	pub use erupt::vk::ShaderStageFlagBits as ShaderStageKind;
 	pub use erupt::vk::SharingMode;
 	pub use erupt::vk::SurfaceTransformFlagBitsKHR as SurfaceTransform;
@@ -54,6 +61,9 @@ pub mod utility;
 
 #[path = "shader/lib.rs"]
 pub mod shader;
+
+#[path = "renderpass/lib.rs"]
+pub mod renderpass;
 
 #[path = "pipeline/lib.rs"]
 pub mod pipeline;

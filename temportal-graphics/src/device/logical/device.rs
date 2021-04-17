@@ -59,7 +59,10 @@ impl Device {
 		utility::as_vulkan_error(unsafe { self._internal.create_shader_module(&info, None, None) })
 	}
 
-	pub fn create_pipeline_layout(&self, info: erupt::vk::PipelineLayoutCreateInfo) -> utility::Result<erupt::vk::PipelineLayout> {
+	pub fn create_pipeline_layout(
+		&self,
+		info: erupt::vk::PipelineLayoutCreateInfo,
+	) -> utility::Result<erupt::vk::PipelineLayout> {
 		utility::as_vulkan_error(unsafe {
 			self._internal.create_pipeline_layout(&info, None, None)
 		})
@@ -74,10 +77,10 @@ impl Device {
 		})
 	}
 
-	pub fn create_render_pass(&self, info: erupt::vk::RenderPassCreateInfo) -> utility::Result<erupt::vk::RenderPass> {
-		utility::as_vulkan_error(unsafe {
-			self._internal.create_render_pass(&info, None, None)
-		})
+	pub fn create_render_pass(
+		&self,
+		info: erupt::vk::RenderPassCreateInfo,
+	) -> utility::Result<erupt::vk::RenderPass> {
+		utility::as_vulkan_error(unsafe { self._internal.create_render_pass(&info, None, None) })
 	}
-
 }

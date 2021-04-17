@@ -1,4 +1,4 @@
-use crate::{flags::ColorComponent};
+use crate::flags::ColorComponent;
 
 pub struct ColorBlendState {
 	pub attachments: Vec<erupt::vk::PipelineColorBlendAttachmentState>,
