@@ -47,6 +47,10 @@ pub use general::*;
 mod object;
 pub use object::*;
 
+/// Instruction related structs.
+#[path = "command/lib.rs"]
+pub mod command;
+
 /// Vulkan Instance related structs.
 #[path = "instance/lib.rs"]
 pub mod instance;

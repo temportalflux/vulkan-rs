@@ -83,4 +83,11 @@ impl Device {
 	) -> utility::Result<erupt::vk::RenderPass> {
 		utility::as_vulkan_error(unsafe { self._internal.create_render_pass(&info, None, None) })
 	}
+
+	pub fn create_framebuffer(
+		&self,
+		info: erupt::vk::FramebufferCreateInfo,
+	) -> utility::Result<erupt::vk::Framebuffer> {
+		utility::as_vulkan_error(unsafe { self._internal.create_framebuffer(&info, None, None) })
+	}
 }
