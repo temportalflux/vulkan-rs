@@ -1,6 +1,13 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+	cell::RefCell,
+	rc::Rc,
+};
 use temportal_engine::{self, display, Engine};
 use temportal_graphics::{device::physical, flags, renderpass};
+
+#[path = "render/TriangleRenderer.rs"]
+mod renderer;
+use renderer::TriangleRenderer;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = crate_engine()?;
@@ -13,6 +20,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let mut display = Engine::create_display_manager(&engine)?;
 	let mut window = create_window(&mut display, "Triangle Demo", 800, 600)?;
+
+	let renderer = Rc::new(RefCell::new(TriangleRenderer::new()));
+	let renderer_weak = Rc::downgrade(&renderer);
+	window
+		.borrow_mut()
+		.add_render_chain_element(renderer_weak.clone());
+	window
+		.borrow_mut()
+		.add_command_recorder(renderer_weak.clone());
+
+	window.borrow_mut().create_render_chain()?;
 
 	temportal_engine::run(
 		&engine,
@@ -42,7 +60,6 @@ fn create_window(
 		mut_window.find_physical_device(&mut vulkan_device_constraints())?;
 		mut_window.create_logical()?;
 		mut_window.create_render_pass(create_render_pass_info())?;
-		mut_window.create_render_chain()?;
 	}
 	Ok(window)
 }
