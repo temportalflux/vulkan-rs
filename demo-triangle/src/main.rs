@@ -1,41 +1,48 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 use temportal_engine::{self, display, Engine};
 use temportal_graphics::{device::physical, flags};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = crate_engine()?;
-	if engine.is_build_instance() {
-		return engine.build();
+	{
+		let engine_mut = engine.borrow_mut();
+		if engine_mut.is_build_instance() {
+			return engine_mut.build();
+		}
 	}
 
-	let display = Engine::create_display_manager(&engine)?;
-	let mut window = create_window(&display, "Triangle Demo", 800, 600)?;
+	let mut display = Engine::create_display_manager(&engine)?;
+	let mut window = create_window(&mut display, "Triangle Demo", 800, 600)?;
 
 	temportal_engine::run(
-		&display,
+		&engine,
+		&mut display,
 		&mut window,
 		include_bytes!("triangle.vert.spirv").to_vec(),
 		include_bytes!("triangle.frag.spirv").to_vec(),
 	)
 }
 
-fn crate_engine() -> Result<Rc<Engine>, Box<dyn std::error::Error>> {
-	let mut engine = temportal_engine::init()?
+fn crate_engine() -> Result<Rc<RefCell<Engine>>, Box<dyn std::error::Error>> {
+	let mut engine = Engine::new()?
 		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
 	engine.build_assets_callback = Some(build_assets);
-	Ok(Rc::new(engine))
+	Ok(Rc::new(RefCell::new(engine)))
 }
 
 fn create_window(
-	display: &display::Manager,
+	display: &mut display::Manager,
 	name: &str,
 	width: u32,
 	height: u32,
-) -> Result<display::Window, Box<dyn std::error::Error>> {
-	let mut window = display.create_window(name, width, height)?;
-	window.find_physical_device(&mut vulkan_device_constraints())?;
-	window.create_logical()?;
-	window.create_render_chain()?;
+) -> Result<Rc<RefCell<display::Window>>, Box<dyn std::error::Error>> {
+	let window = display.create_window(name, width, height)?;
+	{
+		let mut mut_window = window.borrow_mut();
+		mut_window.find_physical_device(&mut vulkan_device_constraints())?;
+		mut_window.create_logical()?;
+		mut_window.create_render_chain()?;
+	}
 	Ok(window)
 }
 
