@@ -120,18 +120,25 @@ impl Info {
 	}
 
 	/// Creates the vulkan instance object, thereby consuming the info.
-	pub fn create_object(
-		mut self,
-		ctx: &Context,
-	) -> Result<instance::Instance, Box<dyn std::error::Error>> {
+	pub fn create_object(mut self, ctx: &Context) -> utility::Result<instance::Instance> {
 		println!("Initializing {}", self.description());
 		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
 		println!("Available layers: {:?}", ctx.valid_instance_layers);
 		if let Some(layer) = self.has_invalid_layer(&ctx) {
-			return Result::Err(Box::new(utility::Error::InvalidInstanceLayer(layer)));
+			return Err(utility::Error::InvalidInstanceLayer(layer));
 		}
 		let create_info = self.to_vk();
-		let instance_loader = erupt::InstanceLoader::new(&ctx.loader, &create_info, None)?;
+		let instance_loader = match erupt::InstanceLoader::new(&ctx.loader, &create_info, None) {
+			Ok(inst) => inst,
+			Err(err) => match err {
+				erupt::LoaderError::VulkanError(res) => {
+					return Err(utility::Error::VulkanError(res))
+				}
+				erupt::LoaderError::SymbolNotAvailable => {
+					return Err(utility::Error::InstanceSymbolNotAvailable())
+				}
+			},
+		};
 		instance::Instance::from(instance_loader, self.validation_enabled)
 	}
 }

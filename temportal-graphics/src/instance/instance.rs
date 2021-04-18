@@ -18,7 +18,7 @@ impl Instance {
 	pub fn from(
 		_internal: erupt::InstanceLoader,
 		enable_validation: bool,
-	) -> Result<Instance, Box<dyn std::error::Error>> {
+	) -> utility::Result<Instance> {
 		let mut instance = Instance {
 			_internal,
 			debug_messenger: None,
@@ -36,14 +36,11 @@ impl Instance {
 						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT,
 				)
 				.pfn_user_callback(Some(debug_callback));
-			instance.debug_messenger = Some(
-				unsafe {
-					instance
-						._internal
-						.create_debug_utils_messenger_ext(&messenger_info, None, None)
-				}
-				.unwrap(),
-			);
+			instance.debug_messenger = Some(utility::as_vulkan_error(unsafe {
+				instance
+					._internal
+					.create_debug_utils_messenger_ext(&messenger_info, None, None)
+			})?);
 		}
 
 		Ok(instance)
@@ -51,13 +48,13 @@ impl Instance {
 
 	/// Creates a vulkan [`Surface`] using a window handle the user provides.
 	pub fn create_surface(
-		instance: Rc<Self>,
+		instance: &Rc<Self>,
 		handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> utility::Result<Surface> {
 		utility::as_vulkan_error(unsafe {
 			erupt::utils::surface::create_surface(&instance._internal, handle, None)
 		})
-		.map(|ok| Surface::from(instance, ok))
+		.map(|ok| Surface::from(instance.clone(), ok))
 	}
 
 	#[doc(hidden)]

@@ -3,6 +3,7 @@ use erupt;
 #[derive(Debug)]
 pub enum Error {
 	InvalidInstanceLayer(String),
+	InstanceSymbolNotAvailable(),
 	VulkanError(erupt::vk::Result),
 }
 
@@ -14,6 +15,7 @@ impl std::fmt::Display for Error {
 			Error::InvalidInstanceLayer(ref layer_name) => {
 				write!(f, "Invalid vulkan instance layer: {}", layer_name)
 			}
+			Error::InstanceSymbolNotAvailable() => write!(f, "Instance symbol not available"),
 			Error::VulkanError(ref vk_result) => vk_result.fmt(f),
 		}
 	}
