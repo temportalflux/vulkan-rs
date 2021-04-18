@@ -22,13 +22,21 @@ impl Default for RecordInstruction {
 }
 
 impl RecordInstruction {
-	pub fn set_extent(mut self, area: structs::Extent2D) -> Self {
-		self.render_area.extent = area;
+	pub fn with_extent(mut self, area: structs::Extent2D) -> Self {
+		self.set_extent(area);
 		self
 	}
 
+	pub fn set_extent(&mut self, area: structs::Extent2D) {
+		self.render_area.extent = area;
+	}
+
 	pub fn clear_with(mut self, clear_value: renderpass::ClearValue) -> Self {
-		self.clear_values.push(clear_value);
+		self.add_clear_value(clear_value);
 		self
+	}
+
+	pub fn add_clear_value(&mut self, clear_value: renderpass::ClearValue) {
+		self.clear_values.push(clear_value);
 	}
 }
