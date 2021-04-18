@@ -83,7 +83,7 @@ impl Info {
 		&mut self,
 		instance: &Instance,
 		physical_device: &physical::Device,
-	) -> logical::Device {
+	) -> utility::Result<logical::Device> {
 		self.extension_names_raw = self
 			.extension_names
 			.iter()
@@ -118,9 +118,22 @@ impl Info {
 
 		info.p_enabled_features = &self.features as _;
 
-		logical::Device::from(
-			erupt::DeviceLoader::new(&instance.unwrap(), *physical_device.unwrap(), &info, None)
-				.unwrap(),
-		)
+		let loader = match erupt::DeviceLoader::new(
+			&instance.unwrap(),
+			*physical_device.unwrap(),
+			&info,
+			None,
+		) {
+			Ok(inst) => inst,
+			Err(err) => match err {
+				erupt::LoaderError::VulkanError(res) => {
+					return Err(utility::Error::VulkanError(res))
+				}
+				erupt::LoaderError::SymbolNotAvailable => {
+					return Err(utility::Error::InstanceSymbolNotAvailable())
+				}
+			},
+		};
+		Ok(logical::Device::from(loader))
 	}
 }

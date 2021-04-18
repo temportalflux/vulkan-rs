@@ -68,12 +68,12 @@ impl ViewInfo {
 	/// Creates an [`image::View`] object, thereby consuming the info.
 	pub fn create_object(
 		&mut self,
-		device: Rc<logical::Device>,
+		device: &Rc<logical::Device>,
 		image: &image::Image,
 	) -> Result<image::View, utility::Error> {
 		let mut info = self.to_vk();
 		info.image = *image.unwrap() as _;
 		let vk = device.create_image_view(info)?;
-		Ok(image::View::from(device, vk))
+		Ok(image::View::from(device.clone(), vk))
 	}
 }

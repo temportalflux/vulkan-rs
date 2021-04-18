@@ -34,7 +34,8 @@ fn create_window(
 ) -> Result<display::Window, Box<dyn std::error::Error>> {
 	let mut window = display.create_window(name, width, height)?;
 	window.find_physical_device(&mut vulkan_device_constraints())?;
-	window.create_logical();
+	window.create_logical()?;
+	window.create_swapchain()?;
 	Ok(window)
 }
 

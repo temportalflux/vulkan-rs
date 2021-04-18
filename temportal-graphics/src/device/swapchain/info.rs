@@ -111,8 +111,9 @@ impl Info {
 	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
 	pub fn create_object(
 		&mut self,
-		device: Rc<logical::Device>,
+		device: &Rc<logical::Device>,
 		surface: &Surface,
+		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
 		let vk = device.create_swapchain(
 			erupt::vk::SwapchainCreateInfoKHRBuilder::new()
@@ -128,9 +129,9 @@ impl Info {
 				.composite_alpha(self.composite_alpha)
 				.present_mode(self.present_mode)
 				.clipped(self.is_clipped)
-				.old_swapchain(erupt::vk::SwapchainKHR::null())
+				.old_swapchain(old.map_or(erupt::vk::SwapchainKHR::null(), |chain| *chain.unwrap()))
 				.build(),
 		)?;
-		Ok(Swapchain::from(device, vk))
+		Ok(Swapchain::from(device.clone(), vk))
 	}
 }
