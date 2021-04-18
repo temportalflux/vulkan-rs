@@ -51,6 +51,7 @@ impl Framebuffer {
 		Framebuffer { _internal }
 	}
 }
+
 /// A trait exposing the internal value for the wrapped [`erupt::vk::Framebuffer`].
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<erupt::vk::Framebuffer> for Framebuffer {

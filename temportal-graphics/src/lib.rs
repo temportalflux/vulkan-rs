@@ -11,6 +11,7 @@ pub mod flags {
 	pub use erupt::vk::ComponentSwizzle;
 	pub use erupt::vk::CompositeAlphaFlagBitsKHR as CompositeAlpha;
 	pub use erupt::vk::CullModeFlags as CullMode;
+	pub use erupt::vk::FenceCreateFlags as FenceState;
 	pub use erupt::vk::Format;
 	pub use erupt::vk::FrontFace;
 	pub use erupt::vk::ImageAspectFlags as ImageAspect;

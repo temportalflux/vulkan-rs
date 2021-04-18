@@ -6,3 +6,7 @@ pub use device::Device;
 mod info;
 pub use info::DeviceQueue;
 pub use info::Info;
+
+#[path = "queue.rs"]
+mod queue;
+pub use queue::*;

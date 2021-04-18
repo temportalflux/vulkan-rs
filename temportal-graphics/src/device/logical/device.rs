@@ -1,6 +1,8 @@
 use crate::{
-	command, flags, pipeline,
-	utility::{self, VulkanObject},
+	command,
+	device::{logical, swapchain::Swapchain},
+	flags, pipeline,
+	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
 
@@ -16,6 +18,10 @@ impl Device {
 		Device {
 			_internal: internal,
 		}
+	}
+
+	pub fn get_queue(&self, queue_family_index: u32) -> logical::Queue {
+		logical::Queue::from(self.get_device_queue(queue_family_index))
 	}
 
 	pub fn allocate_command_buffers(
@@ -35,6 +41,103 @@ impl Device {
 			.map(|vk_buffer| command::Buffer::from(vk_buffer))
 			.collect::<Vec<_>>())
 	}
+
+	pub fn create_semaphores(&self, count: usize) -> utility::Result<Vec<command::Semaphore>> {
+		let mut vec: Vec<command::Semaphore> = Vec::new();
+		let info = erupt::vk::SemaphoreCreateInfoBuilder::new().build();
+		for _ in 0..count {
+			let vk_semaphore = utility::as_vulkan_error(unsafe {
+				self._internal.create_semaphore(&info, None, None)
+			})?;
+			vec.push(command::Semaphore::from(vk_semaphore));
+		}
+		Ok(vec)
+	}
+
+	pub fn create_fences(
+		&self,
+		count: usize,
+		state: flags::FenceState,
+	) -> utility::Result<Vec<command::Fence>> {
+		let mut vec: Vec<command::Fence> = Vec::new();
+		let info = erupt::vk::FenceCreateInfoBuilder::new()
+			.flags(state)
+			.build();
+		for _ in 0..count {
+			let vk_fence = utility::as_vulkan_error(unsafe {
+				self._internal.create_fence(&info, None, None)
+			})?;
+			vec.push(command::Fence::from(vk_fence));
+		}
+		Ok(vec)
+	}
+
+	pub fn wait_for(
+		&self,
+		fence: &command::Fence,
+		wait_for_all: bool,
+		timeout: u64,
+	) -> utility::Result<()> {
+		let fences = [*fence.unwrap()];
+		utility::as_vulkan_error(unsafe {
+			self._internal
+				.wait_for_fences(&fences, wait_for_all, timeout)
+		})
+	}
+
+	pub fn acquire_next_image(
+		&self,
+		swapchain: &Swapchain,
+		timeout: u64,
+		semaphore: Option<&command::Semaphore>,
+		fence: Option<&command::Fence>,
+	) -> utility::Result<usize> {
+		utility::as_vulkan_error(unsafe {
+			self._internal.acquire_next_image_khr(
+				*swapchain.unwrap(),
+				timeout,
+				semaphore.map(|s| *s.unwrap()),
+				fence.map(|s| *s.unwrap()),
+				None,
+			)
+		})
+		.map(|i| i as usize)
+	}
+
+	pub fn reset_fences(&self, fences: &[&command::Fence]) -> utility::Result<()> {
+		let fences = fences.iter().map(|f| *f.unwrap()).collect::<Vec<_>>();
+		utility::as_vulkan_error(unsafe { self._internal.reset_fences(&fences[..]) })
+	}
+
+	pub fn submit(
+		&self,
+		queue: &logical::Queue,
+		infos: Vec<command::SubmitInfo>,
+		signal_fence_when_complete: Option<&command::Fence>,
+	) -> utility::Result<()> {
+		let infos = infos
+			.into_iter()
+			.map(|info| info.to_vk())
+			.collect::<Vec<_>>();
+		utility::as_vulkan_error(unsafe {
+			self._internal.queue_submit(
+				*queue.unwrap(),
+				crate::into_builders!(infos),
+				signal_fence_when_complete.map(|f| *f.unwrap()),
+			)
+		})
+	}
+
+	pub fn present(
+		&self,
+		queue: &logical::Queue,
+		info: command::PresentInfo,
+	) -> utility::Result<()> {
+		let vk_info = info.to_vk();
+		utility::as_vulkan_error(unsafe {
+			self._internal.queue_present_khr(*queue.unwrap(), &vk_info)
+		})
+	}
 }
 
 /// A trait exposing the internal value for the wrapped [`erupt::DeviceLoader`].
@@ -50,6 +153,13 @@ impl utility::VulkanObject<erupt::DeviceLoader> for Device {
 
 #[doc(hidden)]
 impl Device {
+	pub fn get_device_queue(&self, queue_family_index: u32) -> erupt::vk::Queue {
+		unsafe {
+			self._internal
+				.get_device_queue(queue_family_index, /*queue index*/ 0, None)
+		}
+	}
+
 	pub fn create_swapchain(
 		&self,
 		info: erupt::vk::SwapchainCreateInfoKHR,
