@@ -9,11 +9,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 
 	let display = Engine::create_display_manager(&engine)?;
-	let window = create_window(&display, "Triangle Demo", 800, 600)?;
+	let mut window = create_window(&display, "Triangle Demo", 800, 600)?;
 
 	temportal_engine::run(
 		&display,
-		&window,
+		&mut window,
 		include_bytes!("triangle.vert.spirv").to_vec(),
 		include_bytes!("triangle.frag.spirv").to_vec(),
 	)
@@ -35,7 +35,7 @@ fn create_window(
 	let mut window = display.create_window(name, width, height)?;
 	window.find_physical_device(&mut vulkan_device_constraints())?;
 	window.create_logical()?;
-	window.create_swapchain()?;
+	window.create_render_chain()?;
 	Ok(window)
 }
 

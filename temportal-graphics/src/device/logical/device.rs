@@ -21,9 +21,9 @@ impl Device {
 		}
 	}
 
-	pub fn get_queue(device: Rc<Self>, queue_family_index: usize) -> logical::Queue {
+	pub fn get_queue(device: &Rc<Self>, queue_family_index: usize) -> logical::Queue {
 		let vk = device.get_device_queue(queue_family_index as u32);
-		logical::Queue::from(device, vk)
+		logical::Queue::from(device.clone(), vk)
 	}
 
 	pub fn allocate_command_buffers(

@@ -12,10 +12,13 @@ pub struct Pool {
 }
 
 impl Pool {
-	pub fn create(device: Rc<logical::Device>, queue_family_index: usize) -> utility::Result<Pool> {
+	pub fn create(
+		device: &Rc<logical::Device>,
+		queue_family_index: usize,
+	) -> utility::Result<Pool> {
 		let inst = logical::Device::create_command_pool(&device, queue_family_index as u32)?;
 		Ok(Pool {
-			_device: device,
+			_device: device.clone(),
 			_internal: inst,
 		})
 	}
