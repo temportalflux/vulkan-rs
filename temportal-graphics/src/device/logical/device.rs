@@ -120,13 +120,13 @@ impl Device {
 		signal_fence_when_complete: Option<&command::Fence>,
 	) -> utility::Result<()> {
 		let infos = infos
-			.into_iter()
-			.map(|info| info.to_vk())
+			.iter()
+			.map(|info| info.to_vk().into_builder())
 			.collect::<Vec<_>>();
 		utility::as_vulkan_error(unsafe {
 			self._internal.queue_submit(
 				*queue.unwrap(),
-				crate::into_builders!(infos),
+				&infos,
 				signal_fence_when_complete.map(|f| *f.unwrap()),
 			)
 		})

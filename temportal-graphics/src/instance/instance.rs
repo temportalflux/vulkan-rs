@@ -27,14 +27,13 @@ impl Instance {
 		if enable_validation {
 			let messenger_info = erupt::vk::DebugUtilsMessengerCreateInfoEXTBuilder::new()
 				.message_severity(
-					erupt::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
-						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING_EXT
-						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR_EXT,
+					erupt::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR_EXT
+						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING_EXT, //| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
 				)
 				.message_type(
-					erupt::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT
-						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION_EXT
-						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT,
+					erupt::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION_EXT
+						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT
+						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT,
 				)
 				.pfn_user_callback(Some(debug_callback));
 			instance.debug_messenger = Some(

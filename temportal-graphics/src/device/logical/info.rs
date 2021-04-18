@@ -1,7 +1,7 @@
 use crate::{
 	device::{logical, physical},
 	instance::Instance,
-	utility::{self, VulkanInfoMut, VulkanObject},
+	utility::{self, VulkanObject},
 };
 use erupt;
 
@@ -19,7 +19,7 @@ pub struct Info {
 	extension_names_raw: Vec<utility::CStrPtr>,
 	layer_names_raw: Vec<utility::CStrPtr>,
 
-	queues: Vec<erupt::vk::DeviceQueueCreateInfo>,
+	queues: Vec<DeviceQueue>,
 	features: erupt::vk::PhysicalDeviceFeatures,
 }
 
@@ -73,12 +73,7 @@ impl Info {
 
 	/// Ensures that the created device contains a given queue family so transfer queues can be created for it.
 	pub fn add_queue(mut self, queue: DeviceQueue) -> Self {
-		self.queues.push(
-			erupt::vk::DeviceQueueCreateInfoBuilder::new()
-				.queue_family_index(queue.queue_family_index as u32)
-				.queue_priorities(&queue.priorities)
-				.build(),
-		);
+		self.queues.push(queue);
 		self
 	}
 
@@ -89,18 +84,6 @@ impl Info {
 		instance: &Instance,
 		physical_device: &physical::Device,
 	) -> logical::Device {
-		let info = self.to_vk();
-		logical::Device::from(
-			erupt::DeviceLoader::new(&instance.unwrap(), *physical_device.unwrap(), &info, None)
-				.unwrap(),
-		)
-	}
-}
-
-impl VulkanInfoMut<erupt::vk::DeviceCreateInfo> for Info {
-	/// Converts the [`Info`] into the [`erupt::vk::DeviceCreateInfo`] struct
-	/// used to create a [`logical::Device`].
-	fn to_vk(&mut self) -> erupt::vk::DeviceCreateInfo {
 		self.extension_names_raw = self
 			.extension_names
 			.iter()
@@ -111,6 +94,16 @@ impl VulkanInfoMut<erupt::vk::DeviceCreateInfo> for Info {
 			.iter()
 			.map(|owned| utility::to_cstr_ptr(&owned))
 			.collect();
+		let queues = self
+			.queues
+			.iter()
+			.map(|queue| {
+				erupt::vk::DeviceQueueCreateInfoBuilder::new()
+					.queue_family_index(queue.queue_family_index as u32)
+					.queue_priorities(&queue.priorities)
+					.build()
+			})
+			.collect::<Vec<_>>();
 
 		let mut info = erupt::vk::DeviceCreateInfo::default();
 
@@ -120,11 +113,14 @@ impl VulkanInfoMut<erupt::vk::DeviceCreateInfo> for Info {
 		info.pp_enabled_layer_names = self.layer_names_raw.as_ptr() as _;
 		info.enabled_layer_count = self.layer_names_raw.len() as _;
 
-		info.p_queue_create_infos = self.queues.as_ptr() as _;
-		info.queue_create_info_count = self.queues.len() as _;
+		info.p_queue_create_infos = queues.as_ptr() as _;
+		info.queue_create_info_count = queues.len() as _;
 
 		info.p_enabled_features = &self.features as _;
 
-		info
+		logical::Device::from(
+			erupt::DeviceLoader::new(&instance.unwrap(), *physical_device.unwrap(), &info, None)
+				.unwrap(),
+		)
 	}
 }
