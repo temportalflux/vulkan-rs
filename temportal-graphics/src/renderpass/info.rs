@@ -4,6 +4,7 @@ use crate::{
 	utility::{self, VulkanInfo},
 };
 use erupt;
+use std::rc::Rc;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
 pub struct Info {
@@ -78,7 +79,7 @@ impl Info {
 }
 
 impl Info {
-	pub fn create_object(self, device: &logical::Device) -> utility::Result<renderpass::Pass> {
+	pub fn create_object(self, device: Rc<logical::Device>) -> utility::Result<renderpass::Pass> {
 		let attachments = self
 			.attachments
 			.iter()
@@ -114,6 +115,6 @@ impl Info {
 			.dependencies(&dependencies)
 			.build();
 		let vk_obj = device.create_render_pass(vk_info)?;
-		Ok(renderpass::Pass::from(vk_obj))
+		Ok(renderpass::Pass::from(device, vk_obj))
 	}
 }

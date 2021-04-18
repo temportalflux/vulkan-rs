@@ -9,6 +9,7 @@ use crate::{
 	utility::{self, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 use temportal_math::Vector;
 
 /// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
@@ -110,27 +111,26 @@ impl Info {
 	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
 	pub fn create_object(
 		&mut self,
-		device: &logical::Device,
+		device: Rc<logical::Device>,
 		surface: &Surface,
 	) -> Result<Swapchain, utility::Error> {
-		Ok(Swapchain::from(
-			device.create_swapchain(
-				erupt::vk::SwapchainCreateInfoKHRBuilder::new()
-					.surface(*surface.unwrap())
-					.min_image_count(self.image_count)
-					.image_format(self.image_format)
-					.image_color_space(self.image_color_space)
-					.image_extent(self.image_extent)
-					.image_array_layers(self.image_array_layer_count)
-					.image_usage(self.image_usage)
-					.image_sharing_mode(self.sharing_mode)
-					.pre_transform(self.pre_transform)
-					.composite_alpha(self.composite_alpha)
-					.present_mode(self.present_mode)
-					.clipped(self.is_clipped)
-					.old_swapchain(erupt::vk::SwapchainKHR::null())
-					.build(),
-			)?,
-		))
+		let vk = device.create_swapchain(
+			erupt::vk::SwapchainCreateInfoKHRBuilder::new()
+				.surface(*surface.unwrap())
+				.min_image_count(self.image_count)
+				.image_format(self.image_format)
+				.image_color_space(self.image_color_space)
+				.image_extent(self.image_extent)
+				.image_array_layers(self.image_array_layer_count)
+				.image_usage(self.image_usage)
+				.image_sharing_mode(self.sharing_mode)
+				.pre_transform(self.pre_transform)
+				.composite_alpha(self.composite_alpha)
+				.present_mode(self.present_mode)
+				.clipped(self.is_clipped)
+				.old_swapchain(erupt::vk::SwapchainKHR::null())
+				.build(),
+		)?;
+		Ok(Swapchain::from(device, vk))
 	}
 }

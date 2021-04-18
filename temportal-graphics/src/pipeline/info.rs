@@ -5,6 +5,7 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 
 /// Information used to construct a [`Pipeline`](pipeline::Pipeline).
 pub struct Info {
@@ -64,7 +65,8 @@ impl Info {
 	/// with respect to a specific [`Render Pass`](crate::renderpass::Pass).
 	pub fn create_object(
 		self,
-		device: &logical::Device,
+		device: Rc<logical::Device>,
+		layout: &pipeline::Layout,
 		render_pass: &renderpass::Pass,
 	) -> Result<pipeline::Pipeline, utility::Error> {
 		let shader_stages = into_builders!(self.shaders);
@@ -80,8 +82,6 @@ impl Info {
 			.attachments(color_blend_attachments)
 			.build();
 
-		let pipeline_layout = device
-			.create_pipeline_layout(erupt::vk::PipelineLayoutCreateInfoBuilder::new().build())?;
 		let info = erupt::vk::GraphicsPipelineCreateInfoBuilder::new()
 			.stages(&shader_stages)
 			.vertex_input_state(&vertex_input)
@@ -90,11 +90,11 @@ impl Info {
 			.rasterization_state(&rasterizer)
 			.multisample_state(&multisampling)
 			.color_blend_state(&color_blending)
-			.layout(pipeline_layout)
+			.layout(*layout.unwrap())
 			.render_pass(*render_pass.unwrap())
 			.subpass(0);
 
 		let pipelines = device.create_graphics_pipelines(&[info])?;
-		Ok(pipeline::Pipeline::from(pipelines[0]))
+		Ok(pipeline::Pipeline::from(device, pipelines[0]))
 	}
 }

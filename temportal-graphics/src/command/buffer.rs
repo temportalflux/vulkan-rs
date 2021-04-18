@@ -87,3 +87,9 @@ impl VulkanObject<erupt::vk::CommandBuffer> for Buffer {
 		&mut self._internal
 	}
 }
+
+impl Drop for Buffer {
+	fn drop(&mut self) {
+		// NO:OP - these are destroyed implicitly when command::Pool is destroyed
+	}
+}

@@ -2,6 +2,10 @@
 mod info;
 pub use info::*;
 
+#[path = "layout.rs"]
+mod layout;
+pub use layout::*;
+
 #[path = "pipeline.rs"]
 mod pipeline;
 pub use pipeline::*;

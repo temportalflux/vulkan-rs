@@ -2,6 +2,7 @@ use crate::{
 	device::logical, image, renderpass, structs::Extent2D, utility, utility::VulkanObject,
 };
 use erupt;
+use std::rc::Rc;
 
 /// Information used to construct a [`Framebuffer`].
 pub struct Info {
@@ -28,7 +29,7 @@ impl Info {
 		&self,
 		swapchain_image_view: &image::View,
 		render_pass: &renderpass::Pass,
-		device: &logical::Device,
+		device: Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		let attachments = vec![*swapchain_image_view.unwrap()];
 		let info = erupt::vk::FramebufferCreateInfoBuilder::new()
@@ -38,17 +39,19 @@ impl Info {
 			.render_pass(*render_pass.unwrap())
 			.attachments(&attachments[..])
 			.build();
-		Ok(Framebuffer::from(device.create_framebuffer(info)?))
+		let vk = device.create_framebuffer(info)?;
+		Ok(Framebuffer::from(device, vk))
 	}
 }
 
 pub struct Framebuffer {
+	_device: Rc<logical::Device>,
 	_internal: erupt::vk::Framebuffer,
 }
 
 impl Framebuffer {
-	pub fn from(_internal: erupt::vk::Framebuffer) -> Framebuffer {
-		Framebuffer { _internal }
+	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::Framebuffer) -> Framebuffer {
+		Framebuffer { _device, _internal }
 	}
 }
 
@@ -60,5 +63,11 @@ impl VulkanObject<erupt::vk::Framebuffer> for Framebuffer {
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::vk::Framebuffer {
 		&mut self._internal
+	}
+}
+
+impl Drop for Framebuffer {
+	fn drop(&mut self) {
+		self._device.destroy_framebuffer(self._internal)
 	}
 }

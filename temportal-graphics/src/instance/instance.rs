@@ -1,22 +1,26 @@
+use crate::{
+	device::physical,
+	general::Surface,
+	utility::{self, VulkanObject},
+};
 use erupt;
 use raw_window_handle;
-
-use crate::{device::physical, general::Surface, utility::VulkanObject};
+use std::rc::Rc;
 
 /// A user-owned singleton for the [`Vulkan Instance`](erupt::InstanceLoader)
 pub struct Instance {
-	internal: erupt::InstanceLoader,
+	_internal: erupt::InstanceLoader,
 	debug_messenger: Option<erupt::extensions::ext_debug_utils::DebugUtilsMessengerEXT>,
 }
 
 impl Instance {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
 	pub fn from(
-		internal: erupt::InstanceLoader,
+		_internal: erupt::InstanceLoader,
 		enable_validation: bool,
 	) -> Result<Instance, Box<dyn std::error::Error>> {
 		let mut instance = Instance {
-			internal,
+			_internal,
 			debug_messenger: None,
 		};
 
@@ -36,7 +40,7 @@ impl Instance {
 			instance.debug_messenger = Some(
 				unsafe {
 					instance
-						.internal
+						._internal
 						.create_debug_utils_messenger_ext(&messenger_info, None, None)
 				}
 				.unwrap(),
@@ -47,10 +51,21 @@ impl Instance {
 	}
 
 	/// Creates a vulkan [`Surface`] using a window handle the user provides.
-	pub fn create_surface(&self, handle: &impl raw_window_handle::HasRawWindowHandle) -> Surface {
-		Surface::from(
-			unsafe { erupt::utils::surface::create_surface(&self.internal, handle, None) }.unwrap(),
-		)
+	pub fn create_surface(
+		instance: Rc<Self>,
+		handle: &impl raw_window_handle::HasRawWindowHandle,
+	) -> utility::Result<Surface> {
+		utility::as_vulkan_error(unsafe {
+			erupt::utils::surface::create_surface(&instance._internal, handle, None)
+		})
+		.map(|ok| Surface::from(instance, ok))
+	}
+
+	#[doc(hidden)]
+	pub fn destroy_surface(&self, value: erupt::vk::SurfaceKHR) {
+		unsafe {
+			self._internal.destroy_surface_khr(Some(value), None);
+		}
 	}
 
 	/// Searches for an applicable [`Device`](crate::device::physical::Device) that fits the provided constraints and surface.
@@ -59,7 +74,7 @@ impl Instance {
 		constraints: &Vec<physical::Constraint>,
 		surface: &Surface,
 	) -> Result<physical::Device, Option<physical::Constraint>> {
-		match unsafe { self.internal.enumerate_physical_devices(None) }
+		match unsafe { self._internal.enumerate_physical_devices(None) }
 			.unwrap()
 			.into_iter()
 			.map(|vk_physical_device| {
@@ -86,10 +101,22 @@ impl Instance {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<erupt::InstanceLoader> for Instance {
 	fn unwrap(&self) -> &erupt::InstanceLoader {
-		&self.internal
+		&self._internal
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::InstanceLoader {
-		&mut self.internal
+		&mut self._internal
+	}
+}
+
+impl Drop for Instance {
+	fn drop(&mut self) {
+		unsafe {
+			if let Some(msgr) = self.debug_messenger {
+				self._internal
+					.destroy_debug_utils_messenger_ext(Some(msgr), None);
+			}
+			self._internal.destroy_instance(None);
+		}
 	}
 }
 
@@ -99,7 +126,7 @@ impl Instance {
 		&self,
 		device: &erupt::vk::PhysicalDevice,
 	) -> erupt::vk::PhysicalDeviceProperties {
-		unsafe { self.internal.get_physical_device_properties(*device, None) }
+		unsafe { self._internal.get_physical_device_properties(*device, None) }
 	}
 
 	pub fn get_physical_device_queue_family_properties(
@@ -107,7 +134,7 @@ impl Instance {
 		device: &erupt::vk::PhysicalDevice,
 	) -> Vec<erupt::vk::QueueFamilyProperties> {
 		unsafe {
-			self.internal
+			self._internal
 				.get_physical_device_queue_family_properties(*device, None)
 		}
 	}
@@ -119,7 +146,7 @@ impl Instance {
 		surface: &erupt::vk::SurfaceKHR,
 	) -> bool {
 		unsafe {
-			self.internal.get_physical_device_surface_support_khr(
+			self._internal.get_physical_device_surface_support_khr(
 				*device,
 				queue_family_index as u32,
 				*surface,
@@ -135,7 +162,7 @@ impl Instance {
 		surface: &erupt::vk::SurfaceKHR,
 	) -> Vec<erupt::vk::SurfaceFormatKHR> {
 		unsafe {
-			self.internal
+			self._internal
 				.get_physical_device_surface_formats_khr(*device, *surface, None)
 		}
 		.unwrap()
@@ -147,7 +174,7 @@ impl Instance {
 		surface: &erupt::vk::SurfaceKHR,
 	) -> Vec<erupt::vk::PresentModeKHR> {
 		unsafe {
-			self.internal
+			self._internal
 				.get_physical_device_surface_present_modes_khr(*device, *surface, None)
 		}
 		.unwrap()
@@ -158,7 +185,7 @@ impl Instance {
 		device: &erupt::vk::PhysicalDevice,
 	) -> Vec<erupt::vk::ExtensionProperties> {
 		unsafe {
-			self.internal
+			self._internal
 				.enumerate_device_extension_properties(*device, None, None)
 		}
 		.unwrap()
@@ -170,7 +197,7 @@ impl Instance {
 		surface: &erupt::vk::SurfaceKHR,
 	) -> erupt::vk::SurfaceCapabilitiesKHR {
 		unsafe {
-			self.internal
+			self._internal
 				.get_physical_device_surface_capabilities_khr(*device, *surface, None)
 		}
 		.unwrap()

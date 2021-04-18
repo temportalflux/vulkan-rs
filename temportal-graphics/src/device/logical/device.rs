@@ -5,6 +5,7 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 
 /// A wrapper for a [`Vulkan LogicalDevice`](erupt::DeviceLoader),
 /// which can send logical commands to the hardware.
@@ -42,20 +43,23 @@ impl Device {
 			.collect::<Vec<_>>())
 	}
 
-	pub fn create_semaphores(&self, count: usize) -> utility::Result<Vec<command::Semaphore>> {
+	pub fn create_semaphores(
+		device: &Rc<Self>,
+		count: usize,
+	) -> utility::Result<Vec<command::Semaphore>> {
 		let mut vec: Vec<command::Semaphore> = Vec::new();
 		let info = erupt::vk::SemaphoreCreateInfoBuilder::new().build();
 		for _ in 0..count {
 			let vk_semaphore = utility::as_vulkan_error(unsafe {
-				self._internal.create_semaphore(&info, None, None)
+				device._internal.create_semaphore(&info, None, None)
 			})?;
-			vec.push(command::Semaphore::from(vk_semaphore));
+			vec.push(command::Semaphore::from(device.clone(), vk_semaphore));
 		}
 		Ok(vec)
 	}
 
 	pub fn create_fences(
-		&self,
+		device: &Rc<Self>,
 		count: usize,
 		state: flags::FenceState,
 	) -> utility::Result<Vec<command::Fence>> {
@@ -65,9 +69,9 @@ impl Device {
 			.build();
 		for _ in 0..count {
 			let vk_fence = utility::as_vulkan_error(unsafe {
-				self._internal.create_fence(&info, None, None)
+				device._internal.create_fence(&info, None, None)
 			})?;
-			vec.push(command::Fence::from(vk_fence));
+			vec.push(command::Fence::from(device.clone(), vk_fence));
 		}
 		Ok(vec)
 	}
@@ -138,6 +142,10 @@ impl Device {
 			self._internal.queue_present_khr(*queue.unwrap(), &vk_info)
 		})
 	}
+
+	pub fn wait_until_idle(&self) -> utility::Result<()> {
+		utility::as_vulkan_error(unsafe { self._internal.device_wait_idle() })
+	}
 }
 
 /// A trait exposing the internal value for the wrapped [`erupt::DeviceLoader`].
@@ -148,6 +156,14 @@ impl utility::VulkanObject<erupt::DeviceLoader> for Device {
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::DeviceLoader {
 		&mut self._internal
+	}
+}
+
+impl Drop for Device {
+	fn drop(&mut self) {
+		unsafe {
+			self._internal.destroy_device(None);
+		}
 	}
 }
 
@@ -167,6 +183,10 @@ impl Device {
 		utility::as_vulkan_error(unsafe { self._internal.create_swapchain_khr(&info, None, None) })
 	}
 
+	pub fn destroy_swapchain(&self, value: erupt::vk::SwapchainKHR) {
+		unsafe { self._internal.destroy_swapchain_khr(Some(value), None) };
+	}
+
 	pub fn get_swapchain_images(
 		&self,
 		swapchain: &erupt::vk::SwapchainKHR,
@@ -176,6 +196,10 @@ impl Device {
 		})
 	}
 
+	pub fn destroy_image(&self, value: erupt::vk::Image) {
+		unsafe { self._internal.destroy_image(Some(value), None) };
+	}
+
 	pub fn create_image_view(
 		&self,
 		info: erupt::vk::ImageViewCreateInfo,
@@ -183,11 +207,19 @@ impl Device {
 		utility::as_vulkan_error(unsafe { self._internal.create_image_view(&info, None, None) })
 	}
 
+	pub fn destroy_image_view(&self, value: erupt::vk::ImageView) {
+		unsafe { self._internal.destroy_image_view(Some(value), None) };
+	}
+
 	pub fn create_shader_module(
 		&self,
 		info: erupt::vk::ShaderModuleCreateInfo,
 	) -> utility::Result<erupt::vk::ShaderModule> {
 		utility::as_vulkan_error(unsafe { self._internal.create_shader_module(&info, None, None) })
+	}
+
+	pub fn destroy_shader_module(&self, value: erupt::vk::ShaderModule) {
+		unsafe { self._internal.destroy_shader_module(Some(value), None) };
 	}
 
 	pub fn create_pipeline_layout(
@@ -199,6 +231,10 @@ impl Device {
 		})
 	}
 
+	pub fn destroy_pipeline_layout(&self, value: erupt::vk::PipelineLayout) {
+		unsafe { self._internal.destroy_pipeline_layout(Some(value), None) };
+	}
+
 	pub fn create_graphics_pipelines(
 		&self,
 		infos: &[erupt::vk::GraphicsPipelineCreateInfoBuilder<'_>],
@@ -208,11 +244,19 @@ impl Device {
 		})
 	}
 
+	pub fn destroy_pipeline(&self, value: erupt::vk::Pipeline) {
+		unsafe { self._internal.destroy_pipeline(Some(value), None) };
+	}
+
 	pub fn create_render_pass(
 		&self,
 		info: erupt::vk::RenderPassCreateInfo,
 	) -> utility::Result<erupt::vk::RenderPass> {
 		utility::as_vulkan_error(unsafe { self._internal.create_render_pass(&info, None, None) })
+	}
+
+	pub fn destroy_render_pass(&self, value: erupt::vk::RenderPass) {
+		unsafe { self._internal.destroy_render_pass(Some(value), None) };
 	}
 
 	pub fn create_framebuffer(
@@ -222,14 +266,22 @@ impl Device {
 		utility::as_vulkan_error(unsafe { self._internal.create_framebuffer(&info, None, None) })
 	}
 
+	pub fn destroy_framebuffer(&self, value: erupt::vk::Framebuffer) {
+		unsafe { self._internal.destroy_framebuffer(Some(value), None) };
+	}
+
 	pub fn create_command_pool(
-		&self,
+		device: &Rc<Self>,
 		queue_family_index: u32,
 	) -> utility::Result<erupt::vk::CommandPool> {
 		let info = erupt::vk::CommandPoolCreateInfoBuilder::new()
 			.queue_family_index(queue_family_index)
 			.build();
-		utility::as_vulkan_error(unsafe { self._internal.create_command_pool(&info, None, None) })
+		utility::as_vulkan_error(unsafe { device._internal.create_command_pool(&info, None, None) })
+	}
+
+	pub fn destroy_command_pool(&self, value: erupt::vk::CommandPool) {
+		unsafe { self._internal.destroy_command_pool(Some(value), None) };
 	}
 
 	pub fn begin_command_buffer(&self, buffer: &command::Buffer) -> utility::Result<()> {
@@ -304,5 +356,13 @@ impl Device {
 				first_instance,
 			)
 		};
+	}
+
+	pub fn destroy_fence(&self, value: erupt::vk::Fence) {
+		unsafe { self._internal.destroy_fence(Some(value), None) };
+	}
+
+	pub fn destroy_semaphore(&self, value: erupt::vk::Semaphore) {
+		unsafe { self._internal.destroy_semaphore(Some(value), None) };
 	}
 }

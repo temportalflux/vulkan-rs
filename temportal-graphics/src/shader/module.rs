@@ -5,8 +5,10 @@ use crate::{
 	utility::{VulkanInfo, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 
 pub struct Module {
+	_device: Rc<logical::Device>,
 	_internal: erupt::vk::ShaderModule,
 	entry_point: std::ffi::CString,
 	kind: ShaderStageKind,
@@ -14,7 +16,7 @@ pub struct Module {
 
 impl Module {
 	pub fn create(
-		device: &logical::Device,
+		device: Rc<logical::Device>,
 		info: shader::Info,
 	) -> Result<Module, Box<dyn std::error::Error>> {
 		Ok(Module::create_from_bytes(device, &info.bytes[..])?
@@ -25,15 +27,17 @@ impl Module {
 	/// Creates a shader module from bytes loaded from a `.spirv` file.
 	/// These bytes are created from the engine building a shader asset.
 	pub fn create_from_bytes(
-		device: &logical::Device,
+		_device: Rc<logical::Device>,
 		bytes: &[u8],
 	) -> Result<Module, Box<dyn std::error::Error>> {
 		let decoded_bytes = erupt::utils::decode_spv(bytes)?;
 		let info = erupt::vk::ShaderModuleCreateInfoBuilder::new()
 			.code(&decoded_bytes)
 			.build();
+		let _internal = _device.create_shader_module(info)?;
 		Ok(Module {
-			_internal: device.create_shader_module(info)?,
+			_device,
+			_internal,
 			entry_point: std::ffi::CString::default(),
 			kind: ShaderStageKind::VERTEX,
 		})
@@ -58,6 +62,12 @@ impl VulkanObject<erupt::vk::ShaderModule> for Module {
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::vk::ShaderModule {
 		&mut self._internal
+	}
+}
+
+impl Drop for Module {
+	fn drop(&mut self) {
+		self._device.destroy_shader_module(self._internal);
 	}
 }
 

@@ -1,13 +1,15 @@
-use crate::utility;
+use crate::{device::logical, utility};
 use erupt;
+use std::rc::Rc;
 
 pub struct Semaphore {
+	_device: Rc<logical::Device>,
 	_internal: erupt::vk::Semaphore,
 }
 
 impl Semaphore {
-	pub fn from(_internal: erupt::vk::Semaphore) -> Semaphore {
-		Semaphore { _internal }
+	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::Semaphore) -> Semaphore {
+		Semaphore { _device, _internal }
 	}
 }
 
@@ -22,21 +24,30 @@ impl utility::VulkanObject<erupt::vk::Semaphore> for Semaphore {
 	}
 }
 
+impl Drop for Semaphore {
+	fn drop(&mut self) {
+		self._device.destroy_semaphore(self._internal)
+	}
+}
+
 pub struct Fence {
+	_device: Rc<logical::Device>,
 	_internal: erupt::vk::Fence,
 }
 
 impl Fence {
-	pub fn from(_internal: erupt::vk::Fence) -> Fence {
-		Fence { _internal }
-	}
-
-	pub fn empty() -> Fence {
-		Fence::from(erupt::vk::Fence::null())
+	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::Fence) -> Fence {
+		Fence { _device, _internal }
 	}
 
 	pub fn is_valid(&self) -> bool {
 		!self._internal.is_null()
+	}
+}
+
+impl Drop for Fence {
+	fn drop(&mut self) {
+		self._device.destroy_fence(self._internal)
 	}
 }
 

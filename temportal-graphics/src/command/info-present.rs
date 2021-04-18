@@ -30,8 +30,8 @@ impl PresentInfo {
 		self
 	}
 
-	pub fn add_swapchain(mut self, buffer: &Swapchain) -> Self {
-		self.swapchains.push(*buffer.unwrap());
+	pub fn add_swapchain(mut self, swapchain: &Swapchain) -> Self {
+		self.swapchains.push(*swapchain.unwrap());
 		self
 	}
 

@@ -3,15 +3,20 @@ use crate::{
 	utility::{self, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 
 pub struct Pool {
+	_device: Rc<logical::Device>,
 	_internal: erupt::vk::CommandPool,
 }
 
 impl Pool {
-	pub fn create(device: &logical::Device, queue_family_index: usize) -> utility::Result<Pool> {
-		let inst = device.create_command_pool(queue_family_index as u32)?;
-		Ok(Pool { _internal: inst })
+	pub fn create(device: Rc<logical::Device>, queue_family_index: usize) -> utility::Result<Pool> {
+		let inst = logical::Device::create_command_pool(&device, queue_family_index as u32)?;
+		Ok(Pool {
+			_device: device,
+			_internal: inst,
+		})
 	}
 }
 
@@ -23,5 +28,11 @@ impl VulkanObject<erupt::vk::CommandPool> for Pool {
 	}
 	fn unwrap_mut(&mut self) -> &mut erupt::vk::CommandPool {
 		&mut self._internal
+	}
+}
+
+impl Drop for Pool {
+	fn drop(&mut self) {
+		self._device.destroy_command_pool(self._internal)
 	}
 }
