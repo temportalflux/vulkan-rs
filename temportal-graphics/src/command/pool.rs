@@ -1,4 +1,5 @@
 use crate::{
+	command,
 	device::logical,
 	utility::{self, VulkanObject},
 };
@@ -17,6 +18,10 @@ impl Pool {
 			_device: device,
 			_internal: inst,
 		})
+	}
+
+	pub fn allocate_buffers(&self, amount: usize) -> utility::Result<Vec<command::Buffer>> {
+		logical::Device::allocate_command_buffers(&self._device, &self, amount)
 	}
 }
 

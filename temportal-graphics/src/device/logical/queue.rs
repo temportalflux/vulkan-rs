@@ -1,13 +1,27 @@
-use crate::utility;
+use crate::{command, device::logical, utility};
 use erupt;
+use std::rc::Rc;
 
 pub struct Queue {
+	device: Rc<logical::Device>,
 	_internal: erupt::vk::Queue,
 }
 
 impl Queue {
-	pub fn from(_internal: erupt::vk::Queue) -> Queue {
-		Queue { _internal }
+	pub fn from(device: Rc<logical::Device>, _internal: erupt::vk::Queue) -> Queue {
+		Queue { device, _internal }
+	}
+
+	pub fn submit(
+		&self,
+		infos: Vec<command::SubmitInfo>,
+		signal_fence_when_complete: Option<&command::Fence>,
+	) -> utility::Result<()> {
+		self.device.submit(&self, infos, signal_fence_when_complete)
+	}
+
+	pub fn present(&self, info: command::PresentInfo) -> utility::Result<()> {
+		self.device.present(&self, info)
 	}
 }
 

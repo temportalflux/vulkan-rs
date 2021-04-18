@@ -21,12 +21,13 @@ impl Device {
 		}
 	}
 
-	pub fn get_queue(&self, queue_family_index: u32) -> logical::Queue {
-		logical::Queue::from(self.get_device_queue(queue_family_index))
+	pub fn get_queue(device: Rc<Self>, queue_family_index: u32) -> logical::Queue {
+		let vk = device.get_device_queue(queue_family_index);
+		logical::Queue::from(device, vk)
 	}
 
 	pub fn allocate_command_buffers(
-		&self,
+		device: &Rc<Self>,
 		pool: &command::Pool,
 		amount: usize,
 	) -> utility::Result<Vec<command::Buffer>> {
@@ -36,10 +37,10 @@ impl Device {
 			.command_buffer_count(amount as u32)
 			.build();
 		let alloc_result =
-			utility::as_vulkan_error(unsafe { self._internal.allocate_command_buffers(&info) });
+			utility::as_vulkan_error(unsafe { device._internal.allocate_command_buffers(&info) });
 		Ok(alloc_result?
 			.into_iter()
-			.map(|vk_buffer| command::Buffer::from(vk_buffer))
+			.map(|vk_buffer| command::Buffer::from(device.clone(), vk_buffer))
 			.collect::<Vec<_>>())
 	}
 

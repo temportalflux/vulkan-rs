@@ -1,4 +1,4 @@
-use crate::{device::logical, image::Image, utility};
+use crate::{command, device::logical, image::Image, utility};
 use erupt;
 use std::rc::Rc;
 
@@ -23,6 +23,16 @@ impl Swapchain {
 			// no device reference is passed in because the images are a part of the swapchain
 			.map(|image| Image::from(None, image))
 			.collect())
+	}
+
+	pub fn acquire_next_image(
+		&self,
+		timeout: u64,
+		semaphore: Option<&command::Semaphore>,
+		fence: Option<&command::Fence>,
+	) -> utility::Result<usize> {
+		self._device
+			.acquire_next_image(&self, timeout, semaphore, fence)
 	}
 }
 

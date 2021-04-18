@@ -5,27 +5,31 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
+use std::rc::Rc;
 
 pub struct Buffer {
+	device: Rc<logical::Device>,
 	_internal: erupt::vk::CommandBuffer,
 }
 
 impl Buffer {
-	pub fn from(_internal: erupt::vk::CommandBuffer) -> Buffer {
-		Buffer { _internal }
+	pub fn from(device: Rc<logical::Device>, internal: erupt::vk::CommandBuffer) -> Buffer {
+		Buffer {
+			device,
+			_internal: internal,
+		}
 	}
 
-	pub fn begin(&self, device: &logical::Device) -> utility::Result<()> {
-		device.begin_command_buffer(&self)
+	pub fn begin(&self) -> utility::Result<()> {
+		self.device.begin_command_buffer(&self)
 	}
 
-	pub fn end(&self, device: &logical::Device) -> utility::Result<()> {
-		device.end_command_buffer(&self)
+	pub fn end(&self) -> utility::Result<()> {
+		self.device.end_command_buffer(&self)
 	}
 
 	pub fn start_render_pass(
 		&self,
-		device: &logical::Device,
 		frame_buffer: &command::framebuffer::Framebuffer,
 		render_pass: &renderpass::Pass,
 		info: renderpass::RecordInstruction,
@@ -41,32 +45,30 @@ impl Buffer {
 			.render_area(info.render_area)
 			.clear_values(&clear_values)
 			.build();
-		device.begin_render_pass(&self, info);
+		self.device.begin_render_pass(&self, info);
 	}
 
-	pub fn stop_render_pass(&self, device: &logical::Device) {
-		device.end_render_pass(&self);
+	pub fn stop_render_pass(&self) {
+		self.device.end_render_pass(&self);
 	}
 
 	pub fn bind_pipeline(
 		&self,
-		device: &logical::Device,
 		pipeline: &pipeline::Pipeline,
 		bind_point: flags::PipelineBindPoint,
 	) {
-		device.bind_pipeline(&self, &pipeline, bind_point);
+		self.device.bind_pipeline(&self, &pipeline, bind_point);
 	}
 
 	pub fn draw(
 		&self,
-		device: &logical::Device,
 		index_count: u32,
 		first_index: u32,
 		instance_count: u32,
 		first_instance: u32,
 		vertex_offset: i32,
 	) {
-		device.draw_indexed(
+		self.device.draw_indexed(
 			&self,
 			index_count,
 			first_index,
