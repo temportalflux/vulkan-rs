@@ -29,7 +29,7 @@ impl Info {
 		&self,
 		swapchain_image_view: &image::View,
 		render_pass: &renderpass::Pass,
-		device: Rc<logical::Device>,
+		device: &Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		let attachments = vec![*swapchain_image_view.unwrap()];
 		let info = erupt::vk::FramebufferCreateInfoBuilder::new()
@@ -40,7 +40,7 @@ impl Info {
 			.attachments(&attachments[..])
 			.build();
 		let vk = device.create_framebuffer(info)?;
-		Ok(Framebuffer::from(device, vk))
+		Ok(Framebuffer::from(device.clone(), vk))
 	}
 }
 

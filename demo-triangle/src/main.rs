@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 use temportal_engine::{self, display, Engine};
-use temportal_graphics::{device::physical, flags};
+use temportal_graphics::{device::physical, flags, renderpass};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = crate_engine()?;
@@ -41,6 +41,7 @@ fn create_window(
 		let mut mut_window = window.borrow_mut();
 		mut_window.find_physical_device(&mut vulkan_device_constraints())?;
 		mut_window.create_logical()?;
+		mut_window.create_render_pass(create_render_pass_info())?;
 		mut_window.create_render_chain()?;
 	}
 	Ok(window)
@@ -69,6 +70,35 @@ fn vulkan_device_constraints() -> Vec<physical::Constraint> {
 			false,
 		),
 	]
+}
+
+fn create_render_pass_info() -> renderpass::Info {
+	let mut rp_info = renderpass::Info::default();
+
+	let frame_attachment_index = rp_info.attach(
+		renderpass::Attachment::default()
+			.set_format(flags::Format::B8G8R8A8_SRGB)
+			.set_sample_count(flags::SampleCount::_1)
+			.set_general_ops(renderpass::AttachmentOps {
+				load: flags::AttachmentLoadOp::CLEAR,
+				store: flags::AttachmentStoreOp::STORE,
+			})
+			.set_final_layout(flags::ImageLayout::PRESENT_SRC_KHR),
+	);
+
+	let main_pass_index = rp_info.add_subpass(renderpass::Subpass::default().add_attachment_ref(
+		frame_attachment_index,
+		flags::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+	));
+
+	rp_info.add_dependency(
+		renderpass::Dependency::new(None).set_stage(flags::PipelineStage::COLOR_ATTACHMENT_OUTPUT),
+		renderpass::Dependency::new(Some(main_pass_index))
+			.set_stage(flags::PipelineStage::COLOR_ATTACHMENT_OUTPUT)
+			.set_access(flags::Access::COLOR_ATTACHMENT_WRITE),
+	);
+
+	rp_info
 }
 
 fn build_assets(
