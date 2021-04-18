@@ -60,10 +60,18 @@ impl AppInfo {
 
 	/// Sets the application name and version. Use [`utility::make_version`] to create a packed version integer.
 	pub fn application(mut self, name: &str, version: u32) -> AppInfo {
+		self.set_application_info(name, version);
+		self
+	}
+
+	pub fn set_application_info(&mut self, name: &str, version: u32) {
 		self.app_name = String::from(name);
 		self.app_name_c = std::ffi::CString::new(name).unwrap();
 		self.app_version = version;
-		self
+	}
+
+	pub fn app_name(&self) -> &String {
+		&self.app_name
 	}
 
 	/// Returns a string-represenation (`major.minor.patch`) of the application version.

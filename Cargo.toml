@@ -5,6 +5,7 @@ members = [
 	"install-externs",
 	"temportal-math",
 	"temportal-graphics",
-	"temportal-engine"
+	"temportal-engine",
+	"demo-triangle"
 ]
-default-members = ["temportal-engine"]
+default-members = ["demo-triangle"]
