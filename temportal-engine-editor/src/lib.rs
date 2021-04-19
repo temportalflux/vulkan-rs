@@ -9,47 +9,62 @@ use std::{
 	cell::RefCell,
 	rc::{Rc, Weak},
 };
-use temportal_engine::{display, utility};
+use temportal_engine as engine;
 
 #[path = "asset/_.rs"]
 pub mod asset;
 
+#[path = "ui/_.rs"]
+pub mod ui;
+
 use std::time::Instant;
 
 pub struct Editor {
+	ui_elements: Vec<Weak<RefCell<dyn ui::Element>>>,
 	last_frame: Instant,
 	imgui_renderer: Option<imgui_opengl_renderer::Renderer>,
 	imgui_win: Option<imgui_sdl2::ImguiSdl2>,
 	imgui_ctx: Option<imgui::Context>,
 	_gl_context: Option<sdl2::video::GLContext>,
 	sdl_window: Option<sdl2::video::Window>,
-	display: Weak<RefCell<display::Manager>>,
+	display: Option<Rc<RefCell<engine::display::Manager>>>,
+	engine: Weak<RefCell<engine::Engine>>,
 }
 
 impl Editor {
-	pub fn create(display: &Rc<RefCell<display::Manager>>) -> Rc<RefCell<Editor>> {
+	pub fn new(engine: &Rc<RefCell<engine::Engine>>) -> Rc<RefCell<Editor>> {
 		Rc::new(RefCell::new(Editor {
-			display: Rc::downgrade(&display),
+			engine: Rc::downgrade(&engine),
+			display: None,
 			sdl_window: None,
 			_gl_context: None,
 			imgui_ctx: None,
 			imgui_win: None,
 			imgui_renderer: None,
 			last_frame: Instant::now(),
+			ui_elements: Vec::new(),
 		}))
 	}
 
-	pub fn init(&mut self) -> utility::Result<()> {
-		let video = self.display.upgrade().unwrap().borrow().video_subsystem()?;
+	pub fn init_display(&mut self) -> engine::utility::Result<()> {
+		let engine = self.engine.upgrade().unwrap();
+		self.display = Some(engine::Engine::create_display_manager(
+			&engine
+		)?);
+		let video = self.display().borrow().video_subsystem()?;
 		let gl_attr = video.gl_attr();
 		gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
 		gl_attr.set_context_version(3, 0);
 		Ok(())
 	}
 
-	pub fn create_window(&mut self, title: &str, width: u32, height: u32) -> utility::Result<()> {
-		let video = self.display.upgrade().unwrap().borrow().video_subsystem()?;
-		let window = utility::as_window_error(
+	pub fn display(&self) -> &Rc<RefCell<engine::display::Manager>> {
+		&self.display.as_ref().unwrap()
+	}
+
+	pub fn create_window(&mut self, title: &str, width: u32, height: u32) -> engine::utility::Result<()> {
+		let video = self.display().borrow().video_subsystem()?;
+		let window = engine::utility::as_window_error(
 			video
 				.window(title, width, height)
 				.position_centered()
@@ -82,7 +97,7 @@ impl Editor {
 	}
 }
 
-impl display::EventListener for Editor {
+impl engine::display::EventListener for Editor {
 	fn on_event(&mut self, event: &sdl2::event::Event) -> bool {
 		let mut imctx = self.imgui_ctx.as_mut().unwrap();
 		let imsdl = self.imgui_win.as_mut().unwrap();
@@ -92,12 +107,18 @@ impl display::EventListener for Editor {
 }
 
 impl Editor {
-	pub fn render_frame(&mut self) -> utility::Result<()> {
+
+	pub fn add_element(&mut self, element: &Rc<RefCell<dyn ui::Element>>) {
+		let element_weak = Rc::downgrade(&element);
+		self.ui_elements.push(element_weak);
+	}
+
+	pub fn render_frame(&mut self) -> engine::utility::Result<()> {
+		let event_pump = self.display().borrow().event_pump()?;
 		let window = self.sdl_window.as_mut().unwrap();
 		let imctx = self.imgui_ctx.as_mut().unwrap();
 		let imsdl = self.imgui_win.as_mut().unwrap();
 		let imren = self.imgui_renderer.as_mut().unwrap();
-		let event_pump = self.display.upgrade().unwrap().borrow().event_pump()?;
 
 		imsdl.prepare_frame(imctx.io_mut(), &window, &event_pump.mouse_state());
 
@@ -108,7 +129,10 @@ impl Editor {
 		imctx.io_mut().delta_time = delta_s;
 
 		let ui_builder = imctx.frame();
-		ui_builder.show_demo_window(&mut true);
+		self.ui_elements.retain(|element| element.strong_count() > 0);
+		for element in self.ui_elements.iter() {
+			element.upgrade().unwrap().borrow_mut().render(&ui_builder);
+		}
 
 		unsafe {
 			gl::ClearColor(0.2, 0.2, 0.2, 1.0);

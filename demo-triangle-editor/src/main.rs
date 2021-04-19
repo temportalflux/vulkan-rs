@@ -6,11 +6,11 @@ extern crate sdl2;
 
 use demo_triangle;
 use std::rc::Rc;
-use temportal_engine as engine;
 use temportal_engine_editor as editor;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = demo_triangle::create_engine()?;
+	let editor = editor::Editor::new(&engine);
 
 	{
 		/*
@@ -33,15 +33,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		}
 		*/
 	}
-	let display = engine::Engine::create_display_manager(
-		&engine,
-	)?;
 
-	let editor = editor::Editor::create(&display);
 	{
-		(*editor.borrow_mut()).init()?;
+		(*editor.borrow_mut()).init_display()?;
 		let weak_editor = Rc::downgrade(&editor);
-		display.borrow_mut().add_event_listener(weak_editor);
+		editor.borrow().display().borrow_mut().add_event_listener(weak_editor);
 	}
 
 	editor
@@ -49,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.create_window("Triangle Editor", 1280, 720)?;
 
 	while !engine.borrow().should_quit() {
-		display.borrow_mut().poll_all_events()?;
+		editor.borrow().display().borrow_mut().poll_all_events()?;
 		editor.borrow_mut().render_frame()?;
 		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 	}
