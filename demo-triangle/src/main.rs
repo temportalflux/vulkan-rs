@@ -1,13 +1,18 @@
 use std::{cell::RefCell, rc::Rc};
 use temportal_engine::{self, display, Engine};
 use temportal_graphics::{device::physical, flags, renderpass};
+use temportal_math::Vector;
 
 #[path = "render/TriangleRenderer.rs"]
 mod renderer;
 use renderer::TriangleRenderer;
 
+#[path = "lib.rs"]
+mod lib;
+use lib::*;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let engine = crate_engine()?;
+	let engine = crate::create_engine()?;
 	{
 		let engine_mut = engine.borrow_mut();
 		if engine_mut.is_build_instance() {
@@ -22,21 +27,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		include_bytes!("triangle.vert.spirv").to_vec(),
 		include_bytes!("triangle.frag.spirv").to_vec(),
 	)));
-	window
-		.borrow_mut()
-		.add_render_chain_element(renderer.clone())?;
-	window.borrow_mut().add_command_recorder(renderer.clone())?;
+	{
+		let mut window_mut = window.borrow_mut();
+		window_mut.add_render_chain_element(renderer.clone())?;
+		window_mut.add_command_recorder(renderer.clone())?;
+	}
 
 	window.borrow_mut().create_render_chain()?;
 
-	temportal_engine::run(&engine, &mut display, &mut window)
-}
+	{
+		let mut window_mut = window.borrow_mut();
+		window_mut.add_clear_value(renderpass::ClearValue::Color(Vector::new([
+			0.0, 0.0, 0.0, 1.0,
+		])));
+		window_mut.mark_commands_dirty();
+	}
 
-fn crate_engine() -> Result<Rc<RefCell<Engine>>, Box<dyn std::error::Error>> {
-	let mut engine = Engine::new()?
-		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
-	engine.build_assets_callback = Some(build_assets);
-	Ok(Rc::new(RefCell::new(engine)))
+	while !engine.borrow().should_quit() {
+		display.poll_all_events()?;
+		window.borrow_mut().render_frame()?;
+		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
+	}
+
+	window.borrow().logical().wait_until_idle()?;
+
+	Ok(())
 }
 
 fn create_window(
@@ -107,36 +122,4 @@ fn create_render_pass_info() -> renderpass::Info {
 	);
 
 	rp_info
-}
-
-fn build_assets(
-	ctx: &mut temportal_engine::build::BuildContext,
-) -> Result<(), Box<dyn std::error::Error>> {
-	let options = ctx.shader.make_options();
-
-	let outpath = temportal_engine::build::get_output_dir("demo-triangle")?;
-
-	ctx.shader.compile_into_spirv(
-		&options,
-		&outpath,
-		temportal_engine::build::Shader {
-			name: String::from("triangle.vert"),
-			source: String::from(include_str!("triangle.vert")),
-			kind: temportal_engine::build::ShaderKind::Vertex,
-			entry_point: String::from("main"),
-		},
-	)?;
-
-	ctx.shader.compile_into_spirv(
-		&options,
-		&outpath,
-		temportal_engine::build::Shader {
-			name: String::from("triangle.frag"),
-			source: String::from(include_str!("triangle.frag")),
-			kind: temportal_engine::build::ShaderKind::Fragment,
-			entry_point: String::from("main"),
-		},
-	)?;
-
-	Ok(())
 }

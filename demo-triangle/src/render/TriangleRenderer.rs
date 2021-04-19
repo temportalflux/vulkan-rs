@@ -1,5 +1,5 @@
 use temportal_engine::{display, graphics, utility};
-use temportal_graphics::{flags, pipeline, shader, command};
+use temportal_graphics::{command, flags, pipeline, shader};
 
 pub struct TriangleRenderer {
 	pipeline: Option<pipeline::Pipeline>,
@@ -85,7 +85,10 @@ impl graphics::RenderChainElement for TriangleRenderer {
 
 impl graphics::CommandRecorder for TriangleRenderer {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
-		buffer.bind_pipeline(&self.pipeline.as_ref().unwrap(), flags::PipelineBindPoint::GRAPHICS);
+		buffer.bind_pipeline(
+			&self.pipeline.as_ref().unwrap(),
+			flags::PipelineBindPoint::GRAPHICS,
+		);
 		//cmd_buffer.draw(3, 0, 1, 0, 0);
 		buffer.draw_vertices(3);
 		Ok(())

@@ -1,0 +1,16 @@
+[package]
+name = "temportal-engine-editor"
+version = "0.1.0"
+authors = ["Dustin Yost <dustin.yost.t@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+temportal-engine = { path = "../temportal-engine" }
+sdl2 = "0.34"
+gl = "0.14"
+imgui = "0.7"
+imgui-sdl2 = "0.14.0"
+imgui-opengl-renderer = "0.11"
+
