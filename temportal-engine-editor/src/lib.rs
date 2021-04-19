@@ -48,9 +48,7 @@ impl Editor {
 
 	pub fn init_display(&mut self) -> engine::utility::Result<()> {
 		let engine = self.engine.upgrade().unwrap();
-		self.display = Some(engine::Engine::create_display_manager(
-			&engine
-		)?);
+		self.display = Some(engine::Engine::create_display_manager(&engine)?);
 		let video = self.display().borrow().video_subsystem()?;
 		let gl_attr = video.gl_attr();
 		gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
@@ -62,7 +60,12 @@ impl Editor {
 		&self.display.as_ref().unwrap()
 	}
 
-	pub fn create_window(&mut self, title: &str, width: u32, height: u32) -> engine::utility::Result<()> {
+	pub fn create_window(
+		&mut self,
+		title: &str,
+		width: u32,
+		height: u32,
+	) -> engine::utility::Result<()> {
 		let video = self.display().borrow().video_subsystem()?;
 		let window = engine::utility::as_window_error(
 			video
@@ -107,10 +110,12 @@ impl engine::display::EventListener for Editor {
 }
 
 impl Editor {
-
-	pub fn add_element(&mut self, element: &Rc<RefCell<dyn ui::Element>>) {
-		let element_weak = Rc::downgrade(&element);
-		self.ui_elements.push(element_weak);
+	pub fn add_element<T>(&mut self, element: &Rc<RefCell<T>>)
+	where
+		T: ui::Element + 'static,
+	{
+		let element_strong: Rc<RefCell<dyn ui::Element>> = element.clone();
+		self.ui_elements.push(Rc::downgrade(&element_strong));
 	}
 
 	pub fn render_frame(&mut self) -> engine::utility::Result<()> {
@@ -129,7 +134,8 @@ impl Editor {
 		imctx.io_mut().delta_time = delta_s;
 
 		let ui_builder = imctx.frame();
-		self.ui_elements.retain(|element| element.strong_count() > 0);
+		self.ui_elements
+			.retain(|element| element.strong_count() > 0);
 		for element in self.ui_elements.iter() {
 			element.upgrade().unwrap().borrow_mut().render(&ui_builder);
 		}

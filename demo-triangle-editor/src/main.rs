@@ -5,7 +5,6 @@ extern crate imgui_sdl2;
 extern crate sdl2;
 
 use demo_triangle;
-use std::rc::Rc;
 use temportal_engine_editor as editor;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -35,19 +34,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 
 	{
-		(*editor.borrow_mut()).init_display()?;
-		let weak_editor = Rc::downgrade(&editor);
-		editor.borrow().display().borrow_mut().add_event_listener(weak_editor);
+		let mut editor_mut = editor.borrow_mut();
+		editor_mut.init_display()?;
+		editor_mut.create_window("Triangle Editor", 1280, 720)?;
 	}
 
-	editor
-		.borrow_mut()
-		.create_window("Triangle Editor", 1280, 720)?;
+	let workspace = editor::ui::Workspace::new();
+	editor.borrow_mut().add_element(&workspace);
 
-	while !engine.borrow().should_quit() {
-		editor.borrow().display().borrow_mut().poll_all_events()?;
-		editor.borrow_mut().render_frame()?;
-		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
+	{
+		let mut editor_mut = editor.borrow_mut();
+		while !editor_mut.display().borrow_mut().should_quit() {
+			editor_mut.display().borrow_mut().poll_all_events()?;
+			editor_mut.render_frame()?;
+			::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
+		}
 	}
 
 	Ok(())
