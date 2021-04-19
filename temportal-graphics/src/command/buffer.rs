@@ -60,6 +60,10 @@ impl Buffer {
 		self.device.bind_pipeline(&self, &pipeline, bind_point);
 	}
 
+	pub fn draw_vertices(&self, vertex_count: u32) {
+		self.device.draw(&self, vertex_count);
+	}
+
 	pub fn draw(
 		&self,
 		index_count: u32,

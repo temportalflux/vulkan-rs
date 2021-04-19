@@ -2,7 +2,7 @@ use crate::{
 	device::logical,
 	flags::ShaderStageKind,
 	shader,
-	utility::{VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
 use std::rc::Rc;
@@ -15,10 +15,7 @@ pub struct Module {
 }
 
 impl Module {
-	pub fn create(
-		device: Rc<logical::Device>,
-		info: shader::Info,
-	) -> Result<Module, Box<dyn std::error::Error>> {
+	pub fn create(device: Rc<logical::Device>, info: shader::Info) -> utility::Result<Module> {
 		Ok(Module::create_from_bytes(device, &info.bytes[..])?
 			.set_entry_point(info.entry_point)
 			.set_kind(info.kind))
@@ -29,8 +26,11 @@ impl Module {
 	pub fn create_from_bytes(
 		_device: Rc<logical::Device>,
 		bytes: &[u8],
-	) -> Result<Module, Box<dyn std::error::Error>> {
-		let decoded_bytes = erupt::utils::decode_spv(bytes)?;
+	) -> utility::Result<Module> {
+		let decoded_bytes = match erupt::utils::decode_spv(bytes) {
+			Ok(bytes) => bytes,
+			Err(e) => return Err(utility::Error::General(e)),
+		};
 		let info = erupt::vk::ShaderModuleCreateInfoBuilder::new()
 			.code(&decoded_bytes)
 			.build();

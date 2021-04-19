@@ -5,6 +5,7 @@ pub enum Error {
 	InvalidInstanceLayer(String),
 	InstanceSymbolNotAvailable(),
 	VulkanError(erupt::vk::Result),
+	General(std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -17,6 +18,7 @@ impl std::fmt::Display for Error {
 			}
 			Error::InstanceSymbolNotAvailable() => write!(f, "Instance symbol not available"),
 			Error::VulkanError(ref vk_result) => vk_result.fmt(f),
+			Error::General(ref e) => e.fmt(f),
 		}
 	}
 }

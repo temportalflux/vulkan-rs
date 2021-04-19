@@ -1,7 +1,4 @@
-use std::{
-	cell::RefCell,
-	rc::Rc,
-};
+use std::{cell::RefCell, rc::Rc};
 use temportal_engine::{self, display, Engine};
 use temportal_graphics::{device::physical, flags, renderpass};
 
@@ -21,24 +18,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let mut display = Engine::create_display_manager(&engine)?;
 	let mut window = create_window(&mut display, "Triangle Demo", 800, 600)?;
 
-	let renderer = Rc::new(RefCell::new(TriangleRenderer::new()));
-	let renderer_weak = Rc::downgrade(&renderer);
+	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(
+		include_bytes!("triangle.vert.spirv").to_vec(),
+		include_bytes!("triangle.frag.spirv").to_vec(),
+	)));
 	window
 		.borrow_mut()
-		.add_render_chain_element(renderer_weak.clone());
-	window
-		.borrow_mut()
-		.add_command_recorder(renderer_weak.clone());
+		.add_render_chain_element(renderer.clone())?;
+	window.borrow_mut().add_command_recorder(renderer.clone())?;
 
 	window.borrow_mut().create_render_chain()?;
 
-	temportal_engine::run(
-		&engine,
-		&mut display,
-		&mut window,
-		include_bytes!("triangle.vert.spirv").to_vec(),
-		include_bytes!("triangle.frag.spirv").to_vec(),
-	)
+	temportal_engine::run(&engine, &mut display, &mut window)
 }
 
 fn crate_engine() -> Result<Rc<RefCell<Engine>>, Box<dyn std::error::Error>> {
