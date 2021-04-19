@@ -5,21 +5,39 @@ extern crate imgui_sdl2;
 extern crate sdl2;
 
 use demo_triangle;
-use std::{cell::RefCell, rc::Rc};
-use temportal_engine::Engine;
-use temportal_engine_editor::Editor;
+use std::rc::Rc;
+use temportal_engine as engine;
+use temportal_engine_editor as editor;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = demo_triangle::create_engine()?;
+
 	{
+		/*
 		let engine_mut = engine.borrow_mut();
 		if engine_mut.is_build_instance() {
-			return engine_mut.build();
+			let path: std::path::PathBuf = [
+				std::env!("CARGO_MANIFEST_DIR"),
+				"..",
+				"demo-triangle",
+				"assets",
+				"triangle_vert.json",
+			]
+			.iter()
+			.collect();
+			let asset = editor::asset::Manager::read_sync(&engine_mut.assets.types, &path.as_path())?;
+			let _shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+			//println!("{:?}", shader);
+			return Ok(());
+			//return engine_mut.build();
 		}
+		*/
 	}
-	let display = Rc::new(RefCell::new(Engine::create_display_manager(&engine)?));
+	let display = engine::Engine::create_display_manager(
+		&engine,
+	)?;
 
-	let editor = Rc::new(RefCell::new(Editor::create(&display)));
+	let editor = editor::Editor::create(&display);
 	{
 		(*editor.borrow_mut()).init()?;
 		let weak_editor = Rc::downgrade(&editor);

@@ -2,12 +2,14 @@ use std::{cell::RefCell, rc::Rc};
 use temportal_engine::{self, Engine};
 
 pub fn create_engine() -> Result<Rc<RefCell<Engine>>, Box<dyn std::error::Error>> {
-	let mut engine = Engine::new()?
+	let engine = Engine::new()?;
+	engine
+		.borrow_mut()
 		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
-	engine.build_assets_callback = Some(build_assets);
-	Ok(Rc::new(RefCell::new(engine)))
+	Ok(engine)
 }
 
+/*
 fn build_assets(
 	ctx: &mut temportal_engine::build::BuildContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -39,3 +41,4 @@ fn build_assets(
 
 	Ok(())
 }
+*/

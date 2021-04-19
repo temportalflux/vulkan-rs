@@ -13,15 +13,9 @@ use lib::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = crate::create_engine()?;
-	{
-		let engine_mut = engine.borrow_mut();
-		if engine_mut.is_build_instance() {
-			return engine_mut.build();
-		}
-	}
 
-	let mut display = Engine::create_display_manager(&engine)?;
-	let mut window = create_window(&mut display, "Triangle Demo", 800, 600)?;
+	let display = Engine::create_display_manager(&engine)?;
+	let window = create_window(&mut display.borrow_mut(), "Triangle Demo", 800, 600)?;
 
 	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(
 		include_bytes!("triangle.vert.spirv").to_vec(),
@@ -44,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 
 	while !engine.borrow().should_quit() {
-		display.poll_all_events()?;
+		display.borrow_mut().poll_all_events()?;
 		window.borrow_mut().render_frame()?;
 		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 	}

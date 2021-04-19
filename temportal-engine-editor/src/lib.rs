@@ -3,12 +3,16 @@ extern crate imgui;
 extern crate imgui_opengl_renderer;
 extern crate imgui_sdl2;
 extern crate sdl2;
+extern crate shaderc;
 
 use std::{
 	cell::RefCell,
 	rc::{Rc, Weak},
 };
 use temportal_engine::{display, utility};
+
+#[path = "asset/_.rs"]
+pub mod asset;
 
 use std::time::Instant;
 
@@ -23,8 +27,8 @@ pub struct Editor {
 }
 
 impl Editor {
-	pub fn create(display: &Rc<RefCell<display::Manager>>) -> Editor {
-		Editor {
+	pub fn create(display: &Rc<RefCell<display::Manager>>) -> Rc<RefCell<Editor>> {
+		Rc::new(RefCell::new(Editor {
 			display: Rc::downgrade(&display),
 			sdl_window: None,
 			_gl_context: None,
@@ -32,7 +36,7 @@ impl Editor {
 			imgui_win: None,
 			imgui_renderer: None,
 			last_frame: Instant::now(),
-		}
+		}))
 	}
 
 	pub fn init(&mut self) -> utility::Result<()> {
