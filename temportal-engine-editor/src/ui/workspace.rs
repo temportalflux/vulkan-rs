@@ -14,7 +14,7 @@ impl Workspace {
 impl ui::Element for Workspace {
 	fn render(
 		&mut self,
-		_engine: &mut engine::Engine,
+		engine: &mut engine::Engine,
 		asset_manager: &crate::asset::Manager,
 		ui: &imgui::Ui,
 	) {
@@ -22,6 +22,16 @@ impl ui::Element for Workspace {
 			ui.menu(im_str!("General"), true, || {
 				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
 					match asset::build(&asset_manager, "demo-triangle") {
+						Ok(_) => {}
+						Err(e) => println!("{:?}", e),
+					}
+				}
+				if imgui::MenuItem::new(im_str!("Build & Package")).build(&ui) {
+					match asset::build(&asset_manager, "demo-triangle") {
+						Ok(_) => {}
+						Err(e) => println!("{:?}", e),
+					}
+					match asset::package(engine, &asset_manager, "demo-triangle") {
 						Ok(_) => {}
 						Err(e) => println!("{:?}", e),
 					}

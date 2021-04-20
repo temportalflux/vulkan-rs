@@ -9,3 +9,6 @@ pub use build::*;
 
 mod metadata;
 pub use metadata::*;
+
+mod package;
+pub use package::*;
