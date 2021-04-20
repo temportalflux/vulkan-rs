@@ -5,4 +5,4 @@ externs/
 *.spirv
 *.bin
 *.pak
-*/output/
+*/binaries/

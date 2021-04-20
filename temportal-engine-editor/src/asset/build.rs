@@ -16,8 +16,9 @@ pub fn build(
 	let mut assets_dir_path = crate_path.clone();
 	assets_dir_path.push("assets");
 	let mut output_dir_path = crate_path.clone();
-	output_dir_path.push("output");
+	output_dir_path.push("binaries");
 
+	fs::create_dir(&output_dir_path)?;
 	fs::remove_dir_all(&output_dir_path)?;
 
 	for file_path in collect_file_paths(&assets_dir_path)?.iter() {

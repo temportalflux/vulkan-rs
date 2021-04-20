@@ -16,7 +16,7 @@ pub fn package(
 		.collect::<PathBuf>()
 		.canonicalize()?;
 	let mut output_dir_path = module_dir.clone();
-	output_dir_path.push("output");
+	output_dir_path.push("binaries");
 	let mut zip_path = module_dir.clone();
 	zip_path.push(format!("{}.pak", module_name));
 	

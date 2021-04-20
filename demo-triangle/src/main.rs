@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		{
 			let path = [
 				std::env!("CARGO_MANIFEST_DIR"),
-				"output",
+				"binaries",
 				"triangle_vert.bin",
 			]
 			.iter()
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		{
 			let path = [
 				std::env!("CARGO_MANIFEST_DIR"),
-				"output",
+				"binaries",
 				"triangle_frag.bin",
 			]
 			.iter()
