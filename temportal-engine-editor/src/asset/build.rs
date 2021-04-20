@@ -6,9 +6,10 @@ use std::{
 };
 use temportal_engine as engine;
 
-pub fn build(engine: &engine::Engine, module_name: &str) -> Result<(), engine::utility::AnyError> {
-	use crate::asset::Manager;
-
+pub fn build(
+	asset_manager: &crate::asset::Manager,
+	module_name: &str,
+) -> Result<(), engine::utility::AnyError> {
 	let crate_path = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
 		.iter()
 		.collect::<PathBuf>()
@@ -26,15 +27,8 @@ pub fn build(engine: &engine::Engine, module_name: &str) -> Result<(), engine::u
 					.iter()
 					.collect::<PathBuf>();
 				output_file_path.set_extension("bin");
-				let (type_id, asset) =
-					Manager::read_sync(&engine.assets.types, &file_path.as_path())?;
-				Manager::compile(
-					&engine.assets.types,
-					&file_path,
-					&type_id,
-					&asset,
-					&output_file_path,
-				)?;
+				let (type_id, asset) = asset_manager.read_sync(&file_path.as_path())?;
+				asset_manager.compile(&file_path, &type_id, &asset, &output_file_path)?;
 			}
 		}
 	}

@@ -12,11 +12,16 @@ impl Workspace {
 }
 
 impl ui::Element for Workspace {
-	fn render(&mut self, engine: &mut engine::Engine, ui: &imgui::Ui) {
+	fn render(
+		&mut self,
+		_engine: &mut engine::Engine,
+		asset_manager: &crate::asset::Manager,
+		ui: &imgui::Ui,
+	) {
 		if let Some(bar) = ui.begin_main_menu_bar() {
 			ui.menu(im_str!("General"), true, || {
 				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
-					match asset::build(engine, "demo-triangle") {
+					match asset::build(&asset_manager, "demo-triangle") {
 						Ok(_) => {}
 						Err(e) => println!("{:?}", e),
 					}
