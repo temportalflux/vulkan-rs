@@ -1,5 +1,6 @@
+use engine::{display, Engine};
 use std::{cell::RefCell, rc::Rc};
-use temportal_engine::{self, display, Engine};
+use temportal_engine as engine;
 use temportal_graphics::{device::physical, flags, renderpass};
 use temportal_math::Vector;
 
@@ -17,10 +18,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let display = Engine::create_display_manager(&engine)?;
 	let window = create_window(&mut display.borrow_mut(), "Triangle Demo", 800, 600)?;
 
-	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(
-		include_bytes!("triangle.vert.spirv").to_vec(),
-		include_bytes!("triangle.frag.spirv").to_vec(),
-	)));
+	let vert_bytes: Vec<u8>;
+	let frag_bytes: Vec<u8>;
+	{
+		let eng_ref = engine.borrow();
+		{
+			let path = [
+				std::env!("CARGO_MANIFEST_DIR"),
+				"output",
+				"triangle_vert.bin",
+			]
+			.iter()
+			.collect::<std::path::PathBuf>();
+			let asset = eng_ref
+				.assets
+				.loader
+				.decompile(&eng_ref.assets.types, &path)?;
+			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+			vert_bytes = shader.contents().clone();
+		}
+		{
+			let path = [
+				std::env!("CARGO_MANIFEST_DIR"),
+				"output",
+				"triangle_frag.bin",
+			]
+			.iter()
+			.collect::<std::path::PathBuf>();
+			let asset = eng_ref
+				.assets
+				.loader
+				.decompile(&eng_ref.assets.types, &path)?;
+			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+			frag_bytes = shader.contents().clone();
+		}
+	}
+
+	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(vert_bytes, frag_bytes)));
 	{
 		let mut window_mut = window.borrow_mut();
 		window_mut.add_render_chain_element(renderer.clone())?;
@@ -37,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		window_mut.mark_commands_dirty();
 	}
 
-	while !engine.borrow().should_quit() {
+	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
 		window.borrow_mut().render_frame()?;
 		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));

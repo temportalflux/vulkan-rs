@@ -17,10 +17,10 @@ impl Manager {
 	) -> Result<(String, engine::asset::AssetBox), engine::utility::AnyError> {
 		let absolute_path = path.canonicalize()?;
 		let file_json = fs::read_to_string(&absolute_path)?;
-		let type_id = Manager::read_asset_type(&absolute_path, file_json.as_str())?;
+		let type_id = Manager::read_asset_type(file_json.as_str())?;
 		let asset = registry
 			.get(type_id.as_str())
-			.ok_or(asset::Error::UnregisteredAssetType(
+			.ok_or(engine::asset::Error::UnregisteredAssetType(
 				absolute_path.clone(),
 				type_id.to_string(),
 			))?
@@ -28,23 +28,9 @@ impl Manager {
 		Ok((type_id, asset))
 	}
 
-	fn read_asset_type(
-		path: &PathBuf,
-		json_str: &str,
-	) -> Result<String, engine::utility::AnyError> {
-		let parsed_json: serde_json::Value = serde_json::from_str(json_str)?;
-		match parsed_json.as_object() {
-			Some(obj) => match obj.get("type") {
-				Some(id) => Ok(id.as_str().unwrap().to_string()),
-				None => return Err(Box::new(asset::Error::MissingTypeId(path.clone()))),
-			},
-			None => {
-				return Err(Box::new(asset::Error::InvalidJson(
-					path.clone(),
-					"not a json object".to_string(),
-				)))
-			}
-		}
+	fn read_asset_type(json_str: &str) -> Result<String, engine::utility::AnyError> {
+		let generic: engine::asset::AssetGeneric = serde_json::from_str(json_str)?;
+		return Ok(generic.asset_type);
 	}
 
 	pub fn compile(

@@ -1,6 +1,6 @@
 use erupt::vk::ShaderStageFlagBits as ShaderStageKind;
-use shaderc;
 use serde::{Deserialize, Serialize};
+use shaderc;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum ShaderKind {
@@ -50,7 +50,7 @@ impl ShaderKind {
 			_ => panic!("No such shader kind"),
 		}
 	}
-	fn to_string(&self) -> String {
+	fn _to_string(&self) -> String {
 		match self {
 			ShaderKind::Vertex => "vertex".to_string(),
 			ShaderKind::Fragment => "fragment".to_string(),
@@ -61,7 +61,7 @@ impl ShaderKind {
 			_ => String::new(),
 		}
 	}
-	fn from_string(s: &str) -> Option<ShaderKind> {
+	fn _from_string(s: &str) -> Option<ShaderKind> {
 		match s {
 			"vertex" => Some(ShaderKind::Vertex),
 			"fragment" => Some(ShaderKind::Fragment),

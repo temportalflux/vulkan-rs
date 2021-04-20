@@ -28,7 +28,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		self.vert_shader = Some(utility::as_graphics_error(shader::Module::create(
 			window.logical().clone(),
 			shader::Info {
-				kind: flags::ShaderStageKind::VERTEX,
+				kind: flags::ShaderKind::Vertex,
 				entry_point: String::from("main"),
 				bytes: self.vert_bytes.clone(),
 			},
@@ -36,7 +36,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		self.frag_shader = Some(utility::as_graphics_error(shader::Module::create(
 			window.logical().clone(),
 			shader::Info {
-				kind: flags::ShaderStageKind::FRAGMENT,
+				kind: flags::ShaderKind::Fragment,
 				entry_point: String::from("main"),
 				bytes: self.frag_bytes.clone(),
 			},

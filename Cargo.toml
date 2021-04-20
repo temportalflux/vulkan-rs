@@ -10,4 +10,4 @@ members = [
 	"demo-triangle",
 	"demo-triangle-editor"
 ]
-default-members = ["demo-triangle-editor"]
+default-members = ["demo-triangle"]
