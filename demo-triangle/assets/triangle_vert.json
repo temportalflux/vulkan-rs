@@ -1,3 +1,4 @@
 {
-	"type": "shader"
+	"type": "shader",
+	"kind": "Vertex"
 }

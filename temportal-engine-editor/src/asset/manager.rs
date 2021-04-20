@@ -14,17 +14,18 @@ impl Manager {
 	pub fn read_sync(
 		registry: &engine::asset::TypeRegistry,
 		path: &Path,
-	) -> engine::asset::AssetResult {
+	) -> Result<(String, engine::asset::AssetBox), engine::utility::AnyError> {
 		let absolute_path = path.canonicalize()?;
 		let file_json = fs::read_to_string(&absolute_path)?;
 		let type_id = Manager::read_asset_type(&absolute_path, file_json.as_str())?;
-		registry
+		let asset = registry
 			.get(type_id.as_str())
 			.ok_or(asset::Error::UnregisteredAssetType(
 				absolute_path.clone(),
-				type_id,
+				type_id.to_string(),
 			))?
-			.read(&absolute_path, file_json.as_str())
+			.read(&absolute_path, file_json.as_str())?;
+		Ok((type_id, asset))
 	}
 
 	fn read_asset_type(
@@ -44,5 +45,19 @@ impl Manager {
 				)))
 			}
 		}
+	}
+
+	pub fn compile(
+		registry: &engine::asset::TypeRegistry,
+		json_path: &PathBuf,
+		type_id: &String,
+		asset: &engine::asset::AssetBox,
+		write_to: &PathBuf,
+	) -> Result<(), engine::utility::AnyError> {
+		fs::create_dir_all(&write_to.parent().unwrap())?;
+		let metadata = registry.get(type_id).unwrap();
+		let bytes = metadata.compile(&json_path, &asset)?;
+		fs::write(write_to, bytes)?;
+		Ok(())
 	}
 }

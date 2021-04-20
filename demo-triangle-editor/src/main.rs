@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let mut editor_mut = editor.borrow_mut();
 		while !editor_mut.display().borrow_mut().should_quit() {
 			editor_mut.display().borrow_mut().poll_all_events()?;
-			editor_mut.render_frame()?;
+			editor_mut.render_frame(&mut engine.borrow_mut())?;
 			::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 		}
 	}

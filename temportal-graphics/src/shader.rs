@@ -1,17 +1,23 @@
 use crate::{
 	device::logical,
-	flags::ShaderStageKind,
+	flags::ShaderKind,
 	shader,
 	utility::{self, VulkanInfo, VulkanObject},
 };
 use erupt;
 use std::rc::Rc;
 
+pub struct Info {
+	pub kind: ShaderKind,
+	pub entry_point: String,
+	pub bytes: Vec<u8>,
+}
+
 pub struct Module {
 	_device: Rc<logical::Device>,
 	_internal: erupt::vk::ShaderModule,
 	entry_point: std::ffi::CString,
-	kind: ShaderStageKind,
+	kind: ShaderKind,
 }
 
 impl Module {
@@ -39,7 +45,7 @@ impl Module {
 			_device,
 			_internal,
 			entry_point: std::ffi::CString::default(),
-			kind: ShaderStageKind::VERTEX,
+			kind: ShaderKind::Vertex,
 		})
 	}
 
@@ -48,7 +54,7 @@ impl Module {
 		self
 	}
 
-	pub fn set_kind(mut self, kind: ShaderStageKind) -> Self {
+	pub fn set_kind(mut self, kind: ShaderKind) -> Self {
 		self.kind = kind;
 		self
 	}
@@ -74,7 +80,7 @@ impl Drop for Module {
 impl VulkanInfo<erupt::vk::PipelineShaderStageCreateInfo> for Module {
 	fn to_vk(&self) -> erupt::vk::PipelineShaderStageCreateInfo {
 		erupt::vk::PipelineShaderStageCreateInfoBuilder::new()
-			.stage(self.kind)
+			.stage(self.kind.to_vk())
 			.module(*self.unwrap())
 			.name(&self.entry_point)
 			.build()

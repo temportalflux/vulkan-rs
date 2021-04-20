@@ -118,7 +118,7 @@ impl Editor {
 		self.ui_elements.push(Rc::downgrade(&element_strong));
 	}
 
-	pub fn render_frame(&mut self) -> engine::utility::Result<()> {
+	pub fn render_frame(&mut self, engine: &mut engine::Engine) -> engine::utility::Result<()> {
 		let event_pump = self.display().borrow().event_pump()?;
 		let window = self.sdl_window.as_mut().unwrap();
 		let imctx = self.imgui_ctx.as_mut().unwrap();
@@ -137,7 +137,11 @@ impl Editor {
 		self.ui_elements
 			.retain(|element| element.strong_count() > 0);
 		for element in self.ui_elements.iter() {
-			element.upgrade().unwrap().borrow_mut().render(&ui_builder);
+			element
+				.upgrade()
+				.unwrap()
+				.borrow_mut()
+				.render(engine, &ui_builder);
 		}
 
 		unsafe {
