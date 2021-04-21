@@ -41,7 +41,6 @@ impl Manager {
 			.editor_metadata
 			.get(type_id.as_str())
 			.ok_or(engine::asset::Error::UnregisteredAssetType(
-				absolute_path.clone(),
 				type_id.to_string(),
 			))?
 			.read(&absolute_path, file_json.as_str())?;

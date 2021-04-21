@@ -44,6 +44,7 @@
 			"command": "cargo",
 			"args": [
 				"run",
+				"--bin", "demo-triangle",
 				"--",
 				"-v"
 			],
@@ -51,12 +52,13 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Build Demo",
+			"label": "Run Editor",
 			"command": "cargo",
 			"args": [
 				"run",
+				"--bin", "demo-triangle-editor",
 				"--",
-				"-b"
+				"-v"
 			],
 			"group": "build",
 			"problemMatcher": []

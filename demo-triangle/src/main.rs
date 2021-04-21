@@ -15,6 +15,14 @@ use lib::*;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let engine = crate::create_engine()?;
 
+	let pak_path = [
+		std::env!("CARGO_MANIFEST_DIR"),
+		format!("{}.pak", std::env!("CARGO_PKG_NAME")).as_str(),
+	]
+	.iter()
+	.collect::<std::path::PathBuf>();
+	engine.borrow_mut().assets.library.scan_pak(&pak_path)?;
+
 	let display = Engine::create_display_manager(&engine)?;
 	let window = create_window(&mut display.borrow_mut(), "Triangle Demo", 800, 600)?;
 
@@ -23,32 +31,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	{
 		let eng_ref = engine.borrow();
 		{
-			let path = [
-				std::env!("CARGO_MANIFEST_DIR"),
-				"binaries",
-				"triangle_vert.bin",
-			]
-			.iter()
-			.collect::<std::path::PathBuf>();
-			let asset = eng_ref
-				.assets
-				.loader
-				.decompile(&eng_ref.assets.types, &path)?;
+			let asset = eng_ref.assets.loader.load_sync(
+				&eng_ref.assets.types, &eng_ref.assets.library,
+				&engine::asset::Id::new("demo-triangle", "triangle_vert.bin")
+			)?;
 			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 			vert_bytes = shader.contents().clone();
 		}
 		{
-			let path = [
-				std::env!("CARGO_MANIFEST_DIR"),
-				"binaries",
-				"triangle_frag.bin",
-			]
-			.iter()
-			.collect::<std::path::PathBuf>();
-			let asset = eng_ref
-				.assets
-				.loader
-				.decompile(&eng_ref.assets.types, &path)?;
+			let asset = eng_ref.assets.loader.load_sync(
+				&eng_ref.assets.types, &eng_ref.assets.library,
+				&engine::asset::Id::new("demo-triangle", "triangle_frag.bin")
+			)?;
 			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 			frag_bytes = shader.contents().clone();
 		}
