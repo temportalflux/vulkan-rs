@@ -40,7 +40,7 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Run Demo",
+			"label": "Run (Demo Triangle)",
 			"command": "cargo",
 			"args": [
 				"run",
@@ -52,11 +52,35 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Run Editor",
+			"label": "Run Editor (Demo Triangle)",
 			"command": "cargo",
 			"args": [
 				"run",
 				"--bin", "demo-triangle-editor",
+				"--",
+				"-v"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run (Crystal Sphinx)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin", "crystal-sphinx",
+				"--",
+				"-v"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Editor (Crystal Sphinx)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin", "crystal-sphinx-editor",
 				"--",
 				"-v"
 			],

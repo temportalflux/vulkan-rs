@@ -1,12 +1,8 @@
+use crate::engine;
 use std::{self, fs, io::Write, path::PathBuf};
-use temportal_engine as engine;
 use zip;
 
-pub fn package(
-	_engine: &mut engine::Engine,
-	_asset_manager: &crate::asset::Manager,
-	module_name: &str,
-) -> Result<(), engine::utility::AnyError> {
+pub fn package(module_name: &str) -> Result<(), engine::utility::AnyError> {
 	let module_dir = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
 		.iter()
 		.collect::<PathBuf>()
