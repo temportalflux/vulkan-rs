@@ -1,5 +1,5 @@
 [package]
-name = "demo-triangle-editor"
+name = "crystal-sphinx-editor"
 version = "0.1.0"
 authors = ["Dustin Yost <dustin.yost.t@gmail.com>"]
 edition = "2018"
@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 temportal-engine = { path = "../temportal-engine" }
 temportal-engine-editor = { path = "../temportal-engine-editor" }
-demo-triangle = { path = "../demo-triangle" }
+crystal-sphinx = { path = "../crystal-sphinx" }
 imgui = "0.7"

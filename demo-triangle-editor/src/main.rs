@@ -1,8 +1,4 @@
-extern crate gl;
 extern crate imgui;
-extern crate imgui_opengl_renderer;
-extern crate imgui_sdl2;
-extern crate sdl2;
 
 use demo_triangle;
 use temportal_engine_editor as editor;

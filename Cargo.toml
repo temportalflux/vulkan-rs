@@ -8,6 +8,11 @@ members = [
 	"temportal-engine",
 	"temportal-engine-editor",
 	"demo-triangle",
-	"demo-triangle-editor"
+	"demo-triangle-editor",
+	"crystal-sphinx",
+	"crystal-sphinx-editor"
 ]
-default-members = ["demo-triangle", "demo-triangle-editor"]
+default-members = [
+	"demo-triangle", "demo-triangle-editor",
+	"crystal-sphinx", "crystal-sphinx-editor"
+]
