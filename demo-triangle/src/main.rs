@@ -32,16 +32,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let eng_ref = engine.borrow();
 		{
 			let asset = eng_ref.assets.loader.load_sync(
-				&eng_ref.assets.types, &eng_ref.assets.library,
-				&engine::asset::Id::new("demo-triangle", "triangle_vert.bin")
+				&eng_ref.assets.types,
+				&eng_ref.assets.library,
+				&engine::asset::Id::new("demo-triangle", "triangle_vert.bin"),
 			)?;
 			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 			vert_bytes = shader.contents().clone();
 		}
 		{
 			let asset = eng_ref.assets.loader.load_sync(
-				&eng_ref.assets.types, &eng_ref.assets.library,
-				&engine::asset::Id::new("demo-triangle", "triangle_frag.bin")
+				&eng_ref.assets.types,
+				&eng_ref.assets.library,
+				&engine::asset::Id::new("demo-triangle", "triangle_frag.bin"),
 			)?;
 			let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 			frag_bytes = shader.contents().clone();
