@@ -14,7 +14,6 @@ impl Simulation {
 			is_open: false,
 			bring_to_front: true,
 		};
-		println!("{:?}", editor.settings);
 		value.is_open = editor.settings.is_window_open(&value.id);
 		value
 	}
