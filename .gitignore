@@ -6,3 +6,4 @@ externs/
 *.bin
 *.pak
 */binaries/
+config/

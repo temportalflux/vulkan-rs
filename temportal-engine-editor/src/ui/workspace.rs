@@ -7,15 +7,15 @@ pub struct Workspace {
 }
 
 impl Workspace {
-	pub fn new() -> Rc<RefCell<Workspace>> {
+	pub fn new(editor: &crate::Editor) -> Rc<RefCell<Workspace>> {
 		Rc::new(RefCell::new(Workspace {
-			simulation: ui::windows::Simulation::new(),
+			simulation: ui::windows::Simulation::new(editor),
 		}))
 	}
 }
 
 impl ui::Element for Workspace {
-	fn render(&mut self, editor: &crate::Editor, ui: &imgui::Ui) {
+	fn render(&mut self, editor: &mut crate::Editor, ui: &imgui::Ui) {
 		if let Some(bar) = ui.begin_main_menu_bar() {
 			ui.menu(im_str!("General"), true, || {
 				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
@@ -37,7 +37,7 @@ impl ui::Element for Workspace {
 			});
 			ui.menu(im_str!("Windows"), true, || {
 				if imgui::MenuItem::new(im_str!("Simulation")).build(&ui) {
-					self.simulation.open_or_bring_to_front();
+					self.simulation.open_or_bring_to_front(editor);
 				}
 			});
 			bar.end(&ui);

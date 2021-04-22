@@ -81,7 +81,7 @@ impl Ui {
 
 	pub fn render_frame(
 		&mut self,
-		editor: &Editor,
+		editor: &mut Editor,
 		event_pump: sdl2::EventPump,
 	) -> engine::utility::Result<()> {
 		self.imgui_win.prepare_frame(

@@ -15,3 +15,5 @@ pub use editor::*;
 
 #[path = "ui/_.rs"]
 pub mod ui;
+
+pub mod settings;

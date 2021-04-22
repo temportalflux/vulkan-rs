@@ -1,21 +1,28 @@
-use crate::{asset, engine};
+use crate::{
+	asset, engine,
+	settings::{self, Settings},
+};
 use std::{cell::RefCell, rc::Rc};
 
 pub struct Editor {
 	asset_manager: asset::Manager,
 	engine: Rc<RefCell<engine::Engine>>,
+	pub settings: settings::Editor,
 }
 
 impl Editor {
-	pub fn new(engine: Rc<RefCell<engine::Engine>>) -> Rc<RefCell<Editor>> {
+	pub fn new(
+		engine: Rc<RefCell<engine::Engine>>,
+	) -> Result<Rc<RefCell<Editor>>, engine::utility::AnyError> {
 		let mut editor = Editor {
 			engine,
 			asset_manager: asset::Manager::new(),
+			settings: settings::Editor::load()?,
 		};
 		editor
 			.asset_manager
 			.register::<engine::graphics::Shader>(asset::ShaderEditorMetadata::boxed());
-		Rc::new(RefCell::new(editor))
+		Ok(Rc::new(RefCell::new(editor)))
 	}
 
 	pub fn engine(&self) -> &Rc<RefCell<engine::Engine>> {
