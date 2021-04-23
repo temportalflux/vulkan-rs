@@ -30,8 +30,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 		.size(800, 600)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
-	let mut render_chain = window.borrow().create_render_chain(create_render_pass_info())?;
-	render_chain.add_clear_value(renderpass::ClearValue::Color(Vector::new([
+	let render_chain = window.borrow().create_render_chain(&mut display.borrow_mut(), create_render_pass_info())?;
+	render_chain.borrow_mut().add_clear_value(renderpass::ClearValue::Color(Vector::new([
 		0.0, 0.0, 0.0, 1.0,
 	])));
 
@@ -60,16 +60,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 
 	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(vert_bytes, frag_bytes)));
-	render_chain.add_render_chain_element(renderer.clone())?;
-	render_chain.add_command_recorder(renderer.clone())?;
+	render_chain.borrow_mut().add_render_chain_element(renderer.clone())?;
+	render_chain.borrow_mut().add_command_recorder(renderer.clone())?;
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
-		render_chain.render_frame()?;
+		render_chain.borrow_mut().render_frame()?;
 		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 	}
 
-	window.borrow().logical().wait_until_idle()?;
+	render_chain.borrow().logical().wait_until_idle()?;
 
 	Ok(())
 }
