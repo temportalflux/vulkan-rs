@@ -25,7 +25,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	engine.borrow_mut().assets.library.scan_pak(&pak_path)?;
 
 	let display = Engine::create_display_manager(&engine)?;
-	let window = create_window(&mut display.borrow_mut(), "Triangle Demo", 800, 600)?;
+	let window = display::WindowBuilder::default()
+		.title("Triangle Demo")
+		.size(800, 600)
+		.constraints(vulkan_device_constraints())
+		.build(&mut display.borrow_mut())?;
 	let mut render_chain = window.borrow().create_render_chain(create_render_pass_info())?;
 	render_chain.add_clear_value(renderpass::ClearValue::Color(Vector::new([
 		0.0, 0.0, 0.0, 1.0,
@@ -68,21 +72,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	window.borrow().logical().wait_until_idle()?;
 
 	Ok(())
-}
-
-fn create_window(
-	display: &mut display::Manager,
-	name: &str,
-	width: u32,
-	height: u32,
-) -> Result<Rc<RefCell<display::Window>>, Box<dyn std::error::Error>> {
-	let window = display.create_window(name, width, height)?;
-	{
-		let mut mut_window = window.borrow_mut();
-		mut_window.find_physical_device(&mut vulkan_device_constraints())?;
-		mut_window.create_logical()?;
-	}
-	Ok(window)
 }
 
 fn vulkan_device_constraints() -> Vec<physical::Constraint> {
