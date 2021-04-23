@@ -25,11 +25,19 @@ impl Manager {
 	{
 		let runtime_metadata = TAsset::metadata();
 		if !self.editor_metadata.contains_key(runtime_metadata.name()) {
-			self.editor_metadata.insert(runtime_metadata.name(), editor_metadata);
-			log::info!(target: engine::asset::LOG, "Registering asset type editor metadata \"{}\"", runtime_metadata.name());
-		}
-		else {
-			log::error!(target: engine::asset::LOG, "Encountered duplicate asset type with editor metadata \"{}\"", runtime_metadata.name());
+			self.editor_metadata
+				.insert(runtime_metadata.name(), editor_metadata);
+			log::info!(
+				target: engine::asset::LOG,
+				"Registering asset type editor metadata \"{}\"",
+				runtime_metadata.name()
+			);
+		} else {
+			log::error!(
+				target: engine::asset::LOG,
+				"Encountered duplicate asset type with editor metadata \"{}\"",
+				runtime_metadata.name()
+			);
 		}
 	}
 

@@ -1,4 +1,4 @@
-use temportal_engine::{display, graphics, utility};
+use temportal_engine::{graphics, utility};
 use temportal_graphics::{command, flags, pipeline, shader};
 
 pub struct TriangleRenderer {
@@ -24,9 +24,9 @@ impl TriangleRenderer {
 }
 
 impl graphics::RenderChainElement for TriangleRenderer {
-	fn initialize_with(&mut self, window: &display::Window) -> utility::Result<()> {
+	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
 		self.vert_shader = Some(utility::as_graphics_error(shader::Module::create(
-			window.logical().clone(),
+			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Vertex,
 				entry_point: String::from("main"),
@@ -34,7 +34,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 			},
 		))?);
 		self.frag_shader = Some(utility::as_graphics_error(shader::Module::create(
-			window.logical().clone(),
+			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Fragment,
 				entry_point: String::from("main"),
@@ -43,11 +43,11 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		))?);
 		Ok(())
 	}
-	fn on_render_chain_constructed(&mut self, window: &display::Window) -> utility::Result<()> {
+	fn on_render_chain_constructed(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
 		log::trace!("Render chain constructed");
 
 		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
-			window.logical().clone(),
+			render_chain.logical().clone(),
 		))?);
 		self.pipeline = Some(utility::as_graphics_error(
 			pipeline::Info::default()
@@ -57,11 +57,11 @@ impl graphics::RenderChainElement for TriangleRenderer {
 					pipeline::ViewportState::default()
 						.add_viewport(
 							temportal_graphics::utility::Viewport::default()
-								.set_size(window.physical().image_extent()),
+								.set_size(render_chain.physical().image_extent()),
 						)
 						.add_scissor(
 							temportal_graphics::utility::Scissor::default()
-								.set_size(window.physical().image_extent()),
+								.set_size(render_chain.physical().image_extent()),
 						),
 				)
 				.set_rasterization_state(pipeline::RasterizationState::default())
@@ -73,9 +73,9 @@ impl graphics::RenderChainElement for TriangleRenderer {
 					},
 				))
 				.create_object(
-					window.logical().clone(),
+					render_chain.logical().clone(),
 					&self.pipeline_layout.as_ref().unwrap(),
-					&window.render_pass(),
+					&render_chain.render_pass(),
 				),
 		)?);
 

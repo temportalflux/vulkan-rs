@@ -26,6 +26,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let display = Engine::create_display_manager(&engine)?;
 	let window = create_window(&mut display.borrow_mut(), "Triangle Demo", 800, 600)?;
+	let mut render_chain = window.borrow().create_render_chain(create_render_pass_info())?;
+	render_chain.add_clear_value(renderpass::ClearValue::Color(Vector::new([
+		0.0, 0.0, 0.0, 1.0,
+	])));
 
 	let vert_bytes: Vec<u8>;
 	let frag_bytes: Vec<u8>;
@@ -52,25 +56,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	}
 
 	let renderer = Rc::new(RefCell::new(TriangleRenderer::new(vert_bytes, frag_bytes)));
-	{
-		let mut window_mut = window.borrow_mut();
-		window_mut.add_render_chain_element(renderer.clone())?;
-		window_mut.add_command_recorder(renderer.clone())?;
-	}
-
-	window.borrow_mut().create_render_chain()?;
-
-	{
-		let mut window_mut = window.borrow_mut();
-		window_mut.add_clear_value(renderpass::ClearValue::Color(Vector::new([
-			0.0, 0.0, 0.0, 1.0,
-		])));
-		window_mut.mark_commands_dirty();
-	}
+	render_chain.add_render_chain_element(renderer.clone())?;
+	render_chain.add_command_recorder(renderer.clone())?;
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
-		window.borrow_mut().render_frame()?;
+		render_chain.render_frame()?;
 		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 	}
 
@@ -90,7 +81,6 @@ fn create_window(
 		let mut mut_window = window.borrow_mut();
 		mut_window.find_physical_device(&mut vulkan_device_constraints())?;
 		mut_window.create_logical()?;
-		mut_window.create_render_pass(create_render_pass_info())?;
 	}
 	Ok(window)
 }

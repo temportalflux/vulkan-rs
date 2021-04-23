@@ -1,5 +1,5 @@
 use crate::{
-	device::{logical, swapchain::*},
+	device::{logical, physical, swapchain::*},
 	flags::{
 		ColorSpace, CompositeAlpha, Format, ImageUsageFlags, PresentMode, SharingMode,
 		SurfaceTransform,
@@ -61,6 +61,10 @@ impl Info {
 		self
 	}
 
+	pub fn image_extent(&self) -> &Extent2D {
+		&self.image_extent
+	}
+
 	pub fn set_image_extent(mut self, extent: Extent2D) -> Self {
 		self.image_extent = extent;
 		self
@@ -108,9 +112,15 @@ impl Info {
 		self
 	}
 
+	pub fn fill_from_physical(&mut self, physical: &physical::Device) {
+		self.image_extent = physical.image_extent();
+		self.pre_transform = physical.current_transform();
+		self.present_mode = physical.selected_present_mode;
+	}
+
 	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
 	pub fn create_object(
-		&mut self,
+		&self,
 		device: &Rc<logical::Device>,
 		surface: &Surface,
 		old: Option<&Swapchain>,

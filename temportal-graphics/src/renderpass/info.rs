@@ -79,7 +79,7 @@ impl Info {
 }
 
 impl Info {
-	pub fn create_object(self, device: &Rc<logical::Device>) -> utility::Result<renderpass::Pass> {
+	pub fn create_object(&self, device: &Rc<logical::Device>) -> utility::Result<renderpass::Pass> {
 		let attachments = self
 			.attachments
 			.iter()
