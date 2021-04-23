@@ -43,10 +43,15 @@ impl ui::Element for Simulation {
 		}
 		let was_open = self.is_open;
 		imgui::Window::new(im_str!("Simulation"))
-			.size([960.0, 540.0], imgui::Condition::FirstUseEver)
+			.content_size([960.0, 540.0])
+			.resizable(false)
 			.opened(&mut self.is_open)
 			.focused(self.bring_to_front)
-			.build(&ui, || {});
+			.build(&ui, || {
+				//let viewport_size = ui.content_region_avail();
+				//let tex = imgui::TextureId::new(0);
+				//imgui::Image::new(tex, viewport_size).build(&ui);
+			});
 		self.bring_to_front = false;
 		if self.is_open != was_open {
 			self.save_open_state(editor);
