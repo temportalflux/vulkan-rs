@@ -1,10 +1,13 @@
 extern crate imgui;
+extern crate log;
 
 use demo_triangle;
 use temportal_engine as engine;
 use temportal_engine_editor as editor;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+	engine::logging::init(std::env!("CARGO_PKG_NAME"))?;
+
 	let editor = editor::Editor::new(demo_triangle::create_engine()?)?;
 
 	let display = engine::Engine::create_display_manager(editor.borrow().engine())?;

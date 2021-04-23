@@ -21,17 +21,17 @@ impl ui::Element for Workspace {
 				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
 					match asset::build(editor.asset_manager(), "demo-triangle") {
 						Ok(_) => {}
-						Err(e) => println!("{:?}", e),
+						Err(e) => log::error!(target: "ui", "{:?}", e),
 					}
 				}
 				if imgui::MenuItem::new(im_str!("Build & Package")).build(&ui) {
 					match asset::build(editor.asset_manager(), "demo-triangle") {
 						Ok(_) => {}
-						Err(e) => println!("{:?}", e),
+						Err(e) => log::error!(target: "ui", "{:?}", e),
 					}
 					match asset::package("demo-triangle") {
 						Ok(_) => {}
-						Err(e) => println!("{:?}", e),
+						Err(e) => log::error!(target: "ui", "{:?}", e),
 					}
 				}
 			});

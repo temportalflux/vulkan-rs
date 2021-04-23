@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 temportal-engine = { path = "../temportal-engine" }
 temportal-graphics = { path = "../temportal-graphics" }
+log = { version = "0.4.14", features = ["std"] }
 sdl2 = "0.34"
 gl = "0.14"
 imgui = "0.7"

@@ -44,7 +44,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		Ok(())
 	}
 	fn on_render_chain_constructed(&mut self, window: &display::Window) -> utility::Result<()> {
-		println!("Render chain constructed");
+		log::trace!("Render chain constructed");
 
 		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
 			window.logical().clone(),

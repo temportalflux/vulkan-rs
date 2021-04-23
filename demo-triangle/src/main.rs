@@ -13,6 +13,7 @@ mod lib;
 use lib::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+	engine::logging::init(std::env!("CARGO_PKG_NAME"))?;
 	let engine = crate::create_engine()?;
 
 	let pak_path = [

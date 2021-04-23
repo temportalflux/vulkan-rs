@@ -4,6 +4,8 @@ use crate::{
 };
 use std::{cell::RefCell, rc::Rc};
 
+pub static EDITOR_LOG: &'static str = "Editor";
+
 pub struct Editor {
 	asset_manager: asset::Manager,
 	engine: Rc<RefCell<engine::Engine>>,
@@ -14,6 +16,7 @@ impl Editor {
 	pub fn new(
 		engine: Rc<RefCell<engine::Engine>>,
 	) -> Result<Rc<RefCell<Editor>>, engine::utility::AnyError> {
+		log::info!(target: EDITOR_LOG, "Initializing editor");
 		let mut editor = Editor {
 			engine,
 			asset_manager: asset::Manager::new(),

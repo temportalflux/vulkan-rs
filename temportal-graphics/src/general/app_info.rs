@@ -53,6 +53,10 @@ impl AppInfo {
 		self
 	}
 
+	pub fn engine_name(&self) -> &str {
+		self.engine_name.as_str()
+	}
+
 	/// Returns a string-represenation (`major.minor.patch`) of the engine version.
 	pub fn engine_version(&self) -> String {
 		utility::as_version_string(&self.engine_version)

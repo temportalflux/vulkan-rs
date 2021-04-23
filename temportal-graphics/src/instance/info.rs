@@ -121,9 +121,9 @@ impl Info {
 
 	/// Creates the vulkan instance object, thereby consuming the info.
 	pub fn create_object(mut self, ctx: &Context) -> utility::Result<instance::Instance> {
-		println!("Initializing {}", self.description());
-		println!("Available extensions: {:?}", ctx.valid_instance_extensions);
-		println!("Available layers: {:?}", ctx.valid_instance_layers);
+		log::info!(target: crate::LOG, "Initializing {}", self.description());
+		log::debug!(target: crate::LOG, "Available extensions: {:?}", ctx.valid_instance_extensions);
+		log::debug!(target: crate::LOG, "Available layers: {:?}", ctx.valid_instance_layers);
 		if let Some(layer) = self.has_invalid_layer(&ctx) {
 			return Err(utility::Error::InvalidInstanceLayer(layer));
 		}

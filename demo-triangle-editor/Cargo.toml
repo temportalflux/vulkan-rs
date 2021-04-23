@@ -11,3 +11,4 @@ temportal-engine = { path = "../temportal-engine" }
 temportal-engine-editor = { path = "../temportal-engine-editor" }
 demo-triangle = { path = "../demo-triangle" }
 imgui = "0.7"
+log = { version = "0.4.14", features = ["std"] }

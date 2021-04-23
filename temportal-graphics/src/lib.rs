@@ -10,6 +10,8 @@ pub mod structs {
 	pub use erupt::vk::Rect2D;
 }
 
+pub static LOG: &'static str = "graphics";
+
 /// Various forwarded/exposed enumerations from Vulkan/Erupt
 #[path = "flags/_.rs"]
 pub mod flags;

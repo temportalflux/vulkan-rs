@@ -202,15 +202,19 @@ impl Instance {
 
 #[doc(hidden)]
 unsafe extern "system" fn debug_callback(
-	_message_severity: erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT,
+	message_severity: erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT,
 	_message_types: erupt::vk::DebugUtilsMessageTypeFlagsEXT,
 	p_callback_data: *const erupt::vk::DebugUtilsMessengerCallbackDataEXT,
 	_p_user_data: *mut std::ffi::c_void,
 ) -> erupt::vk::Bool32 {
-	eprintln!(
-		"{}",
-		std::ffi::CStr::from_ptr((*p_callback_data).p_message).to_string_lossy()
-	);
-
+	let log_level = match message_severity {
+		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::VERBOSE_EXT => log::Level::Trace,
+		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::INFO_EXT => log::Level::Info,
+		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::WARNING_EXT => log::Level::Warn,
+		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::ERROR_EXT => log::Level::Error,
+		_ => log::Level::Debug,
+	};
+	let message = std::ffi::CStr::from_ptr((*p_callback_data).p_message).to_string_lossy();
+	log::log!(target: "vulkan", log_level, "{}", message);
 	erupt::vk::FALSE
 }

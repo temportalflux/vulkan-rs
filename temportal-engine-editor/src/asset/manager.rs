@@ -24,9 +24,13 @@ impl Manager {
 		TAsset: engine::asset::Asset,
 	{
 		let runtime_metadata = TAsset::metadata();
-		assert!(!self.editor_metadata.contains_key(runtime_metadata.name()));
-		self.editor_metadata
-			.insert(runtime_metadata.name(), editor_metadata);
+		if !self.editor_metadata.contains_key(runtime_metadata.name()) {
+			self.editor_metadata.insert(runtime_metadata.name(), editor_metadata);
+			log::info!(target: engine::asset::LOG, "Registering asset type editor metadata \"{}\"", runtime_metadata.name());
+		}
+		else {
+			log::error!(target: engine::asset::LOG, "Encountered duplicate asset type with editor metadata \"{}\"", runtime_metadata.name());
+		}
 	}
 
 	/// Synchronously reads an asset json from a provided path, returning relevant asset loading errors.

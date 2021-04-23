@@ -31,7 +31,7 @@ impl Simulation {
 	fn save_open_state(&self, editor: &mut Editor) {
 		editor.settings.set_window_open(&self.id, self.is_open);
 		if let Err(e) = editor.settings.save() {
-			println!("Failed to save editor settings, {}", e);
+			log::error!(target: "ui", "Failed to save editor settings, {}", e);
 		}
 	}
 }
