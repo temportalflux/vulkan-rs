@@ -7,9 +7,9 @@
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "Debug",
-			"program": "${workspaceRoot}/target/debug/temportal-engine",
-			"args": ["--validation-layers"],
+			"name": "Crystal Sphinx - Editor (Debug)",
+			"program": "${workspaceRoot}/target/debug/crystal-sphinx-editor",
+			"args": ["-v"],
 			"cwd": "${workspaceRoot}/target/debug/",
 			"sourceLanguages": [
 				"rust"

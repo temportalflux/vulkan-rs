@@ -19,19 +19,19 @@ impl ui::Element for Workspace {
 		if let Some(bar) = ui.begin_main_menu_bar() {
 			ui.menu(im_str!("General"), true, || {
 				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
-					match asset::build(editor.asset_manager(), "demo-triangle") {
+					match asset::build(editor.asset_manager(), &editor.module_name) {
 						Ok(_) => {}
-						Err(e) => log::error!(target: "ui", "{:?}", e),
+						Err(e) => log::error!(target: "ui", "Failed to build... {:?}", e),
 					}
 				}
 				if imgui::MenuItem::new(im_str!("Build & Package")).build(&ui) {
-					match asset::build(editor.asset_manager(), "demo-triangle") {
+					match asset::build(editor.asset_manager(), &editor.module_name) {
 						Ok(_) => {}
-						Err(e) => log::error!(target: "ui", "{:?}", e),
+						Err(e) => log::error!(target: "ui", "Failed to build... {:?}", e),
 					}
-					match asset::package("demo-triangle") {
+					match asset::package(&editor.module_name) {
 						Ok(_) => {}
-						Err(e) => log::error!(target: "ui", "{:?}", e),
+						Err(e) => log::error!(target: "ui", "Failed to package... {:?}", e),
 					}
 				}
 			});

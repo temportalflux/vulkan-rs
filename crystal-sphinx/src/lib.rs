@@ -1,28 +1,23 @@
-use std::{cell::RefCell, rc::Rc};
-
 use engine::{
-	display,
-	graphics::{device::physical, flags, renderpass},
+	display, graphics,
 	math::Vector,
-	utility::AnyError,
+	utility::{AnyError, VoidResult},
 	Engine,
 };
+use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
-
-#[path = "render/TriangleRenderer.rs"]
-mod renderer;
-use renderer::TriangleRenderer;
 
 pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	let engine = Engine::new()?;
-	engine
-		.borrow_mut()
-		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
+	engine.borrow_mut().set_application(
+		"Crystal Sphinx",
+		temportal_engine::utility::make_version(0, 1, 0),
+	);
 	scan_assets(&mut engine.borrow_mut())?;
 	Ok(engine)
 }
 
-fn scan_assets(engine: &mut Engine) -> Result<(), AnyError> {
+fn scan_assets(engine: &mut Engine) -> VoidResult {
 	let pak_path = [
 		std::env!("CARGO_MANIFEST_DIR"),
 		format!("{}.pak", std::env!("CARGO_PKG_NAME")).as_str(),
@@ -32,14 +27,14 @@ fn scan_assets(engine: &mut Engine) -> Result<(), AnyError> {
 	engine.assets.library.scan_pak(&pak_path)
 }
 
-pub fn run(log_name: &str) -> Result<(), AnyError> {
+pub fn run(log_name: &str) -> VoidResult {
 	engine::logging::init(log_name)?;
 	let engine = create_engine()?;
 
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
-		.title("Triangle Demo")
-		.size(800, 600)
+		.title("Crystal Sphinx")
+		.size(1280, 720)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
 	let render_chain = window
@@ -47,11 +42,9 @@ pub fn run(log_name: &str) -> Result<(), AnyError> {
 		.create_render_chain(&mut display.borrow_mut(), create_render_pass_info())?;
 	render_chain
 		.borrow_mut()
-		.add_clear_value(renderpass::ClearValue::Color(Vector::new([
+		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
 			0.0, 0.0, 0.0, 1.0,
 		])));
-
-	let _renderer = TriangleRenderer::new(&engine.borrow(), &mut render_chain.borrow_mut());
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
@@ -62,8 +55,11 @@ pub fn run(log_name: &str) -> Result<(), AnyError> {
 	Ok(())
 }
 
-fn vulkan_device_constraints() -> Vec<physical::Constraint> {
-	use physical::Constraint::*;
+fn vulkan_device_constraints() -> Vec<graphics::device::physical::Constraint> {
+	use graphics::{
+		device::physical::{Constraint::*, Kind},
+		flags,
+	};
 	vec![
 		HasSurfaceFormats(
 			flags::Format::B8G8R8A8_SRGB,
@@ -79,15 +75,16 @@ fn vulkan_device_constraints() -> Vec<physical::Constraint> {
 		),
 		PrioritizedSet(
 			vec![
-				IsDeviceType(physical::Kind::DISCRETE_GPU, Some(100)),
-				IsDeviceType(physical::Kind::INTEGRATED_GPU, Some(0)),
+				IsDeviceType(Kind::DISCRETE_GPU, Some(100)),
+				IsDeviceType(Kind::INTEGRATED_GPU, Some(0)),
 			],
 			false,
 		),
 	]
 }
 
-fn create_render_pass_info() -> renderpass::Info {
+fn create_render_pass_info() -> graphics::renderpass::Info {
+	use graphics::{flags, renderpass};
 	let mut rp_info = renderpass::Info::default();
 
 	let frame_attachment_index = rp_info.attach(

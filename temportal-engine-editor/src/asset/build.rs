@@ -18,8 +18,12 @@ pub fn build(
 	let mut output_dir_path = crate_path.clone();
 	output_dir_path.push("binaries");
 
-	fs::create_dir(&output_dir_path)?;
-	fs::remove_dir_all(&output_dir_path)?;
+	if !output_dir_path.exists() {
+		fs::create_dir(&output_dir_path)?;
+	}
+	else {
+		fs::remove_dir_all(&output_dir_path)?;
+	}
 
 	for file_path in collect_file_paths(&assets_dir_path)?.iter() {
 		let relative_path = file_path.as_path().strip_prefix(&assets_dir_path)?;
