@@ -13,6 +13,9 @@ pub mod asset;
 mod editor;
 pub use editor::*;
 
+#[path = "graphics/_.rs"]
+pub mod graphics;
+
 #[path = "ui/_.rs"]
 pub mod ui;
 

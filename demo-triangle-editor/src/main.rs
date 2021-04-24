@@ -1,7 +1,7 @@
 use demo_triangle;
+use engine::utility::VoidResult;
 use temportal_engine as engine;
 use temportal_engine_editor as editor;
-use engine::utility::VoidResult;
 
 fn main() -> VoidResult {
 	engine::logging::init(demo_triangle::name())?;

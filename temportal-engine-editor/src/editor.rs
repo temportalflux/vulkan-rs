@@ -1,5 +1,5 @@
 use crate::{
-	asset, engine,
+	asset, engine, graphics,
 	settings::{self, Settings},
 };
 use std::{cell::RefCell, rc::Rc};
@@ -27,7 +27,10 @@ impl Editor {
 		};
 		editor
 			.asset_manager
-			.register::<engine::graphics::Shader>(asset::ShaderEditorMetadata::boxed());
+			.register::<engine::graphics::Shader>(graphics::ShaderEditorMetadata::boxed());
+		editor
+			.asset_manager
+			.register::<engine::graphics::Font>(graphics::FontEditorMetadata::boxed());
 		Ok(Rc::new(RefCell::new(editor)))
 	}
 

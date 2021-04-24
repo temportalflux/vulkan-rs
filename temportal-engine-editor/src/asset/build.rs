@@ -20,8 +20,7 @@ pub fn build(
 
 	if !output_dir_path.exists() {
 		fs::create_dir(&output_dir_path)?;
-	}
-	else {
+	} else {
 		fs::remove_dir_all(&output_dir_path)?;
 	}
 
