@@ -113,8 +113,9 @@ impl Info {
 	}
 
 	pub fn fill_from_physical(&mut self, physical: &physical::Device) {
-		self.image_extent = physical.image_extent();
-		self.pre_transform = physical.current_transform();
+		let surface_support = physical.query_surface_support();
+		self.image_extent = surface_support.image_extent();
+		self.pre_transform = surface_support.current_transform();
 		self.present_mode = physical.selected_present_mode;
 	}
 

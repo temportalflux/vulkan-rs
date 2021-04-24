@@ -4,8 +4,10 @@ use crate::{
 	instance::Instance,
 	structs::Extent2D,
 	utility::{self, VulkanObject},
+	Surface,
 };
 use std::collections::hash_map::HashMap;
+use std::rc::{Rc, Weak};
 
 pub use erupt::vk::PhysicalDeviceType as Kind;
 
@@ -15,29 +17,51 @@ struct QueueFamily {
 	supports_surface: bool,
 }
 
+pub struct SurfaceSupport {
+	surface_capabilities: erupt::vk::SurfaceCapabilitiesKHR,
+	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
+	present_modes: Vec<PresentMode>,
+}
+
+impl SurfaceSupport {
+	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](crate::device::swapchain::Swapchain).
+	pub fn image_count_range(&self) -> std::ops::Range<u32> {
+		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
+	}
+
+	pub fn image_extent(&self) -> Extent2D {
+		self.surface_capabilities.current_extent
+	}
+
+	pub fn current_transform(&self) -> SurfaceTransform {
+		self.surface_capabilities.current_transform
+	}
+}
+
 /// The wrapper for [`Vulkan PhysicalDevice`](erupt::vk::PhysicalDevice) objects.
 /// Represents a literal GPU.
 pub struct Device {
-	_internal: erupt::vk::PhysicalDevice,
+	pub selected_present_mode: PresentMode,
 
 	properties: erupt::vk::PhysicalDeviceProperties,
 	queue_families: Vec<QueueFamily>,
-	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
-	present_modes: Vec<PresentMode>,
 	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
-	surface_capabilities: erupt::vk::SurfaceCapabilitiesKHR,
 
-	pub selected_present_mode: PresentMode,
+	_internal: erupt::vk::PhysicalDevice,
+	surface: Weak<Surface>,
+	instance: Weak<Instance>,
 }
 
 impl Device {
 	/// The internal constructor. Users should use [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device) to create a vulkan instance.
 	pub fn from(
-		instance: &Instance,
+		instance: &Rc<Instance>,
 		vk: erupt::vk::PhysicalDevice,
-		surface: &erupt::vk::SurfaceKHR,
+		surface: &Rc<Surface>,
 	) -> Device {
 		Device {
+			instance: Rc::downgrade(&instance),
+			surface: Rc::downgrade(&surface),
 			_internal: vk,
 			properties: instance.get_physical_device_properties(&vk),
 			queue_families: instance
@@ -47,12 +71,13 @@ impl Device {
 				.map(|(index, properties)| QueueFamily {
 					index,
 					properties,
-					supports_surface: instance
-						.does_physical_device_surface_support_khr(&vk, index, &surface),
+					supports_surface: instance.does_physical_device_surface_support_khr(
+						&vk,
+						index,
+						&surface.unwrap(),
+					),
 				})
 				.collect(),
-			surface_formats: instance.get_physical_device_surface_formats(&vk, &surface),
-			present_modes: instance.get_physical_device_surface_present_modes(&vk, &surface),
 			extension_properties: instance
 				.enumerate_device_extension_properties(&vk)
 				.into_iter()
@@ -66,7 +91,6 @@ impl Device {
 					)
 				})
 				.collect(),
-			surface_capabilities: instance.get_physical_device_surface_capabilities(&vk, &surface),
 			selected_present_mode: PresentMode::FIFO_KHR,
 		}
 	}
@@ -105,27 +129,17 @@ impl Device {
 		}
 	}
 
-	#[doc(hidden)]
-	fn contains_all_surface_constraints(&self, format: Format, color_space: ColorSpace) -> bool {
-		for supported_format in self.surface_formats.iter() {
-			if supported_format.format == format && supported_format.color_space == color_space {
-				return true;
-			}
+	pub fn query_surface_support(&self) -> SurfaceSupport {
+		let instance = self.instance.upgrade().unwrap();
+		let surface = self.surface.upgrade().unwrap();
+		SurfaceSupport {
+			surface_capabilities: instance
+				.get_physical_device_surface_capabilities(&self._internal, &surface.unwrap()),
+			surface_formats: instance
+				.get_physical_device_surface_formats(&self._internal, &surface.unwrap()),
+			present_modes: instance
+				.get_physical_device_surface_present_modes(&self._internal, &surface.unwrap()),
 		}
-		false
-	}
-
-	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](crate::device::swapchain::Swapchain).
-	pub fn image_count_range(&self) -> std::ops::Range<u32> {
-		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
-	}
-
-	pub fn image_extent(&self) -> Extent2D {
-		self.surface_capabilities.current_extent
-	}
-
-	pub fn current_transform(&self) -> SurfaceTransform {
-		self.surface_capabilities.current_transform
 	}
 }
 
@@ -193,9 +207,10 @@ impl Device {
 		constraints: &Vec<Constraint>,
 		break_on_first_success: bool,
 	) -> Result<u32, Constraint> {
+		let surface_support = self.query_surface_support();
 		let mut total_score = 0;
 		for constraint in constraints {
-			total_score += self.score_constraint(&constraint)?;
+			total_score += self.score_constraint(&constraint, &surface_support)?;
 			if break_on_first_success {
 				break;
 			}
@@ -203,7 +218,11 @@ impl Device {
 		Ok(total_score)
 	}
 
-	pub fn score_constraint(&mut self, constraint: &Constraint) -> Result<u32, Constraint> {
+	pub fn score_constraint(
+		&mut self,
+		constraint: &Constraint,
+		surface_support: &SurfaceSupport,
+	) -> Result<u32, Constraint> {
 		match constraint {
 			Constraint::HasQueueFamily(flags, requires_surface) => {
 				match self.get_queue_index(*flags, *requires_surface) {
@@ -212,14 +231,17 @@ impl Device {
 				}
 			}
 			Constraint::HasSurfaceFormats(format, color_space) => {
-				if self.contains_all_surface_constraints(*format, *color_space) {
-					Ok(0)
-				} else {
-					Err(constraint.clone())
+				for supported_format in surface_support.surface_formats.iter() {
+					if supported_format.format == *format
+						&& supported_format.color_space == *color_space
+					{
+						return Ok(0);
+					}
 				}
+				Err(constraint.clone())
 			}
 			Constraint::CanPresentWith(mode, score_or_required) => {
-				if self.present_modes.contains(mode) {
+				if surface_support.present_modes.contains(mode) {
 					self.selected_present_mode = *mode;
 					Ok(match score_or_required {
 						Some(score) => *score,

@@ -66,15 +66,15 @@ impl Instance {
 
 	/// Searches for an applicable [`Device`](crate::device::physical::Device) that fits the provided constraints and surface.
 	pub fn find_physical_device(
-		&self,
+		instance: &Rc<Instance>,
 		constraints: &Vec<physical::Constraint>,
-		surface: &Surface,
+		surface: &Rc<Surface>,
 	) -> Result<physical::Device, Option<physical::Constraint>> {
-		match unsafe { self._internal.enumerate_physical_devices(None) }
+		match unsafe { instance._internal.enumerate_physical_devices(None) }
 			.unwrap()
 			.into_iter()
 			.map(|vk_physical_device| {
-				physical::Device::from(self, vk_physical_device, &surface.unwrap())
+				physical::Device::from(instance, vk_physical_device, &surface)
 			})
 			.map(|mut physical_device| {
 				match physical_device.score_against_constraints(&constraints, false) {

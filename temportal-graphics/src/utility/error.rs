@@ -5,6 +5,7 @@ pub enum Error {
 	InvalidInstanceLayer(String),
 	InstanceSymbolNotAvailable(),
 	VulkanError(erupt::vk::Result),
+	RequiresRenderChainUpdate(),
 	General(std::io::Error),
 }
 
@@ -18,6 +19,7 @@ impl std::fmt::Display for Error {
 			}
 			Error::InstanceSymbolNotAvailable() => write!(f, "Instance symbol not available"),
 			Error::VulkanError(ref vk_result) => vk_result.fmt(f),
+			Error::RequiresRenderChainUpdate() => write!(f, "Render chain is out of date"),
 			Error::General(ref e) => e.fmt(f),
 		}
 	}
@@ -28,6 +30,11 @@ impl std::error::Error for Error {}
 pub fn as_vulkan_error<T>(erupt_result: erupt::utils::VulkanResult<T>) -> Result<T> {
 	match erupt_result.result() {
 		Ok(v) => Ok(v),
-		Err(vk_result) => Err(Error::VulkanError(vk_result)),
+		Err(vk_result) => match vk_result {
+			erupt::vk::Result::SUBOPTIMAL_KHR | erupt::vk::Result::ERROR_OUT_OF_DATE_KHR => {
+				Err(Error::RequiresRenderChainUpdate())
+			}
+			_ => Err(Error::VulkanError(vk_result)),
+		},
 	}
 }

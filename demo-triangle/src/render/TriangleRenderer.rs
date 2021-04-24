@@ -1,5 +1,5 @@
 use temportal_engine::{graphics, utility};
-use temportal_graphics::{command, flags, pipeline, shader};
+use temportal_graphics::{command, flags, pipeline, shader, structs};
 
 pub struct TriangleRenderer {
 	pipeline: Option<pipeline::Pipeline>,
@@ -43,9 +43,18 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		))?);
 		Ok(())
 	}
-	fn on_render_chain_constructed(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		log::trace!("Render chain constructed");
 
+	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
+		self.pipeline = None;
+		self.pipeline_layout = None;
+		Ok(())
+	}
+
+	fn on_render_chain_constructed(
+		&mut self,
+		render_chain: &graphics::RenderChain,
+		resolution: structs::Extent2D,
+	) -> utility::Result<()> {
 		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
 			render_chain.logical().clone(),
 		))?);
@@ -56,12 +65,10 @@ impl graphics::RenderChainElement for TriangleRenderer {
 				.set_viewport_state(
 					pipeline::ViewportState::default()
 						.add_viewport(
-							temportal_graphics::utility::Viewport::default()
-								.set_size(render_chain.physical().image_extent()),
+							temportal_graphics::utility::Viewport::default().set_size(resolution),
 						)
 						.add_scissor(
-							temportal_graphics::utility::Scissor::default()
-								.set_size(render_chain.physical().image_extent()),
+							temportal_graphics::utility::Scissor::default().set_size(resolution),
 						),
 				)
 				.set_rasterization_state(pipeline::RasterizationState::default())

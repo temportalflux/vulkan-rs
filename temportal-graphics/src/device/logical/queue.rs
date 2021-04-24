@@ -3,13 +3,26 @@ use erupt;
 use std::rc::Rc;
 
 pub struct Queue {
-	device: Rc<logical::Device>,
+	queue_family_index: usize,
 	_internal: erupt::vk::Queue,
+	device: Rc<logical::Device>,
 }
 
 impl Queue {
-	pub fn from(device: Rc<logical::Device>, _internal: erupt::vk::Queue) -> Queue {
-		Queue { device, _internal }
+	pub fn from(
+		device: Rc<logical::Device>,
+		_internal: erupt::vk::Queue,
+		queue_family_index: usize,
+	) -> Queue {
+		Queue {
+			device,
+			_internal,
+			queue_family_index,
+		}
+	}
+
+	pub fn index(&self) -> usize {
+		self.queue_family_index
 	}
 
 	pub fn submit(
