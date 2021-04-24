@@ -1,5 +1,10 @@
-use temportal_engine::{graphics, utility};
-use temportal_graphics::{command, flags, pipeline, shader, structs};
+use crate::engine::{
+	self,
+	graphics::{self, command, flags, pipeline, shader, structs, RenderChain},
+	utility::{self, AnyError},
+	Engine,
+};
+use std::{cell::RefCell, rc::Rc};
 
 pub struct TriangleRenderer {
 	pipeline: Option<pipeline::Pipeline>,
@@ -11,15 +16,46 @@ pub struct TriangleRenderer {
 }
 
 impl TriangleRenderer {
-	pub fn new(vert_bytes: Vec<u8>, frag_bytes: Vec<u8>) -> TriangleRenderer {
-		TriangleRenderer {
+	pub fn new(
+		engine: &Engine,
+		render_chain: &mut RenderChain,
+	) -> Result<Rc<RefCell<TriangleRenderer>>, AnyError> {
+		let vert_bytes: Vec<u8>;
+		let frag_bytes: Vec<u8>;
+		{
+			{
+				let asset = engine.assets.loader.load_sync(
+					&engine.assets.types,
+					&engine.assets.library,
+					&engine::asset::Id::new("demo-triangle", "triangle_vert.bin"),
+				)?;
+				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+				vert_bytes = shader.contents().clone();
+			}
+			{
+				let asset = engine.assets.loader.load_sync(
+					&engine.assets.types,
+					&engine.assets.library,
+					&engine::asset::Id::new("demo-triangle", "triangle_frag.bin"),
+				)?;
+				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+				frag_bytes = shader.contents().clone();
+			}
+		}
+
+		let strong = Rc::new(RefCell::new(TriangleRenderer {
 			pipeline_layout: None,
 			pipeline: None,
 			vert_bytes,
 			frag_bytes,
 			vert_shader: None,
 			frag_shader: None,
-		}
+		}));
+
+		render_chain.add_render_chain_element(strong.clone())?;
+		render_chain.add_command_recorder(strong.clone())?;
+
+		Ok(strong)
 	}
 }
 
@@ -64,12 +100,8 @@ impl graphics::RenderChainElement for TriangleRenderer {
 				.add_shader(&self.frag_shader.as_ref().unwrap())
 				.set_viewport_state(
 					pipeline::ViewportState::default()
-						.add_viewport(
-							temportal_graphics::utility::Viewport::default().set_size(resolution),
-						)
-						.add_scissor(
-							temportal_graphics::utility::Scissor::default().set_size(resolution),
-						),
+						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
+						.add_scissor(graphics::utility::Scissor::default().set_size(resolution)),
 				)
 				.set_rasterization_state(pipeline::RasterizationState::default())
 				.set_color_blending(pipeline::ColorBlendState::default().add_attachment(

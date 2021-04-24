@@ -19,7 +19,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	while !display.borrow_mut().should_quit() {
 		display.borrow_mut().poll_all_events()?;
 		ui.render_frame(&mut editor.borrow_mut(), display.borrow().event_pump()?)?;
-		::std::thread::sleep(std::time::Duration::new(0, 1_000_000_000u32 / 60));
 	}
 
 	Ok(())
