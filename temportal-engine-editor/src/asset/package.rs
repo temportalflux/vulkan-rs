@@ -1,8 +1,8 @@
-use crate::engine;
+use crate::engine::utility::VoidResult;
 use std::{self, fs, io::Write, path::PathBuf};
 use zip;
 
-pub fn package(module_name: &str) -> Result<(), engine::utility::AnyError> {
+pub fn package(module_name: &str) -> VoidResult {
 	let module_dir = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
 		.iter()
 		.collect::<PathBuf>()

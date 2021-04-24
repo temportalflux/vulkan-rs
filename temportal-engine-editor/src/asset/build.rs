@@ -8,7 +8,7 @@ use temportal_engine as engine;
 pub fn build(
 	asset_manager: &crate::asset::Manager,
 	module_name: &str,
-) -> Result<(), engine::utility::AnyError> {
+) -> engine::utility::VoidResult {
 	let crate_path = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
 		.iter()
 		.collect::<PathBuf>()

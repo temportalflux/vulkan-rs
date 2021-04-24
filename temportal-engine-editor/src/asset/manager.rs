@@ -70,7 +70,7 @@ impl Manager {
 		type_id: &String,
 		asset: &engine::asset::AssetBox,
 		write_to: &PathBuf,
-	) -> Result<(), engine::utility::AnyError> {
+	) -> engine::utility::VoidResult {
 		fs::create_dir_all(&write_to.parent().unwrap())?;
 		let metadata = self.editor_metadata.get(type_id.as_str()).unwrap();
 		let bytes = metadata.compile(&json_path, &asset)?;

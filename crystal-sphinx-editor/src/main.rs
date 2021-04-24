@@ -1,12 +1,13 @@
 use crystal_sphinx;
 use temportal_engine as engine;
 use temportal_engine_editor as editor;
+use engine::utility::VoidResult;
 
 fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> VoidResult {
 	engine::logging::init(name())?;
 
 	let editor = editor::Editor::new(crystal_sphinx::create_engine()?, crystal_sphinx::name())?;

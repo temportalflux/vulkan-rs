@@ -1,11 +1,9 @@
-extern crate imgui;
-extern crate log;
-
 use demo_triangle;
 use temportal_engine as engine;
 use temportal_engine_editor as editor;
+use engine::utility::VoidResult;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> VoidResult {
 	engine::logging::init(demo_triangle::name())?;
 
 	let editor = editor::Editor::new(demo_triangle::create_engine()?, demo_triangle::name())?;

@@ -1,5 +1,5 @@
 mod lib;
 pub use lib::*;
-fn main() -> Result<(), engine::utility::AnyError> {
+fn main() -> engine::utility::VoidResult {
 	lib::run(std::env!("CARGO_PKG_NAME"))
 }

@@ -4,7 +4,7 @@ use engine::{
 	display,
 	graphics::{device::physical, flags, renderpass},
 	math::Vector,
-	utility::AnyError,
+	utility::{AnyError, VoidResult},
 	Engine,
 };
 pub use temportal_engine as engine;
@@ -26,7 +26,7 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	Ok(engine)
 }
 
-fn scan_assets(engine: &mut Engine) -> Result<(), AnyError> {
+fn scan_assets(engine: &mut Engine) -> VoidResult {
 	let pak_path = [
 		std::env!("CARGO_MANIFEST_DIR"),
 		format!("{}.pak", name()).as_str(),
@@ -36,7 +36,7 @@ fn scan_assets(engine: &mut Engine) -> Result<(), AnyError> {
 	engine.assets.library.scan_pak(&pak_path)
 }
 
-pub fn run(log_name: &str) -> Result<(), AnyError> {
+pub fn run(log_name: &str) -> VoidResult {
 	engine::logging::init(log_name)?;
 	let engine = create_engine()?;
 

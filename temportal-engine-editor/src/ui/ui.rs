@@ -83,7 +83,7 @@ impl Ui {
 		&mut self,
 		editor: &mut Editor,
 		event_pump: sdl2::EventPump,
-	) -> engine::utility::Result<()> {
+	) -> engine::utility::VoidResult {
 		self.imgui_win.prepare_frame(
 			self.imgui_ctx.io_mut(),
 			&self.sdl_window,
