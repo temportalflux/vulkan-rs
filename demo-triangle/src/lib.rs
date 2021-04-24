@@ -13,6 +13,10 @@ pub use temportal_engine as engine;
 mod renderer;
 use renderer::TriangleRenderer;
 
+pub fn name() -> &'static str {
+	std::env!("CARGO_PKG_NAME")
+}
+
 pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	let engine = Engine::new()?;
 	engine
@@ -25,7 +29,7 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 fn scan_assets(engine: &mut Engine) -> Result<(), AnyError> {
 	let pak_path = [
 		std::env!("CARGO_MANIFEST_DIR"),
-		format!("{}.pak", std::env!("CARGO_PKG_NAME")).as_str(),
+		format!("{}.pak", name()).as_str(),
 	]
 	.iter()
 	.collect::<std::path::PathBuf>();

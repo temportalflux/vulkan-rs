@@ -7,6 +7,10 @@ use engine::{
 use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
 
+pub fn name() -> &'static str {
+	std::env!("CARGO_PKG_NAME")
+}
+
 pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	let engine = Engine::new()?;
 	engine.borrow_mut().set_application(
@@ -20,15 +24,15 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 fn scan_assets(engine: &mut Engine) -> VoidResult {
 	let pak_path = [
 		std::env!("CARGO_MANIFEST_DIR"),
-		format!("{}.pak", std::env!("CARGO_PKG_NAME")).as_str(),
+		format!("{}.pak", name()).as_str(),
 	]
 	.iter()
 	.collect::<std::path::PathBuf>();
 	engine.assets.library.scan_pak(&pak_path)
 }
 
-pub fn run(log_name: &str) -> VoidResult {
-	engine::logging::init(log_name)?;
+pub fn run() -> VoidResult {
+	engine::logging::init(name())?;
 	let engine = create_engine()?;
 
 	let display = Engine::create_display_manager(&engine)?;
