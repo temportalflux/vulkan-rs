@@ -1,6 +1,7 @@
 use crate::engine::{
 	math::{self, Vector},
 	utility::AnyError,
+	graphics::Glyph
 };
 use std::path::{Path, PathBuf};
 
@@ -11,6 +12,21 @@ pub struct FontSDFBuilder {
 	field_spread: usize,
 	padding_per_char: Vector<usize, 4>,
 	minimum_atlas_size: Vector<usize, 2>,
+}
+
+struct SDFGlyph {
+	ascii_code: usize,
+	texture_size: Vector<usize, 2>,
+	texels: Vec<Vec<u8>>,
+	metric_size: Vector<usize, 2>,
+	metric_bearing: Vector<usize, 2>,
+	metric_advance: usize,
+}
+
+pub struct FontSDF {
+	pub size: Vector<usize, 2>,
+	pub binary: Vec<Vec<u8>>,
+	pub glyphs: Vec<Glyph>,
 }
 
 impl Default for FontSDFBuilder {
@@ -56,10 +72,7 @@ impl FontSDFBuilder {
 
 	/// Compiles the font ttf at `path` into a signed-distance-field.
 	/// Algorithm based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-introduction-code-setup-25lh.
-	pub fn build(
-		self,
-		font_library: &freetype::Library,
-	) -> Result<(Vector<usize, 2>, Vec<Vec<u8>>), AnyError> {
+	pub fn build(self, font_library: &freetype::Library) -> Result<FontSDF, AnyError> {
 		use freetype::{face::LoadFlag, outline::Curve};
 		assert!(self.font_path.exists());
 		log::debug!(
@@ -67,30 +80,39 @@ impl FontSDFBuilder {
 			self.font_path.file_name().unwrap()
 		);
 
-		let face = font_library.new_face(self.font_path, 0)?;
+		let face = font_library.new_face(&self.font_path, 0)?;
 		face.set_pixel_sizes(0, self.glyph_height)?;
 
 		let to_f64_vector =
 			|v: freetype::Vector| Vector::new([(v.x as f64) / 64.0, (v.y as f64) / 64.0]);
 		let spread_f = self.field_spread as f64;
+		let spread_size = Vector::new([self.field_spread * 2; 2]);
 
-		let mut signed_dist_fields = Vec::new();
+		let mut glyphs: Vec<SDFGlyph> = Vec::new();
 
 		for char_code in self.char_range.clone() {
 			face.load_char(char_code, LoadFlag::empty())?;
+			// https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
 			let metrics = face.glyph().metrics();
-			let metrics_size = Vector::new([
-				((metrics.width as usize) / 64) + (self.field_spread * 2),
-				((metrics.height as usize) / 64) + (self.field_spread * 2),
-			]);
-			let left_edge_padded = ((metrics.horiBearingX as f64) / 64.0) - spread_f;
-			let top_edge_padded = ((metrics.horiBearingY as f64) / 64.0) + spread_f;
 			let outline = face.glyph().outline().unwrap();
 
-			let mut texels_in_glyph: Vec<Vec<u8>> =
-				vec![vec![0; metrics_size.x()]; metrics_size.y()];
+			let metric_size = Vector::new([
+				(metrics.width as usize) / 64,
+				(metrics.height as usize) / 64,
+			]);
+			let metric_advance = (metrics.horiAdvance as usize) / 64;
+			let metric_bearing = Vector::new([
+				(metrics.horiBearingX as usize) / 64,
+				(metrics.horiBearingY as usize) / 64,
+			]);
 
-			for glyph_pos in metrics_size.iter(1) {
+			let texture_size = metric_size + spread_size;
+			let left_edge_padded = metric_bearing.x() as f64 - spread_f;
+			let top_edge_padded = metric_bearing.y() as f64 + spread_f;
+
+			let mut texels: Vec<Vec<u8>> = vec![vec![0; texture_size.x()]; texture_size.y()];
+
+			for glyph_pos in texture_size.iter(1) {
 				let mut min_dist = f64::MAX;
 				let mut total_cross_count = 0;
 				let point = Vector::new([
@@ -152,40 +174,34 @@ impl FontSDFBuilder {
 				let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
 				let dist_scaled = (dist_zero_to_one * 255.0).round();
 
-				texels_in_glyph[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
+				texels[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
 			}
 
-			signed_dist_fields.push(texels_in_glyph);
+			glyphs.push(SDFGlyph {
+				ascii_code: char_code,
+				texture_size,
+				texels,
+				metric_size,
+				metric_bearing,
+				metric_advance,
+			});
 		}
 
-		signed_dist_fields
-			.sort_unstable_by(|a, b| (b.len() * b[0].len()).cmp(&(a.len() * a[0].len())));
+		glyphs.sort_unstable_by(|a, b| {
+			(b.texture_size.y() * b.texture_size.x())
+				.cmp(&(a.texture_size.y() * a.texture_size.x()))
+		});
 		log::debug!("SDF calculations complete, starting atlas generation.");
 
-		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
-		let atlas_binary = FontSDFBuilder::bin_pack_expanding_pow2(
-			&signed_dist_fields,
-			&mut atlas_size,
-			&self.padding_per_char,
-		);
+		let font_sdf = self.binpack_pow2_atlas(&glyphs);
+
 		log::debug!(
 			"Packed {} glyphs into a {} SDF texture",
-			signed_dist_fields.len(),
-			atlas_size
+			font_sdf.glyphs.len(),
+			font_sdf.size
 		);
 
-		Ok((
-			atlas_size,
-			atlas_binary
-				.into_iter()
-				.map(|texel_line| {
-					texel_line
-						.into_iter()
-						.map(|alpha| alpha.unwrap_or(0))
-						.collect()
-				})
-				.collect(),
-		))
+		Ok(font_sdf)
 	}
 
 	/// Pack an unknown nuimber of rectangles into a single rectangle with the smallest possible size.
@@ -195,18 +211,30 @@ impl FontSDFBuilder {
 	/// original performance of O(nlog(n)) into O(mnlog(n)) where m is the number of iterations required when resizing the atlas.
 	/// https://en.wikipedia.org/wiki/Bin_packing_problem#First_Fit_Decreasing_(FFD)
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
-	fn bin_pack_expanding_pow2(
-		sorted_fields: &Vec</*Texel*/ Vec<Vec<u8>>>,
-		atlas_size: &mut Vector<usize, 2>,
-		padding_per_field: &Vector<usize, 4>,
-	) -> Vec<Vec<Option<u8>>> {
+	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> FontSDF {
+		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
 		loop {
 			match FontSDFBuilder::bin_pack(
 				sorted_fields,
 				atlas_size.clone(),
-				padding_per_field.clone(),
+				self.padding_per_char.clone(),
 			) {
-				Some(atlas_binary) => return atlas_binary,
+				Some((binary, mut glyphs)) => {
+					glyphs.sort_unstable_by(|a, b| a.ascii_code.cmp(&b.ascii_code));
+					return FontSDF {
+						size: atlas_size,
+						binary: binary
+							.into_iter()
+							.map(|texel_line| {
+								texel_line
+									.into_iter()
+									.map(|alpha| alpha.unwrap_or(0))
+									.collect()
+							})
+							.collect(),
+						glyphs,
+					};
+				}
 				// Bin packing failed, expand in the dimension that is smallest
 				None => {
 					// Expand the atlas such that each dimension that is being expanded (width and/or height),
@@ -216,7 +244,7 @@ impl FontSDFBuilder {
 							as usize,
 						(atlas_size.y() < atlas_size.x()) as usize,
 					]);
-					*atlas_size += dimensions_to_expand_in * (*atlas_size);
+					atlas_size += dimensions_to_expand_in * atlas_size;
 				}
 			}
 		}
@@ -224,25 +252,27 @@ impl FontSDFBuilder {
 
 	fn bin_pack(
 		// each glyph is a 2D array of alpha texels
-		sorted_glyps: &Vec</*glyph*/ Vec<Vec<u8>>>,
+		sorted_glyps: &Vec<SDFGlyph>,
 		atlas_size: Vector<usize, 2>,
 		padding_lrtb: Vector<usize, 4>, // padding on the left, right, top, and bottom
-	) -> Option<Vec<Vec<Option<u8>>>> {
+	) -> Option<(
+		/*binary*/ Vec<Vec<Option<u8>>>,
+		/*glyphs*/ Vec<Glyph>,
+	)> {
 		// the binary of a grayscale/alpha-only 2D image,
 		// where unpopulated "pixels" are represented by `None`.
 		let mut atlas_binary: Vec<Vec<Option<u8>>> =
 			vec![vec![None; atlas_size.x()]; atlas_size.y()];
+		let mut glyphs: Vec<Glyph> = Vec::new();
 		let padding_on_axis = Vector::new([
 			/*x-axis padding*/ padding_lrtb.subvec::<2>(None).total(),
 			/*y-axis padding*/ padding_lrtb.subvec::<2>(Some(2)).total(),
 		]);
 		let padding_offset = Vector::new([padding_lrtb.x(), padding_lrtb.z()]);
 		// Attempt to place all fields in the atlas
-		'place_next_glyph: for (_glyph_idx, glyph_texels) in sorted_glyps.iter().enumerate() {
+		'place_next_glyph: for (_glyph_idx, glyph) in sorted_glyps.iter().enumerate() {
 			// This is then width and height of a given texel
-			let texel_count = [glyph_texels[0].len() as usize, glyph_texels.len() as usize];
-			let glyph_size = Vector::new(texel_count);
-			let glyph_target_size = padding_on_axis + glyph_size;
+			let glyph_target_size = padding_on_axis + glyph.texture_size;
 			// The size of the atlas that can be iterated over while still leaving enough room for the glyph itself.
 			let leading_size = atlas_size - glyph_target_size;
 			for atlas_y in 0..leading_size.y() {
@@ -258,11 +288,19 @@ impl FontSDFBuilder {
 					}
 					// Since there are no other pixels in the desired area,
 					// write the pixels of the texel into the atlas pixels.
-					for glyph_pos in glyph_size.iter(1) {
-						let texel = glyph_texels[glyph_pos.y()][glyph_pos.x()];
+					for glyph_pos in glyph.texture_size.iter(1) {
+						let texel = glyph.texels[glyph_pos.y()][glyph_pos.x()];
 						let atlas_dest = atlas_pos + glyph_pos + padding_offset;
 						atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
 					}
+					glyphs.push(Glyph {
+						ascii_code: glyph.ascii_code,
+						atlas_pos: atlas_pos + padding_offset,
+						atlas_size: glyph.texture_size,
+						metric_size: glyph.metric_size,
+						metric_bearing: glyph.metric_bearing,
+						metric_advance: glyph.metric_advance,
+					});
 					continue 'place_next_glyph;
 				}
 			}
@@ -272,7 +310,7 @@ impl FontSDFBuilder {
 		}
 		// Convert a valid packing such that all unused pixels are completely transparent
 		// (where each pixel is just alpha, no rgb).
-		Some(atlas_binary)
+		Some((atlas_binary, glyphs))
 	}
 }
 
