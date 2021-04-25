@@ -24,7 +24,7 @@ pub fn build(
 	}
 	
 	let mut intended_binaries: Vec<PathBuf> = Vec::new();
-	for asset_file_path in collect_file_paths(&assets_dir_path)?.iter() {
+	for asset_file_path in collect_file_paths(&assets_dir_path, &Vec::new())?.iter() {
 		let relative_path = asset_file_path.as_path().strip_prefix(&assets_dir_path)?;
 		if let Some(ext) = relative_path.extension() {
 			if ext == "json" {
@@ -50,17 +50,15 @@ pub fn build(
 		}
 	}
 
-	for binary_file_path in collect_file_paths(&output_dir_path)?.iter() {
-		if !intended_binaries.contains(binary_file_path) {
-			log::info!(target: asset::LOG, "Deleting old binary {:?}", binary_file_path.as_path().strip_prefix(&output_dir_path)?);
-			std::fs::remove_file(binary_file_path)?;
-		}
+	for binary_file_path in collect_file_paths(&output_dir_path, &intended_binaries)?.iter() {
+		log::info!(target: asset::LOG, "Deleting old binary {:?}", binary_file_path.as_path().strip_prefix(&output_dir_path)?);
+		std::fs::remove_file(binary_file_path)?;
 	}
 
 	Ok(())
 }
 
-pub fn collect_file_paths(path: &Path) -> io::Result<Vec<PathBuf>> {
+pub fn collect_file_paths(path: &Path, ignore: &Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
 	let mut file_paths: Vec<PathBuf> = Vec::new();
 	if !path.is_dir() {
 		return Ok(file_paths);
@@ -69,11 +67,11 @@ pub fn collect_file_paths(path: &Path) -> io::Result<Vec<PathBuf>> {
 	let mut directory_paths: Vec<PathBuf> = vec![path.to_path_buf()];
 	while directory_paths.len() > 0 {
 		for entry in fs::read_dir(directory_paths.pop().unwrap())? {
-			let entry_path = entry?.path();
+			let entry_path = entry?.path().to_path_buf();
 			if entry_path.is_dir() {
-				directory_paths.push(entry_path.to_path_buf());
-			} else {
-				file_paths.push(entry_path.to_path_buf());
+				directory_paths.push(entry_path);
+			} else if !ignore.contains(&entry_path) {
+				file_paths.push(entry_path);
 			}
 		}
 	}
