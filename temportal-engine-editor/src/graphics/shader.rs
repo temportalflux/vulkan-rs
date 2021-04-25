@@ -1,9 +1,9 @@
 use crate::{
 	asset::TypeEditorMetadata,
-	engine::{asset, graphics, utility},
+	engine::{asset, graphics, utility::AnyError},
 };
 use serde_json;
-use std::path::PathBuf;
+use std::{path::{PathBuf, Path}, time::SystemTime};
 
 pub struct ShaderEditorMetadata {}
 
@@ -11,15 +11,29 @@ impl ShaderEditorMetadata {
 	pub fn boxed() -> Box<dyn TypeEditorMetadata> {
 		Box::new(ShaderEditorMetadata {})
 	}
+
+	fn glsl_path(&self, path: &Path) -> PathBuf {
+		let mut glsl_path = PathBuf::from(path.parent().unwrap());
+		glsl_path.push(path.file_stem().unwrap().to_str().unwrap().to_string() + ".glsl");
+		glsl_path
+	}
 }
 
 impl TypeEditorMetadata for ShaderEditorMetadata {
+	
+	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
+	{
+		let glsl_path = self.glsl_path(&path);
+		let asset_last_modified_at = path.metadata()?.modified()?;
+		if !glsl_path.exists() { return Ok(asset_last_modified_at); }
+		let glsl_last_modified_at = glsl_path.metadata()?.modified()?;
+		Ok(asset_last_modified_at.max(glsl_last_modified_at))
+	}
+
 	fn read(&self, path: &std::path::Path, json_str: &str) -> asset::AssetResult {
-		let mut glsl_path = PathBuf::from(path.parent().unwrap());
-		glsl_path.push(path.file_stem().unwrap().to_str().unwrap().to_string() + ".glsl");
 
 		let mut shader: graphics::Shader = serde_json::from_str(json_str)?;
-		shader.set_contents(std::fs::read(glsl_path)?);
+		shader.set_contents(std::fs::read(self.glsl_path(&path))?);
 		Ok(Box::new(shader))
 	}
 
@@ -27,7 +41,7 @@ impl TypeEditorMetadata for ShaderEditorMetadata {
 		&self,
 		json_path: &std::path::Path,
 		asset: &asset::AssetBox,
-	) -> Result<Vec<u8>, utility::AnyError> {
+	) -> Result<Vec<u8>, AnyError> {
 		let shader = asset::as_asset::<graphics::Shader>(asset);
 
 		let mut compiler = shaderc::Compiler::new().unwrap();

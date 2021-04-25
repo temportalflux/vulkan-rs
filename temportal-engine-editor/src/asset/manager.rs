@@ -1,15 +1,14 @@
-use crate::asset;
+use crate::{asset, engine::{self, asset::{TypeId, AssetGeneric, AssetBox}, utility::AnyError}};
 use serde_json;
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
-use temportal_engine as engine;
+use std::{fs, path::{Path, PathBuf}, collections::HashMap, time::SystemTime};
+
+type EditorMetadataBox = Box<dyn asset::TypeEditorMetadata>;
 
 /// Handles creating, saving, loading, moving, and deleting an asset at a given path.
 /// Only accessible during editor-runtime whereas [Loader](temportal_engine::asset::Loader)
 /// handles loading built assets during game-runtime.
 pub struct Manager {
-	editor_metadata: HashMap<engine::asset::TypeId, Box<dyn asset::TypeEditorMetadata>>,
+	editor_metadata: HashMap<TypeId, EditorMetadataBox>,
 }
 
 impl Manager {
@@ -19,7 +18,7 @@ impl Manager {
 		}
 	}
 
-	pub fn register<TAsset>(&mut self, editor_metadata: Box<dyn asset::TypeEditorMetadata>)
+	pub fn register<TAsset>(&mut self, editor_metadata: EditorMetadataBox)
 	where
 		TAsset: engine::asset::Asset,
 	{
@@ -41,11 +40,35 @@ impl Manager {
 		}
 	}
 
+	fn metadata<'r>(&self, type_id: &'r str) -> Result<&EditorMetadataBox, AnyError> {
+		let metadata = self
+			.editor_metadata
+			.get(type_id)
+			.ok_or(engine::asset::Error::UnregisteredAssetType(
+				type_id.to_string(),
+			))?;
+		Ok(metadata)
+	}
+
+	fn read_type_id_sync(&self, path: &Path) -> Result<String, AnyError> {
+		let absolute_path = path.canonicalize()?;
+		let file_json = fs::read_to_string(&absolute_path)?;
+		let type_id = Manager::read_asset_type(file_json.as_str())?;
+		Ok(type_id)
+	}
+	
+	pub fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
+	{
+		let type_id = self.read_type_id_sync(path)?;
+		let metadata = self.metadata(&type_id)?;
+		metadata.last_modified(&path)
+	}
+
 	/// Synchronously reads an asset json from a provided path, returning relevant asset loading errors.
 	pub fn read_sync(
 		&self,
 		path: &Path,
-	) -> Result<(String, engine::asset::AssetBox), engine::utility::AnyError> {
+	) -> Result<(String, AssetBox), AnyError> {
 		let absolute_path = path.canonicalize()?;
 		let file_json = fs::read_to_string(&absolute_path)?;
 		let type_id = Manager::read_asset_type(file_json.as_str())?;
@@ -59,8 +82,8 @@ impl Manager {
 		Ok((type_id, asset))
 	}
 
-	fn read_asset_type(json_str: &str) -> Result<String, engine::utility::AnyError> {
-		let generic: engine::asset::AssetGeneric = serde_json::from_str(json_str)?;
+	fn read_asset_type(json_str: &str) -> Result<String, AnyError> {
+		let generic: AssetGeneric = serde_json::from_str(json_str)?;
 		return Ok(generic.asset_type);
 	}
 

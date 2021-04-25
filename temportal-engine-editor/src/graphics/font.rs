@@ -8,7 +8,7 @@ use crate::{
 	},
 };
 use serde_json;
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, time::SystemTime};
 
 #[path = "sdf-builder.rs"]
 mod sdf_builder;
@@ -35,6 +35,22 @@ impl FontEditorMetadata {
 }
 
 impl TypeEditorMetadata for FontEditorMetadata {
+	
+	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
+	{
+		let mut max_last_modified_at = path.metadata()?.modified()?;
+		for path in [
+			self.font_path(&path, false, false),
+			self.font_path(&path, true, false),
+			self.font_path(&path, false, true),
+			self.font_path(&path, true, true),
+		].iter().filter(|path| path.exists()) {
+			let last_modified_at = path.metadata()?.modified()?;
+			max_last_modified_at = max_last_modified_at.max(last_modified_at);
+		}
+		Ok(max_last_modified_at)
+	}
+
 	fn read(&self, _path: &Path, json_str: &str) -> AssetResult {
 		let font: Font = serde_json::from_str(json_str)?;
 		Ok(Box::new(font))
@@ -56,8 +72,6 @@ impl TypeEditorMetadata for FontEditorMetadata {
 				.with_minimum_atlas_size(Vector::new([1024, 512]))
 				.build(&font_library)?,
 		);
-
-		println!("{:?}", asset);
 
 		let bytes = rmp_serde::to_vec(&asset)?;
 		Ok(bytes)

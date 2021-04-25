@@ -3,12 +3,13 @@ use std::{
 	io::{self},
 	path::{Path, PathBuf},
 };
-use temportal_engine as engine;
+use crate::engine::{self, asset};
 
 pub fn build(
 	asset_manager: &crate::asset::Manager,
 	module_name: &str,
 ) -> engine::utility::VoidResult {
+	log::info!(target: asset::LOG, "Building module {}", module_name);
 	let crate_path = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
 		.iter()
 		.collect::<PathBuf>()
@@ -20,21 +21,42 @@ pub fn build(
 
 	if !output_dir_path.exists() {
 		fs::create_dir(&output_dir_path)?;
-	} else {
-		fs::remove_dir_all(&output_dir_path)?;
 	}
-
-	for file_path in collect_file_paths(&assets_dir_path)?.iter() {
-		let relative_path = file_path.as_path().strip_prefix(&assets_dir_path)?;
+	
+	let mut intended_binaries: Vec<PathBuf> = Vec::new();
+	for asset_file_path in collect_file_paths(&assets_dir_path)?.iter() {
+		let relative_path = asset_file_path.as_path().strip_prefix(&assets_dir_path)?;
 		if let Some(ext) = relative_path.extension() {
 			if ext == "json" {
-				let mut output_file_path = output_dir_path.clone();
-				output_file_path.push(relative_path.file_stem().unwrap());
-				let (type_id, asset) = asset_manager.read_sync(&file_path.as_path())?;
-				asset_manager.compile(&file_path, &type_id, &asset, &output_file_path)?;
+				let mut binary_file_path = output_dir_path.clone();
+				if let Some(parent) = relative_path.parent() {
+					binary_file_path.push(parent);
+				}
+				binary_file_path.push(relative_path.file_stem().unwrap());
+
+				if !binary_file_path.exists()
+					|| (asset_manager.last_modified(&asset_file_path)?
+						> binary_file_path.metadata()?.modified()?)
+				{
+					log::info!(target: asset::LOG, "Building asset {:?}", relative_path);
+					let (type_id, asset) = asset_manager.read_sync(&asset_file_path.as_path())?;
+					asset_manager.compile(&asset_file_path, &type_id, &asset, &binary_file_path)?;
+				} else {
+					log::info!(target: asset::LOG, "Skipping unchanged asset {:?}", relative_path);
+				}
+
+				intended_binaries.push(binary_file_path);
 			}
 		}
 	}
+
+	for binary_file_path in collect_file_paths(&output_dir_path)?.iter() {
+		if !intended_binaries.contains(binary_file_path) {
+			log::info!(target: asset::LOG, "Deleting old binary {:?}", binary_file_path.as_path().strip_prefix(&output_dir_path)?);
+			std::fs::remove_file(binary_file_path)?;
+		}
+	}
+
 	Ok(())
 }
 
