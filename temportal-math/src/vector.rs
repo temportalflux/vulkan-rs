@@ -1164,3 +1164,124 @@ mod property_tests {
 }
 
 // #endregion
+
+pub struct VectorIter<T, const N: usize>
+where
+	T: Sized,
+{
+	min: Vector<T, N>,
+	range: Vector<T, N>,
+	step: Vector<T, N>,
+
+	has_started: bool,
+	value: Vector<T, N>,
+}
+
+impl<T, const N: usize> VectorIter<T, N>
+where
+	T: Default + Copy,
+{
+	pub fn new(min: Vector<T, N>, range: Vector<T, N>, step: Vector<T, N>) -> VectorIter<T, N> {
+		VectorIter {
+			min,
+			range,
+			step,
+			has_started: false,
+			value: Vector::new([T::default(); N]),
+		}
+	}
+}
+
+impl<T, const N: usize> std::iter::Iterator for VectorIter<T, N>
+where
+	T: Default
+		+ Copy
+		+ Add<Output = T>
+		+ AddAssign
+		+ PartialEq
+		+ Rem<Output = T>
+		+ std::fmt::Display
+		+ Div<Output = T>,
+{
+	type Item = Vector<T, N>;
+	fn next(&mut self) -> Option<Self::Item> {
+		if !self.has_started {
+			self.has_started = true;
+			return Some(self.min + self.value);
+		}
+
+		for dim in 0..N {
+			self.value[dim] += self.step[dim];
+			if self.value[dim] == self.range[dim] {
+				self.value[dim] = T::default();
+			} else {
+				return Some(self.min + self.value);
+			}
+		}
+
+		None
+	}
+}
+
+impl<T, const N: usize> Vector<T, N>
+where
+	T: Default + Copy,
+{
+	pub fn iter(&self, step: T) -> VectorIter<T, N> {
+		self.iter_on(Vector::filled(step))
+	}
+
+	pub fn iter_on(&self, step: Vector<T, N>) -> VectorIter<T, N> {
+		VectorIter::new(Vector::filled(T::default()), *self, step)
+	}
+
+	pub fn iter_range(min: Vector<T, N>, max: Vector<T, N>, step: Vector<T, N>) -> VectorIter<T, N>
+	where
+		T: SubAssign,
+	{
+		VectorIter::new(min, max - min, step)
+	}
+}
+
+#[cfg(test)]
+mod vector_iter_tests {
+	use super::*;
+
+	#[test]
+	fn vector_iterates_incremental() {
+		let mut iter = VectorIter::new(
+			Vector::new([0, 0, 0]),
+			Vector::new([2, 3, 4]),
+			Vector::filled(1),
+		);
+		assert_eq!(iter.next(), Some(Vector::new([0, 0, 0])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 0, 0])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 1, 0])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 1, 0])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 2, 0])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 2, 0])));
+
+		assert_eq!(iter.next(), Some(Vector::new([0, 0, 1])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 0, 1])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 1, 1])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 1, 1])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 2, 1])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 2, 1])));
+
+		assert_eq!(iter.next(), Some(Vector::new([0, 0, 2])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 0, 2])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 1, 2])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 1, 2])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 2, 2])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 2, 2])));
+
+		assert_eq!(iter.next(), Some(Vector::new([0, 0, 3])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 0, 3])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 1, 3])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 1, 3])));
+		assert_eq!(iter.next(), Some(Vector::new([0, 2, 3])));
+		assert_eq!(iter.next(), Some(Vector::new([1, 2, 3])));
+
+		assert_eq!(iter.next(), None);
+	}
+}

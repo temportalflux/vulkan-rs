@@ -1,8 +1,6 @@
-use crate::{
-	engine::{
-		math::{self, Vector},
-		utility::AnyError,
-	}
+use crate::engine::{
+	math::{self, Vector},
+	utility::AnyError,
 };
 use std::path::{Path, PathBuf};
 
@@ -25,7 +23,7 @@ impl Default for FontSDFBuilder {
 			glyph_height: 10,
 			field_spread: 10,
 			padding_per_char: Vector::new([0; 4]),
-			minimum_atlas_size: Vector::new([ 256; 2 ]),
+			minimum_atlas_size: Vector::new([256; 2]),
 		}
 	}
 }
@@ -89,79 +87,72 @@ impl FontSDFBuilder {
 			let top_edge_padded = ((metrics.horiBearingY as f64) / 64.0) + spread_f;
 			let outline = face.glyph().outline().unwrap();
 
-			let mut texels_in_glyph = Vec::with_capacity(metrics_size.y());
+			let mut texels_in_glyph: Vec<Vec<u8>> =
+				vec![vec![0; metrics_size.x()]; metrics_size.y()];
 
-			for row in 0..metrics_size.y() {
-				let mut texel_line = Vec::with_capacity(metrics_size.x());
+			for glyph_pos in metrics_size.iter(1) {
+				let mut min_dist = f64::MAX;
+				let mut total_cross_count = 0;
+				let point = Vector::new([
+					left_edge_padded + (glyph_pos.x() as f64) + 0.5,
+					top_edge_padded - (glyph_pos.y() as f64) - 0.5,
+				]);
 
-				for column in 0..metrics_size.x() {
-					let mut min_dist = f64::MAX;
-					let mut total_cross_count = 0;
-					let point = Vector::new([
-						left_edge_padded + (column as f64) + 0.5,
-						top_edge_padded - (row as f64) - 0.5,
-					]);
+				for contour in outline.contours_iter() {
+					let start = *contour.start();
+					let mut curve_start = to_f64_vector(start);
 
-					for contour in outline.contours_iter() {
-						let start = *contour.start();
-						let mut curve_start = to_f64_vector(start);
+					for curve in contour {
+						match curve {
+							Curve::Line(end) => {
+								let curve_end = to_f64_vector(end);
 
-						for curve in contour {
-							match curve {
-								Curve::Line(end) => {
-									let curve_end = to_f64_vector(end);
+								min_dist = min_dist.min(math::ops::distance_point_to_line_segment(
+									point,
+									curve_start,
+									curve_end,
+								));
+								total_cross_count += math::ops::has_crossed_line_segment(
+									point,
+									curve_start,
+									curve_end,
+								) as u32;
 
-									min_dist = min_dist.min(math::ops::distance_point_to_line_segment(
-										point,
-										curve_start,
-										curve_end,
-									));
-									total_cross_count += math::ops::has_crossed_line_segment(
-										point,
-										curve_start,
-										curve_end,
-									) as u32;
+								curve_start = curve_end;
+							}
+							Curve::Bezier2(ctrl, end) => {
+								let control = to_f64_vector(ctrl);
+								let curve_end = to_f64_vector(end);
 
-									curve_start = curve_end;
-								}
-								Curve::Bezier2(ctrl, end) => {
-									let control = to_f64_vector(ctrl);
-									let curve_end = to_f64_vector(end);
+								min_dist = min_dist.min(math::ops::distance_point_to_bezier(
+									point,
+									curve_start,
+									control,
+									curve_end,
+								));
+								total_cross_count += math::ops::count_intercepts_on_bezier(
+									point,
+									curve_start,
+									control,
+									curve_end,
+								);
 
-									min_dist =
-										min_dist.min(math::ops::distance_point_to_bezier(
-											point,
-											curve_start,
-											control,
-											curve_end,
-										));
-									total_cross_count +=
-										math::ops::count_intercepts_on_bezier(
-											point,
-											curve_start,
-											control,
-											curve_end,
-										);
-
-									curve_start = curve_end;
-								}
-								Curve::Bezier3(_, _, _) => {
-									return Err(Box::new(FontError::CubicBezier()));
-								}
-							};
-						}
+								curve_start = curve_end;
+							}
+							Curve::Bezier3(_, _, _) => {
+								return Err(Box::new(FontError::CubicBezier()));
+							}
+						};
 					}
-
-					let dist_signed =
-						(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
-					let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
-					let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
-					let dist_scaled = (dist_zero_to_one * 255.0).round();
-
-					texel_line.push(dist_scaled as u8);
 				}
 
-				texels_in_glyph.push(texel_line);
+				let dist_signed =
+					(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
+				let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
+				let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
+				let dist_scaled = (dist_zero_to_one * 255.0).round();
+
+				texels_in_glyph[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
 			}
 
 			signed_dist_fields.push(texels_in_glyph);
@@ -258,25 +249,19 @@ impl FontSDFBuilder {
 				'place_in_next_column: for atlas_x in 0..leading_size.x() {
 					let atlas_pos = Vector::new([atlas_x, atlas_y]);
 					// If there is already a value inside this cell, then the texel cannot fit and we must search the next cell.
-					for target_y in 0..glyph_target_size.y() {
-						for target_x in 0..glyph_target_size.x() {
-							let target_pos = Vector::new([target_x, target_y]);
-							let atlas_dest = atlas_pos + target_pos;
-							let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
-							if texel.is_some() {
-								continue 'place_in_next_column;
-							}
+					for target_pos in glyph_target_size.iter(1) {
+						let atlas_dest = atlas_pos + target_pos;
+						let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
+						if texel.is_some() {
+							continue 'place_in_next_column;
 						}
 					}
 					// Since there are no other pixels in the desired area,
 					// write the pixels of the texel into the atlas pixels.
-					for glyph_y in 0..glyph_size.y() {
-						for glyph_x in 0..glyph_size.x() {
-							let texel = glyph_texels[glyph_y][glyph_x];
-							let glyph_pos = Vector::new([glyph_x, glyph_y]);
-							let atlas_dest = atlas_pos + glyph_pos + padding_offset;
-							atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
-						}
+					for glyph_pos in glyph_size.iter(1) {
+						let texel = glyph_texels[glyph_pos.y()][glyph_pos.x()];
+						let atlas_dest = atlas_pos + glyph_pos + padding_offset;
+						atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
 					}
 					continue 'place_next_glyph;
 				}
@@ -307,4 +292,3 @@ impl std::fmt::Display for FontError {
 }
 
 impl std::error::Error for FontError {}
-

@@ -14,5 +14,6 @@ members = [
 ]
 default-members = [
 	"demo-triangle", "demo-triangle-editor",
-	"crystal-sphinx", "crystal-sphinx-editor"
+	"crystal-sphinx", "crystal-sphinx-editor",
+	"temportal-math"
 ]

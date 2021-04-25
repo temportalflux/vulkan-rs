@@ -103,7 +103,8 @@ pub fn distance_point_to_bezier(
 		let dist = ((d4 * t.powi(4))
 			+ (4.0 * d3 * t.powi(3))
 			+ (2.0 * d2 * t.powi(2))
-			+ (4.0 * d1 * t) + d0)
+			+ (4.0 * d1 * t)
+			+ d0)
 			.sqrt();
 		min_dist = min_dist.min(dist);
 	}
@@ -179,8 +180,7 @@ pub fn count_intercepts_on_bezier(
 			let between_endpoints = 0.0 < t && t < 1.0;
 			let starts_upwards_line = t == 0.0 && start_dir.y().is_sign_positive();
 			let ends_downwards_line = t == 1.0 && end_dir.y().is_sign_negative();
-			is_right_of_line
-				&& (between_endpoints || starts_upwards_line || ends_downwards_line)
+			is_right_of_line && (between_endpoints || starts_upwards_line || ends_downwards_line)
 		};
 
 		(is_crossing(x1, t1) as u32) + (is_crossing(x2, t2) as u32)
