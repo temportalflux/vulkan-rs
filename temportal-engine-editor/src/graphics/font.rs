@@ -43,47 +43,113 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		// TODO: only initialize this once per build
 		let font_library = Library::init()?;
 
-		// compile the regular font face
-		FontEditorMetadata::compile_font_face(
-			&font_library,
-			&self.font_path(json_path, false, false),
-		)?;
+		let (atlas_size, atlas_binary) = FontSDFBuilder::default()
+			.with_font_path(&self.font_path(json_path, false, false))
+			.with_glyph_height(60)
+			.with_spread(10)
+			.with_padding(Vector::new([8; 4]))
+			.with_minimum_atlas_size(Vector::new([1024, 512]))
+			.build(&font_library)?;
+
+		// TODO: Temporary, dont need to create an image when the binary can be embedded in the asset bin
+		let mut img = image::RgbaImage::new(atlas_size.x() as u32, atlas_size.y() as u32);
+		for x in 0..atlas_size.x() {
+			for y in 0..atlas_size.y() {
+				img.put_pixel(
+					x as u32,
+					y as u32,
+					image::Rgba([255, 255, 255, atlas_binary[y][x]]),
+				);
+			}
+		}
+		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
 
 		let bytes = rmp_serde::to_vec(&asset)?;
 		Ok(bytes)
 	}
 }
 
-impl FontEditorMetadata {
+struct FontSDFBuilder {
+	font_path: PathBuf,
+	char_range: std::ops::RangeInclusive<usize>,
+	glyph_height: u32,
+	field_spread: usize,
+	padding_per_char: Vector<usize, 4>,
+	minimum_atlas_size: Vector<usize, 2>,
+}
+
+impl Default for FontSDFBuilder {
+	fn default() -> FontSDFBuilder {
+		FontSDFBuilder {
+			font_path: PathBuf::default(),
+			// only ASCII is supported atm, and 33-126 is the inclusive range of all printable ASCII characters
+			// http://facweb.cs.depaul.edu/sjost/it212/documents/ascii-pr.htm
+			char_range: 33..=126,
+			glyph_height: 10,
+			field_spread: 10,
+			padding_per_char: Vector::new([0; 4]),
+			minimum_atlas_size: Vector::new([ 256; 2 ]),
+		}
+	}
+}
+
+impl FontSDFBuilder {
+	pub fn with_font_path(mut self, path: &Path) -> Self {
+		self.font_path = path.to_path_buf();
+		self
+	}
+
+	pub fn with_glyph_height(mut self, height: u32) -> Self {
+		self.glyph_height = height;
+		self
+	}
+
+	pub fn with_spread(mut self, spread: usize) -> Self {
+		self.field_spread = spread;
+		self
+	}
+
+	pub fn with_padding(mut self, padding: Vector<usize, 4>) -> Self {
+		self.padding_per_char = padding;
+		self
+	}
+
+	pub fn with_minimum_atlas_size(mut self, size: Vector<usize, 2>) -> Self {
+		self.minimum_atlas_size = size;
+		self
+	}
+
 	/// Compiles the font ttf at `path` into a signed-distance-field.
 	/// Algorithm based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-introduction-code-setup-25lh.
-	fn compile_font_face(font_library: &freetype::Library, path: &Path) -> Result<(), AnyError> {
+	pub fn build(
+		self,
+		font_library: &freetype::Library,
+	) -> Result<(Vector<usize, 2>, Vec<Vec<u8>>), AnyError> {
 		use freetype::{face::LoadFlag, outline::Curve};
-		static GLYPH_PIXEL_HEIGHT: u32 = 60;
-		// only ASCII is supported atm, and 33-126 is the inclusive range of all printable ASCII characters
-		// http://facweb.cs.depaul.edu/sjost/it212/documents/ascii-pr.htm
-		static ASCII_RANGE: std::ops::RangeInclusive<usize> = 33..=126;
-		static SDF_SPREAD: usize = 8;
-		static SDF_SPREAD_F: f64 = SDF_SPREAD as f64;
-		log::debug!("Creating SDF for font {:?}", path.file_name().unwrap());
-		let face = font_library.new_face(path, 0)?;
-		face.set_pixel_sizes(0, GLYPH_PIXEL_HEIGHT)?;
+		assert!(self.font_path.exists());
+		log::debug!(
+			"Creating SDF for font {:?}",
+			self.font_path.file_name().unwrap()
+		);
 
-		let to_f64_vector = |v: freetype::Vector| {
-			Vector::new([(v.x as f64) / 64.0, (v.y as f64) / 64.0])
-		};
+		let face = font_library.new_face(self.font_path, 0)?;
+		face.set_pixel_sizes(0, self.glyph_height)?;
+
+		let to_f64_vector =
+			|v: freetype::Vector| Vector::new([(v.x as f64) / 64.0, (v.y as f64) / 64.0]);
+		let spread_f = self.field_spread as f64;
 
 		let mut signed_dist_fields = Vec::new();
 
-		for char_code in ASCII_RANGE.clone() {
+		for char_code in self.char_range.clone() {
 			face.load_char(char_code, LoadFlag::empty())?;
 			let metrics = face.glyph().metrics();
 			let metrics_size = Vector::new([
-				((metrics.width as usize) / 64) + (SDF_SPREAD * 2),
-				((metrics.height as usize) / 64) + (SDF_SPREAD * 2),
+				((metrics.width as usize) / 64) + (self.field_spread * 2),
+				((metrics.height as usize) / 64) + (self.field_spread * 2),
 			]);
-			let left_edge_padded = ((metrics.horiBearingX as f64) / 64.0) - SDF_SPREAD_F;
-			let top_edge_padded = ((metrics.horiBearingY as f64) / 64.0) + SDF_SPREAD_F;
+			let left_edge_padded = ((metrics.horiBearingX as f64) / 64.0) - spread_f;
+			let top_edge_padded = ((metrics.horiBearingY as f64) / 64.0) + spread_f;
 			let outline = face.glyph().outline().unwrap();
 
 			let mut texels_in_glyph = Vec::with_capacity(metrics_size.y());
@@ -100,48 +166,60 @@ impl FontEditorMetadata {
 					]);
 
 					for contour in outline.contours_iter() {
-						let mut start = *contour.start();
+						let start = *contour.start();
+						let mut curve_start = to_f64_vector(start);
 
 						for curve in contour {
-							let curve_start = to_f64_vector(start);
-
-							let (end, dist, cross_num) = match curve {
+							match curve {
 								Curve::Line(end) => {
 									let curve_end = to_f64_vector(end);
 
-									let dist = FontEditorMetadata::find_dist_to_line(point, curve_start, curve_end);
-									let cross_num =
-										FontEditorMetadata::find_cross_num_of_line(point, curve_start, curve_end);
+									min_dist = min_dist.min(FontEditorMetadata::find_dist_to_line(
+										point,
+										curve_start,
+										curve_end,
+									));
+									total_cross_count += FontEditorMetadata::find_cross_num_of_line(
+										point,
+										curve_start,
+										curve_end,
+									);
 
-									(end, dist, cross_num)
+									curve_start = curve_end;
 								}
 								Curve::Bezier2(ctrl, end) => {
 									let control = to_f64_vector(ctrl);
 									let curve_end = to_f64_vector(end);
 
-									let dist =
-										FontEditorMetadata::find_dist_to_bezier(point, curve_start, control, curve_end);
-									let cross_num = FontEditorMetadata::find_cross_num_of_bezier(
-										point, curve_start, control, curve_end
-									);
+									min_dist =
+										min_dist.min(FontEditorMetadata::find_dist_to_bezier(
+											point,
+											curve_start,
+											control,
+											curve_end,
+										));
+									total_cross_count +=
+										FontEditorMetadata::find_cross_num_of_bezier(
+											point,
+											curve_start,
+											control,
+											curve_end,
+										);
 
-									(end, dist, cross_num)
+									curve_start = curve_end;
 								}
 								Curve::Bezier3(_, _, _) => {
 									return Err(Box::new(FontError::CubicBezier()));
 								}
 							};
-
-							min_dist = min_dist.min(dist);
-							total_cross_count += cross_num;
-							start = end;
 						}
 					}
 
-					let dist_signed = (((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
-					let dist_clamped = dist_signed.min(SDF_SPREAD_F).max(-SDF_SPREAD_F);
-					let dist_positive = dist_clamped + SDF_SPREAD_F;
-					let dist_scaled = ((dist_positive / (SDF_SPREAD_F * 2.0)) * 255.0).round();
+					let dist_signed =
+						(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
+					let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
+					let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
+					let dist_scaled = (dist_zero_to_one * 255.0).round();
 
 					texel_line.push(dist_scaled as u8);
 				}
@@ -156,27 +234,34 @@ impl FontEditorMetadata {
 			.sort_unstable_by(|a, b| (b.len() * b[0].len()).cmp(&(a.len() * a[0].len())));
 		log::debug!("SDF calculations complete, starting atlas generation.");
 
-		let (atlas_binary, atlas_size) =
-			FontEditorMetadata::bin_pack_expanding_pow2(&signed_dist_fields);
+		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
+		let atlas_binary = FontEditorMetadata::bin_pack_expanding_pow2(
+			&signed_dist_fields,
+			&mut atlas_size,
+			&self.padding_per_char,
+		);
 		log::debug!(
 			"Packed {} glyphs into a {} SDF texture",
 			signed_dist_fields.len(),
 			atlas_size
 		);
 
-		// TODO: Temporary, dont need to create an image when the binary can be embedded in the asset bin
-		let mut img = image::RgbaImage::new(atlas_size.x(), atlas_size.y());
-		for x in 0..atlas_size.x() {
-			for y in 0..atlas_size.y() {
-				let pixel: Option<u8> = atlas_binary[y as usize][x as usize];
-				img.put_pixel(x, y, pixel.map_or(image::Rgba([0; 4]), |alpha| image::Rgba([255, 255, 255, alpha])));
-			}
-		}
-		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
-
-		Ok(())
+		Ok((
+			atlas_size,
+			atlas_binary
+				.into_iter()
+				.map(|texel_line| {
+					texel_line
+						.into_iter()
+						.map(|alpha| alpha.unwrap_or(0))
+						.collect()
+				})
+				.collect(),
+		))
 	}
+}
 
+impl FontEditorMetadata {
 	// Based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-calculating-the-distance-33io
 	fn find_dist_to_line(
 		point: Vector<f64, 2>,
@@ -280,11 +365,12 @@ impl FontEditorMetadata {
 		let x = line_start.x() + t * line.x();
 
 		let is_right_of_line = x > point.x();
-		let between_endpoints = 0.0 < t || t < 1.0;
+		let between_endpoints = 0.0 < t && t < 1.0;
 		let starts_upwards_line = t == 0.0 && line.y().is_sign_positive();
 		let ends_downwards_line = t == 1.0 && line.y().is_sign_negative();
 
-		(is_right_of_line && (between_endpoints || starts_upwards_line || ends_downwards_line)) as u32
+		(is_right_of_line && (between_endpoints || starts_upwards_line || ends_downwards_line))
+			as u32
 	}
 
 	fn find_cross_num_of_bezier(
@@ -300,10 +386,10 @@ impl FontEditorMetadata {
 			let start_to_point = point - start;
 			let t = start_to_point.y() / line.y();
 			let a = 1.0 - t;
-			let x = a.powi(2) * start.x() + (2.0 * a * t * control.x()) + (t.powi(2) * end.x());
+			let x = (a.powi(2) * start.x()) + (2.0 * a * t * control.x()) + (t.powi(2) * end.x());
 
 			let is_right_of_line = x > point.x();
-			let between_endpoints = 0.0 < t || t < 1.0;
+			let between_endpoints = 0.0 < t && t < 1.0;
 			let starts_upwards_line = t == 0.0 && line.y().is_sign_positive();
 			let ends_downwards_line = t == 1.0 && line.y().is_sign_negative();
 
@@ -350,7 +436,7 @@ impl FontEditorMetadata {
 		} else {
 			let is_crossing = |x: f64, t: f64| -> bool {
 				let is_right_of_line = x > point.x();
-				let between_endpoints = 0.0 < t || t < 1.0;
+				let between_endpoints = 0.0 < t && t < 1.0;
 				let starts_upwards_line = t == 0.0 && start_dir.y().is_sign_positive();
 				let ends_downwards_line = t == 1.0 && end_dir.y().is_sign_negative();
 				is_right_of_line
@@ -370,18 +456,16 @@ impl FontEditorMetadata {
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
 	fn bin_pack_expanding_pow2(
 		sorted_fields: &Vec</*Texel*/ Vec<Vec<u8>>>,
-	) -> (Vec<Vec<Option<u8>>>, Vector<u32, 2>) {
-		// start with a 512x512 atlas. the atlas must be at all times a power of two in each dimesion,
-		// so that it can be compressed on platforms with little memory (Nintendo Switch is often a good example here).
-		let mut atlas_size: Vector<usize, 2> = Vector::new([512; 2]);
+		atlas_size: &mut Vector<usize, 2>,
+		padding_per_field: &Vector<usize, 4>,
+	) -> Vec<Vec<Option<u8>>> {
 		loop {
-			match FontEditorMetadata::bin_pack(sorted_fields, atlas_size.clone()) {
-				Some(atlas_binary) => {
-					return (
-						atlas_binary,
-						Vector::new([atlas_size.x() as u32, atlas_size.y() as u32]),
-					)
-				}
+			match FontEditorMetadata::bin_pack(
+				sorted_fields,
+				atlas_size.clone(),
+				padding_per_field.clone(),
+			) {
+				Some(atlas_binary) => return atlas_binary,
 				// Bin packing failed, expand in the dimension that is smallest
 				None => {
 					// Expand the atlas such that each dimension that is being expanded (width and/or height),
@@ -391,7 +475,7 @@ impl FontEditorMetadata {
 							as usize,
 						(atlas_size.y() < atlas_size.x()) as usize,
 					]);
-					atlas_size += dimensions_to_expand_in * atlas_size;
+					*atlas_size += dimensions_to_expand_in * (*atlas_size);
 				}
 			}
 		}
@@ -399,26 +483,36 @@ impl FontEditorMetadata {
 
 	fn bin_pack(
 		// each glyph is a 2D array of alpha texels
-		sorted_glyps: &Vec</*glyph*/Vec<Vec<u8>>>,
+		sorted_glyps: &Vec</*glyph*/ Vec<Vec<u8>>>,
 		atlas_size: Vector<usize, 2>,
+		padding_lrtb: Vector<usize, 4>, // padding on the left, right, top, and bottom
 	) -> Option<Vec<Vec<Option<u8>>>> {
 		// the binary of a grayscale/alpha-only 2D image,
 		// where unpopulated "pixels" are represented by `None`.
 		let mut atlas_binary: Vec<Vec<Option<u8>>> =
 			vec![vec![None; atlas_size.x()]; atlas_size.y()];
+		let padding_on_axis = Vector::new([
+			/*x-axis padding*/ padding_lrtb.subvec::<2>(None).total(),
+			/*y-axis padding*/ padding_lrtb.subvec::<2>(Some(2)).total(),
+		]);
+		let padding_offset = Vector::new([padding_lrtb.x(), padding_lrtb.z()]);
 		// Attempt to place all fields in the atlas
-		'place_next_glyph: for glyph_texels in sorted_glyps {
+		'place_next_glyph: for (_glyph_idx, glyph_texels) in sorted_glyps.iter().enumerate() {
 			// This is then width and height of a given texel
-			let glyph_size =
-				Vector::new([glyph_texels[0].len() as usize, glyph_texels.len() as usize]);
+			let texel_count = [glyph_texels[0].len() as usize, glyph_texels.len() as usize];
+			let glyph_size = Vector::new(texel_count);
+			let glyph_target_size = padding_on_axis + glyph_size;
 			// The size of the atlas that can be iterated over while still leaving enough room for the glyph itself.
-			let leading_size = atlas_size - glyph_size;
+			let leading_size = atlas_size - glyph_target_size;
 			for atlas_y in 0..leading_size.y() {
 				'place_in_next_column: for atlas_x in 0..leading_size.x() {
+					let atlas_pos = Vector::new([atlas_x, atlas_y]);
 					// If there is already a value inside this cell, then the texel cannot fit and we must search the next cell.
-					for glyph_y in 0..glyph_size.y() {
-						for glyph_x in 0..glyph_size.x() {
-							let texel = atlas_binary[atlas_y + glyph_y][atlas_x + glyph_x];
+					for target_y in 0..glyph_target_size.y() {
+						for target_x in 0..glyph_target_size.x() {
+							let target_pos = Vector::new([target_x, target_y]);
+							let atlas_dest = atlas_pos + target_pos;
+							let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
 							if texel.is_some() {
 								continue 'place_in_next_column;
 							}
@@ -429,7 +523,9 @@ impl FontEditorMetadata {
 					for glyph_y in 0..glyph_size.y() {
 						for glyph_x in 0..glyph_size.x() {
 							let texel = glyph_texels[glyph_y][glyph_x];
-							atlas_binary[atlas_y + glyph_y][atlas_x + glyph_x] = Some(texel);
+							let glyph_pos = Vector::new([glyph_x, glyph_y]);
+							let atlas_dest = atlas_pos + glyph_pos + padding_offset;
+							atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
 						}
 					}
 					continue 'place_next_glyph;

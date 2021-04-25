@@ -4,7 +4,7 @@ use std::ops::*;
 /// Linear Algebraic structure for vectors in multiple dimensions.
 #[derive(Copy, Clone, Debug)]
 pub struct Vector<T, const N: usize> {
-	data: [T; N],
+	pub data: [T; N],
 }
 
 impl<T, const N: usize> std::fmt::Display for Vector<T, N>
@@ -1037,6 +1037,15 @@ mod cross_tests {
 // #endregion
 
 // #region Properties
+
+impl<T, const N: usize> Vector<T, N> {
+	pub fn total(&self) -> T
+	where
+		T: std::iter::Sum + Copy,
+	{
+		self.data.iter().map(|dim| *dim).sum()
+	}
+}
 
 impl<T, const N: usize> Vector<T, N>
 where
