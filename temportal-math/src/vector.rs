@@ -2,9 +2,27 @@ use std::iter::Sum;
 use std::ops::*;
 
 /// Linear Algebraic structure for vectors in multiple dimensions.
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Vector<T, const N: usize> {
 	data: [T; N],
+}
+
+impl<T, const N: usize> std::fmt::Display for Vector<T, N>
+where
+	T: std::fmt::Display,
+{
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "<")?;
+		for i in 0..N {
+			if i == 0 {
+				write!(f, "{}", self.data[i])?;
+			} else {
+				write!(f, ", {}", self.data[i])?;
+			}
+		}
+		write!(f, ">")?;
+		Ok(())
+	}
 }
 
 // #region Initialization
@@ -32,6 +50,18 @@ impl<T, const N: usize> Vector<T, N> {
 	/// ```
 	pub fn capacity(&self) -> usize {
 		N
+	}
+
+	pub fn from_vec<U>(other: Vector<U, N>) -> Vector<T, N>
+	where
+		U: Sized + Into<T> + Copy,
+		T: Default + Copy,
+	{
+		let mut vret = Vector::new([T::default(); N]);
+		for i in 0..N {
+			vret[i] = other[i].into();
+		}
+		vret
 	}
 }
 
@@ -571,6 +601,52 @@ where
 	fn div(self, other: Self) -> Self::Output {
 		let mut vret = self.clone();
 		vret.div_assign(other);
+		vret
+	}
+}
+
+impl<T, const N: usize> AddAssign<T> for Vector<T, N>
+where
+	T: Default + Copy + AddAssign,
+{
+	fn add_assign(&mut self, other: T) {
+		for i in 0..N {
+			self.data[i] += other;
+		}
+	}
+}
+
+impl<T, const N: usize> Add<T> for Vector<T, N>
+where
+	T: Default + Copy + AddAssign,
+{
+	type Output = Vector<T, N>;
+	fn add(self, other: T) -> Self::Output {
+		let mut vret = self.clone();
+		vret.add_assign(other);
+		vret
+	}
+}
+
+impl<T, const N: usize> SubAssign<T> for Vector<T, N>
+where
+	T: Default + Copy + SubAssign,
+{
+	fn sub_assign(&mut self, other: T) {
+		for i in 0..N {
+			self.data[i] -= other;
+		}
+	}
+}
+
+impl<T, const N: usize> Sub<T> for Vector<T, N>
+where
+	T: Default + Copy + SubAssign,
+{
+	type Output = Vector<T, N>;
+	fn sub(self, other: T) -> Self::Output {
+		let mut vret = self.clone();
+		vret.sub_assign(other);
 		vret
 	}
 }
