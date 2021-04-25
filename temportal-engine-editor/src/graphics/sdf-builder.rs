@@ -1,11 +1,11 @@
 use crate::engine::{
+	graphics::font,
 	math::{self, Vector},
 	utility::AnyError,
-	graphics::Glyph
 };
 use std::path::{Path, PathBuf};
 
-pub struct FontSDFBuilder {
+pub struct SDFBuilder {
 	font_path: PathBuf,
 	char_range: std::ops::RangeInclusive<usize>,
 	glyph_height: u32,
@@ -23,15 +23,9 @@ struct SDFGlyph {
 	metric_advance: usize,
 }
 
-pub struct FontSDF {
-	pub size: Vector<usize, 2>,
-	pub binary: Vec<Vec<u8>>,
-	pub glyphs: Vec<Glyph>,
-}
-
-impl Default for FontSDFBuilder {
-	fn default() -> FontSDFBuilder {
-		FontSDFBuilder {
+impl Default for SDFBuilder {
+	fn default() -> Self {
+		SDFBuilder {
 			font_path: PathBuf::default(),
 			// only ASCII is supported atm, and 33-126 is the inclusive range of all printable ASCII characters
 			// http://facweb.cs.depaul.edu/sjost/it212/documents/ascii-pr.htm
@@ -44,7 +38,7 @@ impl Default for FontSDFBuilder {
 	}
 }
 
-impl FontSDFBuilder {
+impl SDFBuilder {
 	pub fn with_font_path(mut self, path: &Path) -> Self {
 		self.font_path = path.to_path_buf();
 		self
@@ -72,7 +66,7 @@ impl FontSDFBuilder {
 
 	/// Compiles the font ttf at `path` into a signed-distance-field.
 	/// Algorithm based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-introduction-code-setup-25lh.
-	pub fn build(self, font_library: &freetype::Library) -> Result<FontSDF, AnyError> {
+	pub fn build(self, font_library: &freetype::Library) -> Result<font::SDF, AnyError> {
 		use freetype::{face::LoadFlag, outline::Curve};
 		assert!(self.font_path.exists());
 		log::debug!(
@@ -211,17 +205,17 @@ impl FontSDFBuilder {
 	/// original performance of O(nlog(n)) into O(mnlog(n)) where m is the number of iterations required when resizing the atlas.
 	/// https://en.wikipedia.org/wiki/Bin_packing_problem#First_Fit_Decreasing_(FFD)
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
-	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> FontSDF {
+	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> font::SDF {
 		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
 		loop {
-			match FontSDFBuilder::bin_pack(
+			match SDFBuilder::bin_pack(
 				sorted_fields,
 				atlas_size.clone(),
 				self.padding_per_char.clone(),
 			) {
 				Some((binary, mut glyphs)) => {
 					glyphs.sort_unstable_by(|a, b| a.ascii_code.cmp(&b.ascii_code));
-					return FontSDF {
+					return font::SDF {
 						size: atlas_size,
 						binary: binary
 							.into_iter()
@@ -257,13 +251,13 @@ impl FontSDFBuilder {
 		padding_lrtb: Vector<usize, 4>, // padding on the left, right, top, and bottom
 	) -> Option<(
 		/*binary*/ Vec<Vec<Option<u8>>>,
-		/*glyphs*/ Vec<Glyph>,
+		/*glyphs*/ Vec<font::Glyph>,
 	)> {
 		// the binary of a grayscale/alpha-only 2D image,
 		// where unpopulated "pixels" are represented by `None`.
 		let mut atlas_binary: Vec<Vec<Option<u8>>> =
 			vec![vec![None; atlas_size.x()]; atlas_size.y()];
-		let mut glyphs: Vec<Glyph> = Vec::new();
+		let mut glyphs: Vec<font::Glyph> = Vec::new();
 		let padding_on_axis = Vector::new([
 			/*x-axis padding*/ padding_lrtb.subvec::<2>(None).total(),
 			/*y-axis padding*/ padding_lrtb.subvec::<2>(Some(2)).total(),
@@ -293,7 +287,7 @@ impl FontSDFBuilder {
 						let atlas_dest = atlas_pos + glyph_pos + padding_offset;
 						atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
 					}
-					glyphs.push(Glyph {
+					glyphs.push(font::Glyph {
 						ascii_code: glyph.ascii_code,
 						atlas_pos: atlas_pos + padding_offset,
 						atlas_size: glyph.texture_size,

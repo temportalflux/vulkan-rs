@@ -30,7 +30,7 @@ impl Editor {
 			.register::<engine::graphics::Shader>(graphics::ShaderEditorMetadata::boxed());
 		editor
 			.asset_manager
-			.register::<engine::graphics::Font>(graphics::FontEditorMetadata::boxed());
+			.register::<engine::graphics::font::Font>(graphics::FontEditorMetadata::boxed());
 		Ok(Rc::new(RefCell::new(editor)))
 	}
 

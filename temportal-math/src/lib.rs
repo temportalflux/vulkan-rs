@@ -3,6 +3,8 @@ pub use quaternion::*;
 
 mod vector;
 pub use vector::*;
+mod vector_serde;
+pub use vector_serde::*;
 
 pub mod ops;
 

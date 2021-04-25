@@ -14,6 +14,17 @@
 			"sourceLanguages": [
 				"rust"
 			]
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Crystal Sphinx - Game (Debug)",
+			"program": "${workspaceRoot}/target/debug/crystal-sphinx",
+			"args": ["-v"],
+			"cwd": "${workspaceRoot}/target/debug/",
+			"sourceLanguages": [
+				"rust"
+			]
 		}
 	]
 }

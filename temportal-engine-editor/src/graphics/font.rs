@@ -2,14 +2,17 @@ use crate::{
 	asset::TypeEditorMetadata,
 	engine::{
 		asset::{as_asset, AssetBox, AssetResult},
-		graphics::Font,
+		graphics::font::Font,
 		math::Vector,
 		utility::AnyError,
 	},
-	graphics::FontSDFBuilder,
 };
 use serde_json;
 use std::path::{Path, PathBuf};
+
+#[path = "sdf-builder.rs"]
+mod sdf_builder;
+pub use sdf_builder::*;
 
 pub struct FontEditorMetadata {}
 
@@ -39,31 +42,22 @@ impl TypeEditorMetadata for FontEditorMetadata {
 
 	fn compile(&self, json_path: &Path, asset: &AssetBox) -> Result<Vec<u8>, AnyError> {
 		use freetype::Library;
-		let asset = as_asset::<Font>(asset).clone();
+		let mut asset = as_asset::<Font>(asset).clone();
 
 		// TODO: only initialize this once per build
 		let font_library = Library::init()?;
 
-		let sdf = FontSDFBuilder::default()
-			.with_font_path(&self.font_path(json_path, false, false))
-			.with_glyph_height(60)
-			.with_spread(10)
-			.with_padding(Vector::new([8; 4]))
-			.with_minimum_atlas_size(Vector::new([1024, 512]))
-			.build(&font_library)?;
+		asset.set_sdf(
+			SDFBuilder::default()
+				.with_font_path(&self.font_path(json_path, false, false))
+				.with_glyph_height(60)
+				.with_spread(10)
+				.with_padding(Vector::new([8; 4]))
+				.with_minimum_atlas_size(Vector::new([1024, 512]))
+				.build(&font_library)?,
+		);
 
-		// TODO: Temporary, dont need to create an image when the binary can be embedded in the asset bin
-		let mut img = image::RgbaImage::new(sdf.size.x() as u32, sdf.size.y() as u32);
-		for x in 0..sdf.size.x() {
-			for y in 0..sdf.size.y() {
-				img.put_pixel(
-					x as u32,
-					y as u32,
-					image::Rgba([255, 255, 255, sdf.binary[y][x]]),
-				);
-			}
-		}
-		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
+		println!("{:?}", asset);
 
 		let bytes = rmp_serde::to_vec(&asset)?;
 		Ok(bytes)

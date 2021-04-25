@@ -1177,11 +1177,11 @@ where
 	value: Vector<T, N>,
 }
 
-impl<T, const N: usize> VectorIter<T, N>
-where
-	T: Default + Copy,
-{
-	pub fn new(min: Vector<T, N>, range: Vector<T, N>, step: Vector<T, N>) -> VectorIter<T, N> {
+impl<T, const N: usize> VectorIter<T, N> {
+	pub fn new(min: Vector<T, N>, range: Vector<T, N>, step: Vector<T, N>) -> VectorIter<T, N>
+	where
+		T: Default + Copy,
+	{
 		VectorIter {
 			min,
 			range,
