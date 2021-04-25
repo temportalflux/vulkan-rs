@@ -39,8 +39,8 @@ pub fn has_crossed_line_segment(
 		return false;
 	}
 
-	let t = (point - segment_end).y() / line.y();
-	let x = segment_end.x() + t * line.x();
+	let t = (point - segment_start).y() / line.y();
+	let x = segment_start.x() + t * line.x();
 
 	let is_right_of_line = x > point.x();
 	let between_endpoints = 0.0 < t && t < 1.0;
