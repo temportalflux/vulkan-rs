@@ -27,7 +27,7 @@ impl TriangleRenderer {
 				let asset = engine.assets.loader.load_sync(
 					&engine.assets.types,
 					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_vert.bin"),
+					&engine::asset::Id::new("demo-triangle", "triangle_vert"),
 				)?;
 				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 				vert_bytes = shader.contents().clone();
@@ -36,7 +36,7 @@ impl TriangleRenderer {
 				let asset = engine.assets.loader.load_sync(
 					&engine.assets.types,
 					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_frag.bin"),
+					&engine::asset::Id::new("demo-triangle", "triangle_frag"),
 				)?;
 				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
 				frag_bytes = shader.contents().clone();

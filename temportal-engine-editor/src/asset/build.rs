@@ -28,10 +28,8 @@ pub fn build(
 		let relative_path = file_path.as_path().strip_prefix(&assets_dir_path)?;
 		if let Some(ext) = relative_path.extension() {
 			if ext == "json" {
-				let mut output_file_path = [output_dir_path.as_path(), relative_path]
-					.iter()
-					.collect::<PathBuf>();
-				output_file_path.set_extension("bin");
+				let mut output_file_path = output_dir_path.clone();
+				output_file_path.push(relative_path.file_stem().unwrap());
 				let (type_id, asset) = asset_manager.read_sync(&file_path.as_path())?;
 				asset_manager.compile(&file_path, &type_id, &asset, &output_file_path)?;
 			}
