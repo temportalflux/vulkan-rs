@@ -1,8 +1,10 @@
 mod quaternion;
-mod vector;
-
 pub use quaternion::*;
+
+mod vector;
 pub use vector::*;
+
+pub mod ops;
 
 #[macro_export]
 macro_rules! assert_vec_approx {
