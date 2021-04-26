@@ -8,7 +8,10 @@ use crate::{
 	},
 };
 use serde_json;
-use std::{path::{Path, PathBuf}, time::SystemTime};
+use std::{
+	path::{Path, PathBuf},
+	time::SystemTime,
+};
 
 #[path = "sdf-builder.rs"]
 mod sdf_builder;
@@ -35,16 +38,17 @@ impl FontEditorMetadata {
 }
 
 impl TypeEditorMetadata for FontEditorMetadata {
-	
-	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
-	{
+	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError> {
 		let mut max_last_modified_at = path.metadata()?.modified()?;
 		for path in [
 			self.font_path(&path, false, false),
 			self.font_path(&path, true, false),
 			self.font_path(&path, false, true),
 			self.font_path(&path, true, true),
-		].iter().filter(|path| path.exists()) {
+		]
+		.iter()
+		.filter(|path| path.exists())
+		{
 			let last_modified_at = path.metadata()?.modified()?;
 			max_last_modified_at = max_last_modified_at.max(last_modified_at);
 		}

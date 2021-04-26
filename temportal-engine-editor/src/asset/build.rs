@@ -1,13 +1,14 @@
+use crate::engine::{self, asset};
 use std::{
 	self, fs,
 	io::{self},
 	path::{Path, PathBuf},
 };
-use crate::engine::{self, asset};
 
 pub fn build(
 	asset_manager: &crate::asset::Manager,
 	module_name: &str,
+	force_build: bool,
 ) -> engine::utility::VoidResult {
 	log::info!(target: asset::LOG, "Building module {}", module_name);
 	let crate_path = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
@@ -21,8 +22,10 @@ pub fn build(
 
 	if !output_dir_path.exists() {
 		fs::create_dir(&output_dir_path)?;
+	} else if force_build {
+		fs::remove_dir_all(&output_dir_path)?;
 	}
-	
+
 	let mut intended_binaries: Vec<PathBuf> = Vec::new();
 	for asset_file_path in collect_file_paths(&assets_dir_path, &Vec::new())?.iter() {
 		let relative_path = asset_file_path.as_path().strip_prefix(&assets_dir_path)?;
@@ -42,7 +45,11 @@ pub fn build(
 					let (type_id, asset) = asset_manager.read_sync(&asset_file_path.as_path())?;
 					asset_manager.compile(&asset_file_path, &type_id, &asset, &binary_file_path)?;
 				} else {
-					log::info!(target: asset::LOG, "Skipping unchanged asset {:?}", relative_path);
+					log::info!(
+						target: asset::LOG,
+						"Skipping unchanged asset {:?}",
+						relative_path
+					);
 				}
 
 				intended_binaries.push(binary_file_path);
@@ -51,7 +58,11 @@ pub fn build(
 	}
 
 	for binary_file_path in collect_file_paths(&output_dir_path, &intended_binaries)?.iter() {
-		log::info!(target: asset::LOG, "Deleting old binary {:?}", binary_file_path.as_path().strip_prefix(&output_dir_path)?);
+		log::info!(
+			target: asset::LOG,
+			"Deleting old binary {:?}",
+			binary_file_path.as_path().strip_prefix(&output_dir_path)?
+		);
 		std::fs::remove_file(binary_file_path)?;
 	}
 

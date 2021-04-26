@@ -18,8 +18,10 @@ impl ui::Element for Workspace {
 	fn render(&mut self, editor: &mut crate::Editor, ui: &imgui::Ui) {
 		if let Some(bar) = ui.begin_main_menu_bar() {
 			ui.menu(im_str!("General"), true, || {
-				if imgui::MenuItem::new(im_str!("Build")).build(&ui) {
-					match asset::build(editor.asset_manager(), &editor.module_name) {
+				let build = imgui::MenuItem::new(im_str!("Build")).build(&ui);
+				let rebuild = imgui::MenuItem::new(im_str!("Build (Force)")).build(&ui);
+				if build || rebuild {
+					match asset::build(editor.asset_manager(), &editor.module_name, rebuild) {
 						Ok(_) => {}
 						Err(e) => log::error!(target: "ui", "Failed to build... {:?}", e),
 					}

@@ -7,24 +7,6 @@ pub struct Vector<T, const N: usize> {
 	pub data: [T; N],
 }
 
-impl<T, const N: usize> std::fmt::Display for Vector<T, N>
-where
-	T: std::fmt::Display,
-{
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "<")?;
-		for i in 0..N {
-			if i == 0 {
-				write!(f, "{}", self.data[i])?;
-			} else {
-				write!(f, ", {}", self.data[i])?;
-			}
-		}
-		write!(f, ">")?;
-		Ok(())
-	}
-}
-
 // #region Initialization
 
 impl<T, const N: usize> Vector<T, N> {
@@ -1164,6 +1146,33 @@ mod property_tests {
 }
 
 // #endregion
+
+impl<T, const N: usize> std::fmt::Display for Vector<T, N>
+where
+	T: std::fmt::Display,
+{
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "<")?;
+		for i in 0..N {
+			if i == 0 {
+				write!(f, "{}", self.data[i])?;
+			} else {
+				write!(f, ", {}", self.data[i])?;
+			}
+		}
+		write!(f, ">")?;
+		Ok(())
+	}
+}
+
+impl<T, const N: usize> Vector<T, N>
+where
+	T: std::fmt::Display,
+{
+	pub fn display(&self) -> String {
+		format!("{}", *self)
+	}
+}
 
 pub struct VectorIter<T, const N: usize>
 where

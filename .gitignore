@@ -8,3 +8,4 @@ externs/
 */binaries/
 config/
 *.log
+*.opt

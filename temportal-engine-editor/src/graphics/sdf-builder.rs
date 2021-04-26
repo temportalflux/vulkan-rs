@@ -206,6 +206,9 @@ impl SDFBuilder {
 	/// https://en.wikipedia.org/wiki/Bin_packing_problem#First_Fit_Decreasing_(FFD)
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
 	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> font::SDF {
+		optick::event!();
+		optick::tag!("glyph-count", sorted_fields.len() as u32);
+		optick::tag!("min-atlas-size", self.minimum_atlas_size.display());
 		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
 		loop {
 			match SDFBuilder::bin_pack(
@@ -246,29 +249,36 @@ impl SDFBuilder {
 
 	fn bin_pack(
 		// each glyph is a 2D array of alpha texels
-		sorted_glyps: &Vec<SDFGlyph>,
+		sorted_glyphs: &Vec<SDFGlyph>,
 		atlas_size: Vector<usize, 2>,
 		padding_lrtb: Vector<usize, 4>, // padding on the left, right, top, and bottom
 	) -> Option<(
 		/*binary*/ Vec<Vec<Option<u8>>>,
 		/*glyphs*/ Vec<font::Glyph>,
 	)> {
+		optick::event!();
+		optick::tag!("atlas-size", atlas_size.display());
 		// the binary of a grayscale/alpha-only 2D image,
 		// where unpopulated "pixels" are represented by `None`.
 		let mut atlas_binary: Vec<Vec<Option<u8>>> =
 			vec![vec![None; atlas_size.x()]; atlas_size.y()];
 		let mut glyphs: Vec<font::Glyph> = Vec::new();
+
 		let padding_on_axis = Vector::new([
 			/*x-axis padding*/ padding_lrtb.subvec::<2>(None).total(),
 			/*y-axis padding*/ padding_lrtb.subvec::<2>(Some(2)).total(),
 		]);
 		let padding_offset = Vector::new([padding_lrtb.x(), padding_lrtb.z()]);
+
 		// Attempt to place all fields in the atlas
-		'place_next_glyph: for (_glyph_idx, glyph) in sorted_glyps.iter().enumerate() {
+		'place_next_glyph: for (_glyph_idx, glyph) in sorted_glyphs.iter().enumerate() {
+			optick::event!("place");
+			optick::tag!("glyph", _glyph_idx as u32);
 			// This is then width and height of a given texel
 			let glyph_target_size = padding_on_axis + glyph.texture_size;
 			// The size of the atlas that can be iterated over while still leaving enough room for the glyph itself.
 			let leading_size = atlas_size - glyph_target_size;
+
 			for atlas_y in 0..leading_size.y() {
 				'place_in_next_column: for atlas_x in 0..leading_size.x() {
 					let atlas_pos = Vector::new([atlas_x, atlas_y]);

@@ -8,6 +8,10 @@ fn name() -> &'static str {
 }
 
 fn main() -> VoidResult {
+	#[cfg(feature = "profile")]
+	{
+		optick::start_capture();
+	}
 	engine::logging::init(name())?;
 
 	let editor = editor::Editor::new(crystal_sphinx::create_engine()?, crystal_sphinx::name())?;
@@ -23,5 +27,9 @@ fn main() -> VoidResult {
 		ui.render_frame(&mut editor.borrow_mut(), display.borrow().event_pump()?)?;
 	}
 
+	#[cfg(feature = "profile")]
+	{
+		optick::stop_capture(name());
+	}
 	Ok(())
 }

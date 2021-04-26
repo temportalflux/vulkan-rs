@@ -3,7 +3,10 @@ use crate::{
 	engine::{asset, graphics, utility::AnyError},
 };
 use serde_json;
-use std::{path::{PathBuf, Path}, time::SystemTime};
+use std::{
+	path::{Path, PathBuf},
+	time::SystemTime,
+};
 
 pub struct ShaderEditorMetadata {}
 
@@ -20,18 +23,17 @@ impl ShaderEditorMetadata {
 }
 
 impl TypeEditorMetadata for ShaderEditorMetadata {
-	
-	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
-	{
+	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError> {
 		let glsl_path = self.glsl_path(&path);
 		let asset_last_modified_at = path.metadata()?.modified()?;
-		if !glsl_path.exists() { return Ok(asset_last_modified_at); }
+		if !glsl_path.exists() {
+			return Ok(asset_last_modified_at);
+		}
 		let glsl_last_modified_at = glsl_path.metadata()?.modified()?;
 		Ok(asset_last_modified_at.max(glsl_last_modified_at))
 	}
 
 	fn read(&self, path: &std::path::Path, json_str: &str) -> asset::AssetResult {
-
 		let mut shader: graphics::Shader = serde_json::from_str(json_str)?;
 		shader.set_contents(std::fs::read(self.glsl_path(&path))?);
 		Ok(Box::new(shader))

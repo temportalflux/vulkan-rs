@@ -1,6 +1,18 @@
-use crate::{asset, engine::{self, asset::{TypeId, AssetGeneric, AssetBox}, utility::AnyError}};
+use crate::{
+	asset,
+	engine::{
+		self,
+		asset::{AssetBox, AssetGeneric, TypeId},
+		utility::AnyError,
+	},
+};
 use serde_json;
-use std::{fs, path::{Path, PathBuf}, collections::HashMap, time::SystemTime};
+use std::{
+	collections::HashMap,
+	fs,
+	path::{Path, PathBuf},
+	time::SystemTime,
+};
 
 type EditorMetadataBox = Box<dyn asset::TypeEditorMetadata>;
 
@@ -41,12 +53,9 @@ impl Manager {
 	}
 
 	fn metadata<'r>(&self, type_id: &'r str) -> Result<&EditorMetadataBox, AnyError> {
-		let metadata = self
-			.editor_metadata
-			.get(type_id)
-			.ok_or(engine::asset::Error::UnregisteredAssetType(
-				type_id.to_string(),
-			))?;
+		let metadata = self.editor_metadata.get(type_id).ok_or(
+			engine::asset::Error::UnregisteredAssetType(type_id.to_string()),
+		)?;
 		Ok(metadata)
 	}
 
@@ -56,19 +65,15 @@ impl Manager {
 		let type_id = Manager::read_asset_type(file_json.as_str())?;
 		Ok(type_id)
 	}
-	
-	pub fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError>
-	{
+
+	pub fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError> {
 		let type_id = self.read_type_id_sync(path)?;
 		let metadata = self.metadata(&type_id)?;
 		metadata.last_modified(&path)
 	}
 
 	/// Synchronously reads an asset json from a provided path, returning relevant asset loading errors.
-	pub fn read_sync(
-		&self,
-		path: &Path,
-	) -> Result<(String, AssetBox), AnyError> {
+	pub fn read_sync(&self, path: &Path) -> Result<(String, AssetBox), AnyError> {
 		let absolute_path = path.canonicalize()?;
 		let file_json = fs::read_to_string(&absolute_path)?;
 		let type_id = Manager::read_asset_type(file_json.as_str())?;
