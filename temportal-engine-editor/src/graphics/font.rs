@@ -67,15 +67,27 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		// TODO: only initialize this once per build
 		let font_library = Library::init()?;
 
-		asset.set_sdf(
-			SDFBuilder::default()
-				.with_font_path(&self.font_path(json_path, false, false))
-				.with_glyph_height(60)
-				.with_spread(10)
-				.with_padding(Vector::new([8; 4]))
-				.with_minimum_atlas_size(Vector::new([1024, 512]))
-				.build(&font_library)?,
-		);
+		let sdf = SDFBuilder::default()
+			.with_font_path(&self.font_path(json_path, false, false))
+			.with_glyph_height(60)
+			.with_spread(10)
+			.with_padding(Vector::new([8; 4]))
+			.with_minimum_atlas_size(Vector::new([1024, 512]))
+			.build(&font_library)?;
+
+		let mut img = image::RgbaImage::new(sdf.size.x() as u32, sdf.size.y() as u32);
+		for x in 0..sdf.size.x() {
+			for y in 0..sdf.size.y() {
+				img.put_pixel(
+					x as u32,
+					y as u32,
+					image::Rgba([255, 255, 255, sdf.binary[y][x]]),
+				);
+			}
+		}
+		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
+
+		asset.set_sdf(sdf);
 
 		let bytes = rmp_serde::to_vec(&asset)?;
 		Ok(bytes)

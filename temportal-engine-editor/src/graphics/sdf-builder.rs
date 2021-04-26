@@ -69,6 +69,19 @@ impl SDFBuilder {
 	pub fn build(self, font_library: &freetype::Library) -> Result<font::SDF, AnyError> {
 		use freetype::{face::LoadFlag, outline::Curve};
 		assert!(self.font_path.exists());
+		optick::event!("build-font-sdf");
+		optick::tag!(
+			"font-name",
+			self.font_path.file_name().unwrap().to_str().unwrap()
+		);
+		optick::tag!("glyph-height", self.glyph_height);
+		optick::tag!("field-spread", self.field_spread as u32);
+		optick::tag!("padding.left", self.padding_per_char.x() as u32);
+		optick::tag!("padding.right", self.padding_per_char.y() as u32);
+		optick::tag!("padding.top", self.padding_per_char.z() as u32);
+		optick::tag!("padding.bottom", self.padding_per_char.w() as u32);
+		optick::tag!("min-atlas-size.x", self.minimum_atlas_size.x() as u32);
+		optick::tag!("min-atlas-size.y", self.minimum_atlas_size.y() as u32);
 		log::debug!(
 			"Creating SDF for font {:?}",
 			self.font_path.file_name().unwrap()
@@ -85,6 +98,8 @@ impl SDFBuilder {
 		let mut glyphs: Vec<SDFGlyph> = Vec::new();
 
 		for char_code in self.char_range.clone() {
+			optick::event!("calc-sdf");
+			optick::tag!("code", char_code as u32);
 			face.load_char(char_code, LoadFlag::empty())?;
 			// https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
 			let metrics = face.glyph().metrics();
@@ -94,6 +109,8 @@ impl SDFBuilder {
 				(metrics.width as usize) / 64,
 				(metrics.height as usize) / 64,
 			]);
+			optick::tag!("size.x", metric_size.x() as u32);
+			optick::tag!("size.y", metric_size.y() as u32);
 			let metric_advance = (metrics.horiAdvance as usize) / 64;
 			let metric_bearing = Vector::new([
 				(metrics.horiBearingX as usize) / 64,
@@ -208,7 +225,8 @@ impl SDFBuilder {
 	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> font::SDF {
 		optick::event!();
 		optick::tag!("glyph-count", sorted_fields.len() as u32);
-		optick::tag!("min-atlas-size", self.minimum_atlas_size.display());
+		optick::tag!("min-atlas-size.x", self.minimum_atlas_size.x() as u32);
+		optick::tag!("min-atlas-size.y", self.minimum_atlas_size.y() as u32);
 		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
 		loop {
 			match SDFBuilder::bin_pack(
@@ -257,7 +275,8 @@ impl SDFBuilder {
 		/*glyphs*/ Vec<font::Glyph>,
 	)> {
 		optick::event!();
-		optick::tag!("atlas-size", atlas_size.display());
+		optick::tag!("atlas-size.x", atlas_size.x() as u32);
+		optick::tag!("atlas-size.y", atlas_size.y() as u32);
 		// the binary of a grayscale/alpha-only 2D image,
 		// where unpopulated "pixels" are represented by `None`.
 		let mut atlas_binary: Vec<Vec<Option<u8>>> =
@@ -270,33 +289,57 @@ impl SDFBuilder {
 		]);
 		let padding_offset = Vector::new([padding_lrtb.x(), padding_lrtb.z()]);
 
+		let min_glyph_target_size = sorted_glyphs
+			.iter()
+			.map(|glyph| glyph.texture_size + padding_on_axis)
+			.fold(Vector::new([usize::MAX; 2]), |acc, size| {
+				Vector::new([acc.x().min(size.x()), acc.y().min(size.y())])
+			});
+		let mut empty_cells_in_row: Vec<Vec<std::ops::Range<usize>>> =
+			vec![vec![0..atlas_size.x()]; atlas_size.y()];
+
 		// Attempt to place all fields in the atlas
 		'place_next_glyph: for (_glyph_idx, glyph) in sorted_glyphs.iter().enumerate() {
 			optick::event!("place");
-			optick::tag!("glyph", _glyph_idx as u32);
-			// This is then width and height of a given texel
-			let glyph_target_size = padding_on_axis + glyph.texture_size;
-			// The size of the atlas that can be iterated over while still leaving enough room for the glyph itself.
-			let leading_size = atlas_size - glyph_target_size;
+			optick::tag!("glyph", glyph.ascii_code as u32);
+			optick::tag!("glyph-size.x", glyph.texture_size.x() as u32);
+			optick::tag!("glyph-size.y", glyph.texture_size.y() as u32);
 
-			for atlas_y in 0..leading_size.y() {
-				'place_in_next_column: for atlas_x in 0..leading_size.x() {
-					let atlas_pos = Vector::new([atlas_x, atlas_y]);
-					// If there is already a value inside this cell, then the texel cannot fit and we must search the next cell.
-					for target_pos in glyph_target_size.iter(1) {
-						let atlas_dest = atlas_pos + target_pos;
-						let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
-						if texel.is_some() {
-							continue 'place_in_next_column;
+			let glyph_target_size = padding_on_axis + glyph.texture_size;
+			for atlas_y in 0..(atlas_size.y() - glyph_target_size.y()) {
+				let mut glyph_pos_in_atlas: Option<(Vector<usize, 2>, usize)> = None;
+				'place_glyph_in_a_row: for (idx, cell_range) in empty_cells_in_row[atlas_y]
+					.iter()
+					.filter(|range| (range.end - range.start) >= glyph_target_size.x())
+					.enumerate()
+				{
+					'place_in_cell: for atlas_x in
+						cell_range.start..(cell_range.end - glyph_target_size.x())
+					{
+						let atlas_pos = Vector::new([atlas_x, atlas_y]);
+						// If there is already a value inside this cell, then the texel cannot fit and we must search the next cell.
+						for target_pos in glyph_target_size.iter(1) {
+							let atlas_dest = atlas_pos + target_pos;
+							let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
+							if texel.is_some() {
+								continue 'place_in_cell;
+							}
 						}
+
+						glyph_pos_in_atlas = Some((atlas_pos, idx));
+						break 'place_glyph_in_a_row;
 					}
-					// Since there are no other pixels in the desired area,
-					// write the pixels of the texel into the atlas pixels.
+				}
+
+				if let Some((atlas_pos, cell_range_idx)) = glyph_pos_in_atlas {
+					// Copy the glyph into the atlas
 					for glyph_pos in glyph.texture_size.iter(1) {
 						let texel = glyph.texels[glyph_pos.y()][glyph_pos.x()];
 						let atlas_dest = atlas_pos + glyph_pos + padding_offset;
 						atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
 					}
+
+					// Record the glyph into the lookup metadata
 					glyphs.push(font::Glyph {
 						ascii_code: glyph.ascii_code,
 						atlas_pos: atlas_pos + padding_offset,
@@ -305,6 +348,23 @@ impl SDFBuilder {
 						metric_bearing: glyph.metric_bearing,
 						metric_advance: glyph.metric_advance,
 					});
+
+					// Adjust the atlas metadata so we can continue to use the cell-range optimization
+					let cell_range = empty_cells_in_row[atlas_y].remove(cell_range_idx);
+					let pre_glyph_range = cell_range.start..atlas_pos.x();
+					let post_glyph_range = (atlas_pos.x() + glyph_target_size.x())..cell_range.end;
+					// Insert the post-range first so the cell_range_idx can be used as is for both ranges
+					if !post_glyph_range.is_empty()
+						&& (post_glyph_range.end - post_glyph_range.start) >= min_glyph_target_size.x()
+					{
+						empty_cells_in_row[atlas_y].insert(cell_range_idx, post_glyph_range);
+					}
+					if !pre_glyph_range.is_empty()
+						&& (pre_glyph_range.end - pre_glyph_range.start) >= min_glyph_target_size.x()
+					{
+						empty_cells_in_row[atlas_y].insert(cell_range_idx, pre_glyph_range);
+					}
+
 					continue 'place_next_glyph;
 				}
 			}
