@@ -97,110 +97,120 @@ impl SDFBuilder {
 
 		let mut glyphs: Vec<SDFGlyph> = Vec::new();
 
-		for char_code in self.char_range.clone() {
-			optick::event!("calc-sdf");
-			optick::tag!("code", char_code as u32);
-			face.load_char(char_code, LoadFlag::empty())?;
-			// https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
-			let metrics = face.glyph().metrics();
-			let outline = face.glyph().outline().unwrap();
+		{
+			optick::event!("calc-sdf-all");
+			optick::tag!(
+				"char-count",
+				(self.char_range.end() - self.char_range.start()) as u32
+			);
+			for char_code in self.char_range.clone() {
+				optick::event!("calc-sdf");
+				optick::tag!("code", char_code as u32);
+				face.load_char(char_code, LoadFlag::empty())?;
+				// https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
+				let metrics = face.glyph().metrics();
+				let outline = face.glyph().outline().unwrap();
 
-			let metric_size = Vector::new([
-				(metrics.width as usize) / 64,
-				(metrics.height as usize) / 64,
-			]);
-			optick::tag!("size.x", metric_size.x() as u32);
-			optick::tag!("size.y", metric_size.y() as u32);
-			let metric_advance = (metrics.horiAdvance as usize) / 64;
-			let metric_bearing = Vector::new([
-				(metrics.horiBearingX as usize) / 64,
-				(metrics.horiBearingY as usize) / 64,
-			]);
-
-			let texture_size = metric_size + spread_size;
-			let left_edge_padded = metric_bearing.x() as f64 - spread_f;
-			let top_edge_padded = metric_bearing.y() as f64 + spread_f;
-
-			let mut texels: Vec<Vec<u8>> = vec![vec![0; texture_size.x()]; texture_size.y()];
-
-			for glyph_pos in texture_size.iter(1) {
-				let mut min_dist = f64::MAX;
-				let mut total_cross_count = 0;
-				let point = Vector::new([
-					left_edge_padded + (glyph_pos.x() as f64) + 0.5,
-					top_edge_padded - (glyph_pos.y() as f64) - 0.5,
+				let metric_size = Vector::new([
+					(metrics.width as usize) / 64,
+					(metrics.height as usize) / 64,
+				]);
+				optick::tag!("size.x", metric_size.x() as u32);
+				optick::tag!("size.y", metric_size.y() as u32);
+				let metric_advance = (metrics.horiAdvance as usize) / 64;
+				let metric_bearing = Vector::new([
+					(metrics.horiBearingX as usize) / 64,
+					(metrics.horiBearingY as usize) / 64,
 				]);
 
-				for contour in outline.contours_iter() {
-					let start = *contour.start();
-					let mut curve_start = to_f64_vector(start);
+				let texture_size = metric_size + spread_size;
+				let left_edge_padded = metric_bearing.x() as f64 - spread_f;
+				let top_edge_padded = metric_bearing.y() as f64 + spread_f;
 
-					for curve in contour {
-						match curve {
-							Curve::Line(end) => {
-								let curve_end = to_f64_vector(end);
+				let mut texels: Vec<Vec<u8>> = vec![vec![0; texture_size.x()]; texture_size.y()];
 
-								min_dist = min_dist.min(math::ops::distance_point_to_line_segment(
-									point,
-									curve_start,
-									curve_end,
-								));
-								total_cross_count += math::ops::has_crossed_line_segment(
-									point,
-									curve_start,
-									curve_end,
-								) as u32;
+				for glyph_pos in texture_size.iter(1) {
+					let mut min_dist = f64::MAX;
+					let mut total_cross_count = 0;
+					let point = Vector::new([
+						left_edge_padded + (glyph_pos.x() as f64) + 0.5,
+						top_edge_padded - (glyph_pos.y() as f64) - 0.5,
+					]);
 
-								curve_start = curve_end;
-							}
-							Curve::Bezier2(ctrl, end) => {
-								let control = to_f64_vector(ctrl);
-								let curve_end = to_f64_vector(end);
+					for contour in outline.contours_iter() {
+						let start = *contour.start();
+						let mut curve_start = to_f64_vector(start);
 
-								min_dist = min_dist.min(math::ops::distance_point_to_bezier(
-									point,
-									curve_start,
-									control,
-									curve_end,
-								));
-								total_cross_count += math::ops::count_intercepts_on_bezier(
-									point,
-									curve_start,
-									control,
-									curve_end,
-								);
+						for curve in contour {
+							match curve {
+								Curve::Line(end) => {
+									let curve_end = to_f64_vector(end);
 
-								curve_start = curve_end;
-							}
-							Curve::Bezier3(_, _, _) => {
-								return Err(Box::new(FontError::CubicBezier()));
-							}
-						};
+									min_dist =
+										min_dist.min(math::ops::distance_point_to_line_segment(
+											point,
+											curve_start,
+											curve_end,
+										));
+									total_cross_count += math::ops::has_crossed_line_segment(
+										point,
+										curve_start,
+										curve_end,
+									) as u32;
+
+									curve_start = curve_end;
+								}
+								Curve::Bezier2(ctrl, end) => {
+									let control = to_f64_vector(ctrl);
+									let curve_end = to_f64_vector(end);
+
+									min_dist = min_dist.min(math::ops::distance_point_to_bezier(
+										point,
+										curve_start,
+										control,
+										curve_end,
+									));
+									total_cross_count += math::ops::count_intercepts_on_bezier(
+										point,
+										curve_start,
+										control,
+										curve_end,
+									);
+
+									curve_start = curve_end;
+								}
+								Curve::Bezier3(_, _, _) => {
+									return Err(Box::new(FontError::CubicBezier()));
+								}
+							};
+						}
 					}
+
+					let dist_signed =
+						(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
+					let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
+					let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
+					let dist_scaled = (dist_zero_to_one * 255.0).round();
+
+					texels[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
 				}
 
-				let dist_signed =
-					(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
-				let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
-				let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
-				let dist_scaled = (dist_zero_to_one * 255.0).round();
-
-				texels[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
+				glyphs.push(SDFGlyph {
+					ascii_code: char_code,
+					texture_size,
+					texels,
+					metric_size,
+					metric_bearing,
+					metric_advance,
+				});
 			}
-
-			glyphs.push(SDFGlyph {
-				ascii_code: char_code,
-				texture_size,
-				texels,
-				metric_size,
-				metric_bearing,
-				metric_advance,
-			});
 		}
 
 		glyphs.sort_unstable_by(|a, b| {
-			(b.texture_size.y() * b.texture_size.x())
-				.cmp(&(a.texture_size.y() * a.texture_size.x()))
+			b.texture_size
+				.y()
+				.cmp(&a.texture_size.y())
+				.then(b.texture_size.x().cmp(&a.texture_size.x()))
 		});
 		log::debug!("SDF calculations complete, starting atlas generation.");
 
@@ -228,29 +238,45 @@ impl SDFBuilder {
 		optick::tag!("min-atlas-size.x", self.minimum_atlas_size.x() as u32);
 		optick::tag!("min-atlas-size.y", self.minimum_atlas_size.y() as u32);
 		let mut atlas_size: Vector<usize, 2> = self.minimum_atlas_size;
+		let padding_offset = Vector::new([self.padding_per_char.x(), self.padding_per_char.z()]);
+		let padding_on_axis = Vector::new([
+			/*x-axis padding*/ self.padding_per_char.subvec::<2>(None).total(),
+			/*y-axis padding*/ self.padding_per_char.subvec::<2>(Some(2)).total(),
+		]);
+		let glyph_sizes = sorted_fields
+			.iter()
+			.map(|glyph| glyph.texture_size + padding_on_axis)
+			.collect::<Vec<_>>();
 		loop {
-			match SDFBuilder::bin_pack(
-				sorted_fields,
-				atlas_size.clone(),
-				self.padding_per_char.clone(),
-			) {
-				Some((binary, mut glyphs)) => {
+			match SDFBuilder::plan_cell_packing(atlas_size.clone(), &glyph_sizes) {
+				Some(glyph_positions) => {
+					optick::event!("process-packing");
+					let mut binary: Vec<Vec<u8>> = vec![vec![0; atlas_size.x()]; atlas_size.y()];
+					let mut glyphs: Vec<font::Glyph> = Vec::new();
+					for (field, &atlas_pos) in sorted_fields.iter().zip(glyph_positions.iter()) {
+						// Copy the glyph into the atlas
+						for glyph_pos in field.texture_size.iter(1) {
+							let texel = field.texels[glyph_pos.y()][glyph_pos.x()];
+							let atlas_dest = atlas_pos + glyph_pos + padding_offset;
+							binary[atlas_dest.y()][atlas_dest.x()] = texel;
+						}
+
+						glyphs.push(font::Glyph {
+							ascii_code: field.ascii_code,
+							atlas_pos: atlas_pos + padding_offset,
+							atlas_size: field.texture_size,
+							metric_size: field.metric_size,
+							metric_bearing: field.metric_bearing,
+							metric_advance: field.metric_advance,
+						});
+					}
 					glyphs.sort_unstable_by(|a, b| a.ascii_code.cmp(&b.ascii_code));
 					return font::SDF {
 						size: atlas_size,
-						binary: binary
-							.into_iter()
-							.map(|texel_line| {
-								texel_line
-									.into_iter()
-									.map(|alpha| alpha.unwrap_or(0))
-									.collect()
-							})
-							.collect(),
+						binary,
 						glyphs,
 					};
 				}
-				// Bin packing failed, expand in the dimension that is smallest
 				None => {
 					// Expand the atlas such that each dimension that is being expanded (width and/or height),
 					// the atlas size doubles (maintaining power of 2).
@@ -265,116 +291,106 @@ impl SDFBuilder {
 		}
 	}
 
-	fn bin_pack(
-		// each glyph is a 2D array of alpha texels
-		sorted_glyphs: &Vec<SDFGlyph>,
+	/// Packs a list of item sizes into a 2D grid.
+	/// Assumes that `cell_item_sizes` are sorted in decreasing height,
+	/// and when heights match, in decreasing width.
+	/// Packs cell items starting in the top left of the cell-space defined by `atlas_size`,
+	/// and moving first across the row and then to the next row.
+	/// If some value is returned, it will always have the same length as `cell_item_sizes`,
+	/// where each returned position matches 1:1 with a provided size at the same index.
+	fn plan_cell_packing(
 		atlas_size: Vector<usize, 2>,
-		padding_lrtb: Vector<usize, 4>, // padding on the left, right, top, and bottom
-	) -> Option<(
-		/*binary*/ Vec<Vec<Option<u8>>>,
-		/*glyphs*/ Vec<font::Glyph>,
-	)> {
+		cell_item_sizes: &Vec</*size*/ Vector<usize, 2>>,
+	) -> Option<Vec</*position*/ Vector<usize, 2>>> {
 		optick::event!();
 		optick::tag!("atlas-size.x", atlas_size.x() as u32);
 		optick::tag!("atlas-size.y", atlas_size.y() as u32);
-		// the binary of a grayscale/alpha-only 2D image,
-		// where unpopulated "pixels" are represented by `None`.
-		let mut atlas_binary: Vec<Vec<Option<u8>>> =
-			vec![vec![None; atlas_size.x()]; atlas_size.y()];
-		let mut glyphs: Vec<font::Glyph> = Vec::new();
 
-		let padding_on_axis = Vector::new([
-			/*x-axis padding*/ padding_lrtb.subvec::<2>(None).total(),
-			/*y-axis padding*/ padding_lrtb.subvec::<2>(Some(2)).total(),
-		]);
-		let padding_offset = Vector::new([padding_lrtb.x(), padding_lrtb.z()]);
-
-		let min_glyph_target_size = sorted_glyphs
+		let min_item_size = cell_item_sizes
 			.iter()
-			.map(|glyph| glyph.texture_size + padding_on_axis)
 			.fold(Vector::new([usize::MAX; 2]), |acc, size| {
 				Vector::new([acc.x().min(size.x()), acc.y().min(size.y())])
 			});
-		let mut empty_cells_in_row: Vec<Vec<std::ops::Range<usize>>> =
-			vec![vec![0..atlas_size.x()]; atlas_size.y()];
 
-		// Attempt to place all fields in the atlas
-		'place_next_glyph: for (_glyph_idx, glyph) in sorted_glyphs.iter().enumerate() {
-			optick::event!("place");
-			optick::tag!("glyph", glyph.ascii_code as u32);
-			optick::tag!("glyph-size.x", glyph.texture_size.x() as u32);
-			optick::tag!("glyph-size.y", glyph.texture_size.y() as u32);
+		#[derive(Debug)]
+		struct Cell {
+			pos: Vector<usize, 2>,
+			size: Vector<usize, 2>,
+		}
 
-			let glyph_target_size = padding_on_axis + glyph.texture_size;
-			for atlas_y in 0..(atlas_size.y() - glyph_target_size.y()) {
-				let mut glyph_pos_in_atlas: Option<(Vector<usize, 2>, usize)> = None;
-				'place_glyph_in_a_row: for (idx, cell_range) in empty_cells_in_row[atlas_y]
-					.iter()
-					.filter(|range| (range.end - range.start) >= glyph_target_size.x())
-					.enumerate()
-				{
-					'place_in_cell: for atlas_x in
-						cell_range.start..(cell_range.end - glyph_target_size.x())
-					{
-						let atlas_pos = Vector::new([atlas_x, atlas_y]);
-						// If there is already a value inside this cell, then the texel cannot fit and we must search the next cell.
-						for target_pos in glyph_target_size.iter(1) {
-							let atlas_dest = atlas_pos + target_pos;
-							let texel = atlas_binary[atlas_dest.y()][atlas_dest.x()];
-							if texel.is_some() {
-								continue 'place_in_cell;
-							}
-						}
+		let mut cells = vec![Cell {
+			pos: Vector::filled(0),
+			size: atlas_size,
+		}];
+		let mut cell_item_positions: Vec<Vector<usize, 2>> =
+			vec![Vector::filled(0); cell_item_sizes.len()];
 
-						glyph_pos_in_atlas = Some((atlas_pos, idx));
-						break 'place_glyph_in_a_row;
+		let insert_cell = |list: &mut Vec<Cell>, cell: Cell| {
+			if cell.size.x() >= min_item_size.x() && cell.size.y() >= min_item_size.y() {
+				match list.binary_search_by(|existing| {
+					existing
+						.size
+						.y()
+						.cmp(&cell.size.y())
+						.then(existing.size.x().cmp(&cell.size.x()))
+						.then(existing.pos.y().cmp(&cell.pos.y()))
+						.then(existing.pos.x().cmp(&cell.pos.x()))
+				}) {
+					Ok(existing_idx) => {
+						log::error!(
+							"Tried inserting cell that already exists {:?} at {} => {:?}",
+							cell,
+							existing_idx,
+							list[existing_idx]
+						);
 					}
-				}
-
-				if let Some((atlas_pos, cell_range_idx)) = glyph_pos_in_atlas {
-					// Copy the glyph into the atlas
-					for glyph_pos in glyph.texture_size.iter(1) {
-						let texel = glyph.texels[glyph_pos.y()][glyph_pos.x()];
-						let atlas_dest = atlas_pos + glyph_pos + padding_offset;
-						atlas_binary[atlas_dest.y()][atlas_dest.x()] = Some(texel);
+					Err(insert_sort_idx) => {
+						list.insert(insert_sort_idx, cell);
 					}
-
-					// Record the glyph into the lookup metadata
-					glyphs.push(font::Glyph {
-						ascii_code: glyph.ascii_code,
-						atlas_pos: atlas_pos + padding_offset,
-						atlas_size: glyph.texture_size,
-						metric_size: glyph.metric_size,
-						metric_bearing: glyph.metric_bearing,
-						metric_advance: glyph.metric_advance,
-					});
-
-					// Adjust the atlas metadata so we can continue to use the cell-range optimization
-					let cell_range = empty_cells_in_row[atlas_y].remove(cell_range_idx);
-					let pre_glyph_range = cell_range.start..atlas_pos.x();
-					let post_glyph_range = (atlas_pos.x() + glyph_target_size.x())..cell_range.end;
-					// Insert the post-range first so the cell_range_idx can be used as is for both ranges
-					if !post_glyph_range.is_empty()
-						&& (post_glyph_range.end - post_glyph_range.start) >= min_glyph_target_size.x()
-					{
-						empty_cells_in_row[atlas_y].insert(cell_range_idx, post_glyph_range);
-					}
-					if !pre_glyph_range.is_empty()
-						&& (pre_glyph_range.end - pre_glyph_range.start) >= min_glyph_target_size.x()
-					{
-						empty_cells_in_row[atlas_y].insert(cell_range_idx, pre_glyph_range);
-					}
-
-					continue 'place_next_glyph;
 				}
 			}
-			// The texel was not placed (otherwise `field_loop` would have continued).
-			// This means the atlas was not big enough to fix all the texels.
-			return None;
+		};
+
+		for (idx_item, (item_size, item_pos_out)) in cell_item_sizes
+			.iter()
+			.zip(cell_item_positions.iter_mut())
+			.enumerate()
+		{
+			optick::event!();
+			optick::tag!("item", idx_item as u32);
+			match cells
+				.iter()
+				.enumerate()
+				.find(|(_, cell)| item_size.x() <= cell.size.x() && item_size.y() <= cell.size.y())
+				.map(|(idx_cell, _)| idx_cell)
+			{
+				Some(idx_cell) => {
+					let cell = cells.remove(idx_cell);
+					*item_pos_out = cell.pos;
+					// A new cell formed by the remainder to the right of the placed item.
+					// the remainder below the item is discarded.
+					let item_width = Vector::new([item_size.x(), 0]);
+					let item_height = Vector::new([0, item_size.y()]);
+					insert_cell(
+						&mut cells,
+						Cell {
+							pos: cell.pos + item_width,
+							size: Vector::new([cell.size.x() - item_size.x(), item_size.y()]),
+						},
+					);
+					insert_cell(
+						&mut cells,
+						Cell {
+							pos: cell.pos + item_height,
+							size: cell.size - item_height,
+						},
+					);
+				}
+				None => return None,
+			}
 		}
-		// Convert a valid packing such that all unused pixels are completely transparent
-		// (where each pixel is just alpha, no rgb).
-		Some((atlas_binary, glyphs))
+
+		Some(cell_item_positions)
 	}
 }
 
