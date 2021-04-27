@@ -75,6 +75,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 			.with_minimum_atlas_size(Vector::new([1024, 512]))
 			.build(&font_library)?;
 
+		/*
 		let mut img = image::RgbaImage::new(sdf.size.x() as u32, sdf.size.y() as u32);
 		for x in 0..sdf.size.x() {
 			for y in 0..sdf.size.y() {
@@ -86,6 +87,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 			}
 		}
 		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
+		*/
 
 		asset.set_sdf(sdf);
 
