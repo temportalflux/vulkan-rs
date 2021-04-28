@@ -1,6 +1,5 @@
 use crate::{
 	backend,
-	context::Context,
 	utility::{self, VulkanInfo},
 };
 
@@ -29,9 +28,9 @@ impl AppInfo {
 	/// 	.engine("Engine", utility::make_version(0, 1, 0))
 	/// 	.application("Game", utility::make_version(0, 1, 0));
 	/// ```
-	pub fn new(ctx: &Context) -> AppInfo {
+	pub fn new() -> AppInfo {
 		AppInfo {
-			api_version: backend::vk::make_version(1, 0, 0),
+			api_version: backend::vk::make_version(1, 2, 0),
 			engine_name: String::new(),
 			engine_name_c: std::ffi::CString::default(),
 			engine_version: 0,

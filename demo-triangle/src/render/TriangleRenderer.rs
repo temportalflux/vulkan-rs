@@ -61,22 +61,26 @@ impl TriangleRenderer {
 
 impl graphics::RenderChainElement for TriangleRenderer {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.vert_shader = Some(Rc::new(utility::as_graphics_error(shader::Module::create(
-			render_chain.logical().clone(),
-			shader::Info {
-				kind: flags::ShaderKind::Vertex,
-				entry_point: String::from("main"),
-				bytes: self.vert_bytes.clone(),
-			},
-		))?));
-		self.frag_shader = Some(Rc::new(utility::as_graphics_error(shader::Module::create(
-			render_chain.logical().clone(),
-			shader::Info {
-				kind: flags::ShaderKind::Fragment,
-				entry_point: String::from("main"),
-				bytes: self.frag_bytes.clone(),
-			},
-		))?));
+		self.vert_shader = Some(Rc::new(utility::as_graphics_error(
+			shader::Module::create(
+				render_chain.logical().clone(),
+				shader::Info {
+					kind: flags::ShaderKind::Vertex,
+					entry_point: String::from("main"),
+					bytes: self.vert_bytes.clone(),
+				},
+			),
+		)?));
+		self.frag_shader = Some(Rc::new(utility::as_graphics_error(
+			shader::Module::create(
+				render_chain.logical().clone(),
+				shader::Info {
+					kind: flags::ShaderKind::Fragment,
+					entry_point: String::from("main"),
+					bytes: self.frag_bytes.clone(),
+				},
+			),
+		)?));
 		Ok(())
 	}
 

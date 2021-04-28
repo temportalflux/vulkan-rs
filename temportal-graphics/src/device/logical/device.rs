@@ -241,7 +241,10 @@ impl Device {
 	) -> utility::Result<Vec<backend::vk::Pipeline>> {
 		match unsafe { self.internal.create_graphics_pipelines(cache, infos, None) } {
 			Ok(pipelines) => Ok(pipelines),
-			Err((pipelines, vk_result)) => Err(utility::Error::VulkanError(vk_result)),
+			Err((pipelines, vk_result)) => match vk_result {
+				backend::vk::Result::SUCCESS => Ok(pipelines),
+				_ => Err(utility::Error::VulkanError(vk_result)),
+			},
 		}
 	}
 

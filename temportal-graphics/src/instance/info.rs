@@ -142,7 +142,7 @@ impl Info {
 				backend::InstanceError::VkError(res) => {
 					return Err(utility::Error::VulkanError(res))
 				}
-				backend::InstanceError::LoadError(items) => {
+				backend::InstanceError::LoadError(_items) => {
 					return Err(utility::Error::InstanceSymbolNotAvailable())
 				}
 			},
