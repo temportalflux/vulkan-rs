@@ -54,7 +54,7 @@ impl TypeEditorMetadata for ShaderEditorMetadata {
 			shaderc::TargetEnv::Vulkan,
 			shaderc::EnvVersion::Vulkan1_2 as u32,
 		);
-		options.set_target_spirv(shaderc::SpirvVersion::V1_5);
+		options.set_target_spirv(shaderc::SpirvVersion::V1_3);
 		options.set_source_language(shaderc::SourceLanguage::GLSL);
 
 		let shader_code = shader.content_as_string()?;

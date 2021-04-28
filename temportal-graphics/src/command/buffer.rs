@@ -38,7 +38,7 @@ impl Buffer {
 			.iter()
 			.map(|value| value.to_vk())
 			.collect::<Vec<_>>();
-		let info = backend::vk::RenderPassBeginInfoBuilder::new()
+		let info = backend::vk::RenderPassBeginInfo::builder()
 			.render_pass(*render_pass.unwrap())
 			.framebuffer(*frame_buffer.unwrap())
 			.render_area(info.render_area)

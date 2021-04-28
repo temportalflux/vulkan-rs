@@ -71,13 +71,13 @@ fn vulkan_device_constraints() -> Vec<physical::Constraint> {
 	vec![
 		HasSurfaceFormats(
 			flags::Format::B8G8R8A8_SRGB,
-			flags::ColorSpace::SRGB_NONLINEAR_KHR,
+			flags::ColorSpace::SRGB_NONLINEAR,
 		),
 		HasExtension(String::from("VK_KHR_swapchain")),
 		PrioritizedSet(
 			vec![
-				CanPresentWith(flags::PresentMode::MAILBOX_KHR, Some(1)),
-				CanPresentWith(flags::PresentMode::FIFO_KHR, None),
+				CanPresentWith(flags::PresentMode::MAILBOX, Some(1)),
+				CanPresentWith(flags::PresentMode::FIFO, None),
 			],
 			false,
 		),
@@ -97,7 +97,7 @@ fn create_render_pass_info() -> renderpass::Info {
 	let frame_attachment_index = rp_info.attach(
 		renderpass::Attachment::default()
 			.set_format(flags::Format::B8G8R8A8_SRGB)
-			.set_sample_count(flags::SampleCount::_1)
+			.set_sample_count(flags::SampleCount::TYPE_1)
 			.set_general_ops(renderpass::AttachmentOps {
 				load: flags::AttachmentLoadOp::CLEAR,
 				store: flags::AttachmentStoreOp::STORE,

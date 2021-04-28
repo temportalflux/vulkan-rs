@@ -31,7 +31,7 @@ impl AppInfo {
 	/// ```
 	pub fn new(ctx: &Context) -> AppInfo {
 		AppInfo {
-			api_version: ctx.loader.instance_version(),
+			api_version: backend::vk::make_version(1, 0, 0),
 			engine_name: String::new(),
 			engine_name_c: std::ffi::CString::default(),
 			engine_version: 0,
@@ -101,7 +101,7 @@ impl AppInfo {
 impl VulkanInfo<backend::vk::ApplicationInfo> for AppInfo {
 	/// Converts the [`AppInfo`] into the [`backend::vk::ApplicationInfo`] struct
 	fn to_vk(&self) -> backend::vk::ApplicationInfo {
-		backend::vk::ApplicationInfoBuilder::new()
+		backend::vk::ApplicationInfo::builder()
 			.api_version(self.api_version)
 			.engine_name(&self.engine_name_c)
 			.engine_version(self.engine_version)

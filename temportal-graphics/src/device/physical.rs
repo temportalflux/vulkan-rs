@@ -92,7 +92,7 @@ impl Device {
 					)
 				})
 				.collect(),
-			selected_present_mode: PresentMode::FIFO_KHR,
+			selected_present_mode: PresentMode::FIFO,
 		}
 	}
 

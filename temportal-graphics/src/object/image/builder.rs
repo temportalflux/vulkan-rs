@@ -24,12 +24,12 @@ impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			mem_info: AllocationInfo::default(),
-			image_type: ImageType::_2D,
+			image_type: ImageType::TYPE_2D,
 			format: Format::UNDEFINED,
 			extent: Extent3D::default(),
 			mip_levels: 1,
 			array_layers: 1,
-			samples: SampleCount::_1,
+			samples: SampleCount::TYPE_1,
 			tiling: ImageTiling::OPTIMAL,
 			usage: ImageUsage::default(),
 			sharing_mode: SharingMode::EXCLUSIVE,
@@ -44,7 +44,7 @@ impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
 	/// used to create a [`image::Image`].
 	fn to_vk(&self) -> backend::vk::ImageCreateInfo {
-		backend::vk::ImageCreateInfoBuilder::new()
+		backend::vk::ImageCreateInfo::builder()
 			.image_type(self.image_type)
 			.format(self.format)
 			.extent(self.extent)

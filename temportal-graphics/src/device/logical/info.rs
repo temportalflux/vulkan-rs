@@ -84,6 +84,7 @@ impl Info {
 		instance: &Instance,
 		physical_device: &physical::Device,
 	) -> utility::Result<logical::Device> {
+		use backend::version::InstanceV1_0;
 		self.extension_names_raw = self
 			.extension_names
 			.iter()
@@ -98,7 +99,7 @@ impl Info {
 			.queues
 			.iter()
 			.map(|queue| {
-				backend::vk::DeviceQueueCreateInfoBuilder::new()
+				backend::vk::DeviceQueueCreateInfo::builder()
 					.queue_family_index(queue.queue_family_index as u32)
 					.queue_priorities(&queue.priorities)
 					.build()
@@ -118,22 +119,11 @@ impl Info {
 
 		info.p_enabled_features = &self.features as _;
 
-		let loader = match backend::DeviceLoader::new(
-			&instance.unwrap(),
-			*physical_device.unwrap(),
-			&info,
-			None,
-		) {
-			Ok(inst) => inst,
-			Err(err) => match err {
-				backend::LoaderError::VulkanError(res) => {
-					return Err(utility::Error::VulkanError(res))
-				}
-				backend::LoaderError::SymbolNotAvailable => {
-					return Err(utility::Error::InstanceSymbolNotAvailable())
-				}
-			},
-		};
-		Ok(logical::Device::from(loader))
+		let internal = utility::as_vulkan_error(unsafe {
+			instance
+				.unwrap()
+				.create_device(*physical_device.unwrap(), &info, None)
+		})?;
+		Ok(logical::Device::from(&instance, internal))
 	}
 }

@@ -1,16 +1,17 @@
 use crate::backend;
+use backend::version::EntryV1_0;
 use std::error::Error;
 
 /// A user-owned singleton which holds data about allocators and api-level availability.
 pub struct Context {
-	pub loader: backend::DefaultEntryLoader,
+	pub loader: backend::Entry,
 	pub valid_instance_extensions: Vec<String>,
 	pub valid_instance_layers: Vec<String>,
 }
 
 impl Context {
 	pub fn new() -> Result<Context, Box<dyn Error>> {
-		let loader = backend::EntryLoader::new()?;
+		let loader = unsafe { backend::Entry::new() }?;
 		let valid_instance_extensions = Context::get_instance_extensions(&loader);
 		let valid_instance_layers = Context::get_instance_layers(&loader);
 		Ok(Context {
@@ -20,12 +21,10 @@ impl Context {
 		})
 	}
 
-	fn get_instance_extensions(loader: &backend::DefaultEntryLoader) -> Vec<String> {
+	fn get_instance_extensions(loader: &backend::Entry) -> Vec<String> {
 		let mut valid_instance_extensions: Vec<String> = Vec::new();
 		unsafe {
-			let ext_props = loader
-				.enumerate_instance_extension_properties(None, None)
-				.unwrap();
+			let ext_props = loader.enumerate_instance_extension_properties().unwrap();
 			for prop in ext_props {
 				// Convert the os-level string to a rust string
 				valid_instance_extensions.push(
@@ -39,10 +38,10 @@ impl Context {
 		valid_instance_extensions
 	}
 
-	fn get_instance_layers<T>(loader: &backend::EntryLoader<T>) -> Vec<String> {
+	fn get_instance_layers(loader: &backend::Entry) -> Vec<String> {
 		let mut valid_instance_layers: Vec<String> = Vec::new();
 		unsafe {
-			let layer_props = loader.enumerate_instance_layer_properties(None).unwrap();
+			let layer_props = loader.enumerate_instance_layer_properties().unwrap();
 			for prop in layer_props {
 				// Convert the os-level string to a rust string
 				valid_instance_layers.push(

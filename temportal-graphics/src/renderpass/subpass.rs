@@ -23,7 +23,7 @@ impl Subpass {
 		layout: flags::ImageLayout,
 	) -> Self {
 		self.attachment_refs.push(
-			backend::vk::AttachmentReferenceBuilder::new()
+			backend::vk::AttachmentReference::builder()
 				.attachment(attachment_index as u32)
 				.layout(layout)
 				.build(),
@@ -34,9 +34,9 @@ impl Subpass {
 
 impl VulkanInfo<backend::vk::SubpassDescription> for Subpass {
 	fn to_vk(&self) -> backend::vk::SubpassDescription {
-		backend::vk::SubpassDescriptionBuilder::new()
+		backend::vk::SubpassDescription::builder()
 			.pipeline_bind_point(self.bind_point)
-			.color_attachments(&crate::into_builders!(self.attachment_refs))
+			.color_attachments(&self.attachment_refs)
 			.build()
 	}
 }

@@ -1,9 +1,9 @@
 extern crate sdl2;
 extern crate vk_mem;
 
-pub use erupt as backend;
+pub use ash as backend;
 
-/// Various forwarded/exposed structures from Vulkan/Erupt
+/// Various forwarded/exposed structures from Vulkan/Backend
 pub mod structs {
 	pub use crate::backend::vk::ComponentMapping;
 	pub use crate::backend::vk::Extent2D;
@@ -18,7 +18,7 @@ pub static LOG: &'static str = "graphics";
 mod allocator;
 pub use allocator::*;
 
-/// Various forwarded/exposed enumerations from Vulkan/Erupt
+/// Various forwarded/exposed enumerations from Vulkan/Backend
 #[path = "flags/_.rs"]
 pub mod flags;
 

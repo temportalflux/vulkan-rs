@@ -75,7 +75,7 @@ impl RasterizationState {
 
 impl VulkanInfo<backend::vk::PipelineRasterizationStateCreateInfo> for RasterizationState {
 	fn to_vk(&self) -> backend::vk::PipelineRasterizationStateCreateInfo {
-		let mut info = backend::vk::PipelineRasterizationStateCreateInfoBuilder::new()
+		let mut info = backend::vk::PipelineRasterizationStateCreateInfo::builder()
 			.depth_clamp_enable(self.depth_clamp_enabled)
 			.rasterizer_discard_enable(self.rasterizer_discard_enabled)
 			.polygon_mode(self.polygon_mode)

@@ -26,7 +26,7 @@ impl Scissor {
 
 impl Into<backend::vk::Rect2D> for Scissor {
 	fn into(self) -> backend::vk::Rect2D {
-		backend::vk::Rect2DBuilder::new()
+		backend::vk::Rect2D::builder()
 			.offset(backend::vk::Offset2D {
 				x: self.offset.x(),
 				y: self.offset.y(),

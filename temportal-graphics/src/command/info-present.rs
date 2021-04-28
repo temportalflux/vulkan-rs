@@ -42,7 +42,7 @@ impl PresentInfo {
 
 impl VulkanInfo<backend::vk::PresentInfoKHR> for PresentInfo {
 	fn to_vk(&self) -> backend::vk::PresentInfoKHR {
-		backend::vk::PresentInfoKHRBuilder::new()
+		backend::vk::PresentInfoKHR::builder()
 			.wait_semaphores(&self.semaphores_to_wait_for)
 			.swapchains(&self.swapchains)
 			.image_indices(&self.image_indices)

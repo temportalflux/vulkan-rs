@@ -19,7 +19,7 @@ pub struct ViewInfo {
 impl ViewInfo {
 	pub fn new() -> ViewInfo {
 		ViewInfo {
-			view_type: ImageViewType::_2D,
+			view_type: ImageViewType::TYPE_2D,
 			format: Format::UNDEFINED,
 			components: ComponentMapping {
 				r: ComponentSwizzle::R,
@@ -56,7 +56,7 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for ViewInfo {
 	/// Converts the [`ViewInfo`] into the [`backend::vk::ImageViewCreateInfo`] struct
 	/// used to create a [`image::View`].
 	fn to_vk(&self) -> backend::vk::ImageViewCreateInfo {
-		backend::vk::ImageViewCreateInfoBuilder::new()
+		backend::vk::ImageViewCreateInfo::builder()
 			.view_type(self.view_type)
 			.format(self.format)
 			.components(self.components)

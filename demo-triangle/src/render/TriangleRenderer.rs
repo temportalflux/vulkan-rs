@@ -11,8 +11,8 @@ pub struct TriangleRenderer {
 	pipeline_layout: Option<pipeline::Layout>,
 	vert_bytes: Vec<u8>,
 	frag_bytes: Vec<u8>,
-	vert_shader: Option<shader::Module>,
-	frag_shader: Option<shader::Module>,
+	vert_shader: Option<Rc<shader::Module>>,
+	frag_shader: Option<Rc<shader::Module>>,
 }
 
 impl TriangleRenderer {
@@ -61,22 +61,22 @@ impl TriangleRenderer {
 
 impl graphics::RenderChainElement for TriangleRenderer {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.vert_shader = Some(utility::as_graphics_error(shader::Module::create(
+		self.vert_shader = Some(Rc::new(utility::as_graphics_error(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Vertex,
 				entry_point: String::from("main"),
 				bytes: self.vert_bytes.clone(),
 			},
-		))?);
-		self.frag_shader = Some(utility::as_graphics_error(shader::Module::create(
+		))?));
+		self.frag_shader = Some(Rc::new(utility::as_graphics_error(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Fragment,
 				entry_point: String::from("main"),
 				bytes: self.frag_bytes.clone(),
 			},
-		))?);
+		))?));
 		Ok(())
 	}
 
@@ -96,8 +96,8 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		))?);
 		self.pipeline = Some(utility::as_graphics_error(
 			pipeline::Info::default()
-				.add_shader(&self.vert_shader.as_ref().unwrap())
-				.add_shader(&self.frag_shader.as_ref().unwrap())
+				.add_shader(Rc::downgrade(self.vert_shader.as_ref().unwrap()))
+				.add_shader(Rc::downgrade(self.frag_shader.as_ref().unwrap()))
 				.set_viewport_state(
 					pipeline::ViewportState::default()
 						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))

@@ -103,9 +103,8 @@ impl Info {
 		mut self,
 		window_handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> Self {
-		use backend::utils::surface::enumerate_required_extensions;
-		let window_extensions = enumerate_required_extensions(window_handle).unwrap();
-		self.append_raw_extensions(window_extensions);
+		let window_extensions = ash_window::enumerate_required_extensions(window_handle).unwrap();
+		self.append_raw_extensions(window_extensions.iter().map(|cstr| cstr.as_ptr()).collect());
 		self
 	}
 
@@ -121,6 +120,7 @@ impl Info {
 
 	/// Creates the vulkan instance object, thereby consuming the info.
 	pub fn create_object(mut self, ctx: &Context) -> utility::Result<instance::Instance> {
+		use backend::version::EntryV1_0;
 		log::info!(target: crate::LOG, "Initializing {}", self.description());
 		log::debug!(
 			target: crate::LOG,
@@ -136,18 +136,18 @@ impl Info {
 			return Err(utility::Error::InvalidInstanceLayer(layer));
 		}
 		let create_info = self.to_vk();
-		let instance_loader = match backend::InstanceLoader::new(&ctx.loader, &create_info, None) {
+		let internal = match unsafe { ctx.loader.create_instance(&create_info, None) } {
 			Ok(inst) => inst,
 			Err(err) => match err {
-				backend::LoaderError::VulkanError(res) => {
+				backend::InstanceError::VkError(res) => {
 					return Err(utility::Error::VulkanError(res))
 				}
-				backend::LoaderError::SymbolNotAvailable => {
+				backend::InstanceError::LoadError(items) => {
 					return Err(utility::Error::InstanceSymbolNotAvailable())
 				}
 			},
 		};
-		instance::Instance::from(instance_loader, self.validation_enabled)
+		instance::Instance::from(internal, &ctx, self.validation_enabled)
 	}
 }
 
@@ -166,7 +166,7 @@ impl utility::VulkanInfoMut<backend::vk::InstanceCreateInfo> for Info {
 			.iter()
 			.map(|owned| utility::to_cstr_ptr(&owned))
 			.collect();
-		backend::vk::InstanceCreateInfoBuilder::new()
+		backend::vk::InstanceCreateInfo::builder()
 			.application_info(&self.app_info_raw)
 			.enabled_extension_names(&self.extensions_raw)
 			.enabled_layer_names(&self.layers_raw)

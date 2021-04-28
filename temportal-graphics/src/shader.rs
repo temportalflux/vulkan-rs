@@ -33,11 +33,11 @@ impl Module {
 		_device: Rc<logical::Device>,
 		bytes: &[u8],
 	) -> utility::Result<Module> {
-		let decoded_bytes = match backend::utils::decode_spv(bytes) {
+		let decoded_bytes = match backend::util::read_spv(&mut std::io::Cursor::new(bytes)) {
 			Ok(bytes) => bytes,
 			Err(e) => return Err(utility::Error::General(e)),
 		};
-		let info = backend::vk::ShaderModuleCreateInfoBuilder::new()
+		let info = backend::vk::ShaderModuleCreateInfo::builder()
 			.code(&decoded_bytes)
 			.build();
 		let _internal = _device.create_shader_module(info)?;
@@ -79,7 +79,7 @@ impl Drop for Module {
 
 impl VulkanInfo<backend::vk::PipelineShaderStageCreateInfo> for Module {
 	fn to_vk(&self) -> backend::vk::PipelineShaderStageCreateInfo {
-		backend::vk::PipelineShaderStageCreateInfoBuilder::new()
+		backend::vk::PipelineShaderStageCreateInfo::builder()
 			.stage(self.kind.to_vk())
 			.module(*self.unwrap())
 			.name(&self.entry_point)

@@ -25,12 +25,13 @@ impl Swapchain {
 			.collect())
 	}
 
+	/// returns (_, true) if the swapchain is suboptimal
 	pub fn acquire_next_image(
 		&self,
 		timeout: u64,
 		semaphore: Option<&command::Semaphore>,
 		fence: Option<&command::Fence>,
-	) -> utility::Result<usize> {
+	) -> utility::Result<(u32, bool)> {
 		self._device
 			.acquire_next_image(&self, timeout, semaphore, fence)
 	}

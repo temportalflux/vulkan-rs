@@ -13,7 +13,7 @@ pub struct Layout {
 
 impl Layout {
 	pub fn create(_device: Rc<logical::Device>) -> utility::Result<Layout> {
-		let vk_info = backend::vk::PipelineLayoutCreateInfoBuilder::new().build();
+		let vk_info = backend::vk::PipelineLayoutCreateInfo::builder().build();
 		let _internal = _device.create_pipeline_layout(vk_info)?;
 		Ok(Layout { _device, _internal })
 	}

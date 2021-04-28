@@ -84,18 +84,14 @@ impl Info {
 		let attachments = self
 			.attachments
 			.iter()
-			.map(|v| v.to_vk().into_builder())
+			.map(|v| v.to_vk())
 			.collect::<Vec<_>>();
-		let subpasses = self
-			.subpasses
-			.iter()
-			.map(|v| v.to_vk().into_builder())
-			.collect::<Vec<_>>();
+		let subpasses = self.subpasses.iter().map(|v| v.to_vk()).collect::<Vec<_>>();
 		let dependencies = self
 			.dependencies
 			.iter()
 			.map(|(src, dst)| {
-				backend::vk::SubpassDependencyBuilder::new()
+				backend::vk::SubpassDependency::builder()
 					.src_subpass(
 						src.subpass_index
 							.unwrap_or(backend::vk::SUBPASS_EXTERNAL as usize) as u32,
@@ -108,9 +104,10 @@ impl Info {
 					)
 					.dst_stage_mask(dst.stage_mask)
 					.dst_access_mask(dst.access_mask)
+					.build()
 			})
 			.collect::<Vec<_>>();
-		let vk_info = backend::vk::RenderPassCreateInfoBuilder::new()
+		let vk_info = backend::vk::RenderPassCreateInfo::builder()
 			.attachments(&attachments)
 			.subpasses(&subpasses)
 			.dependencies(&dependencies)

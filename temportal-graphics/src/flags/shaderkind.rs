@@ -1,4 +1,4 @@
-use crate::backend::vk::ShaderStageFlagBits as ShaderStageKind;
+use crate::backend::vk::ShaderStageFlags as ShaderStageKind;
 use serde::{Deserialize, Serialize};
 use shaderc;
 

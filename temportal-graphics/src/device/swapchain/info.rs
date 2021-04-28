@@ -33,14 +33,14 @@ impl Default for Info {
 		Info {
 			image_count: 0,
 			image_format: Format::UNDEFINED,
-			image_color_space: ColorSpace::SRGB_NONLINEAR_KHR,
+			image_color_space: ColorSpace::SRGB_NONLINEAR,
 			image_extent: Extent2D::default(),
 			image_array_layer_count: 0,
 			image_usage: ImageUsageFlags::empty(),
 			sharing_mode: SharingMode::EXCLUSIVE,
-			pre_transform: SurfaceTransform::IDENTITY_KHR,
-			composite_alpha: CompositeAlpha::OPAQUE_KHR,
-			present_mode: PresentMode::MAILBOX_KHR,
+			pre_transform: SurfaceTransform::IDENTITY,
+			composite_alpha: CompositeAlpha::OPAQUE,
+			present_mode: PresentMode::MAILBOX,
 			is_clipped: true,
 		}
 	}
@@ -128,7 +128,7 @@ impl Info {
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
 		let vk = device.create_swapchain(
-			backend::vk::SwapchainCreateInfoKHRBuilder::new()
+			backend::vk::SwapchainCreateInfoKHR::builder()
 				.surface(*surface.unwrap())
 				.min_image_count(self.image_count)
 				.image_format(self.image_format)

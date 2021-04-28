@@ -22,7 +22,7 @@ pub struct ColorBlendAttachment {
 impl ColorBlendState {
 	pub fn add_attachment(mut self, attachment: ColorBlendAttachment) -> Self {
 		self.attachments.push(
-			backend::vk::PipelineColorBlendAttachmentStateBuilder::new()
+			backend::vk::PipelineColorBlendAttachmentState::builder()
 				.color_write_mask(attachment.color_flags)
 				.blend_enable(false)
 				.build(),

@@ -45,7 +45,7 @@ impl SubmitInfo {
 
 impl VulkanInfo<backend::vk::SubmitInfo> for SubmitInfo {
 	fn to_vk(&self) -> backend::vk::SubmitInfo {
-		backend::vk::SubmitInfoBuilder::new()
+		backend::vk::SubmitInfo::builder()
 			.wait_semaphores(&self.semaphores_to_wait_for)
 			.wait_dst_stage_mask(&self.stages_waited_for)
 			.command_buffers(&self.buffers)

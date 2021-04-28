@@ -39,10 +39,6 @@ impl Fence {
 	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::Fence) -> Fence {
 		Fence { _device, _internal }
 	}
-
-	pub fn is_valid(&self) -> bool {
-		!self._internal.is_null()
-	}
 }
 
 impl Drop for Fence {

@@ -33,7 +33,8 @@ impl Queue {
 		self.device.submit(&self, infos, signal_fence_when_complete)
 	}
 
-	pub fn present(&self, info: command::PresentInfo) -> utility::Result<()> {
+	/// returns true if the swapchain is suboptimal
+	pub fn present(&self, info: command::PresentInfo) -> utility::Result<bool> {
 		self.device.present(&self, info)
 	}
 }

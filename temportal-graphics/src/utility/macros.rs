@@ -22,13 +22,3 @@ pub fn as_version_string(version: &u32) -> String {
 		backend::vk::version_patch(*version)
 	)
 }
-
-#[macro_export]
-#[doc(hidden)]
-macro_rules! into_builders {
-	($a:expr) => {
-		&$a.iter()
-			.map(|info| info.into_builder())
-			.collect::<Vec<_>>()[..]
-	};
-}

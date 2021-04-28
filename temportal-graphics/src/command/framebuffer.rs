@@ -31,7 +31,7 @@ impl Info {
 		device: &Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		let attachments = vec![*swapchain_image_view.unwrap()];
-		let info = backend::vk::FramebufferCreateInfoBuilder::new()
+		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
 			.height(self.extent.height)
 			.layers(self.layer_count)

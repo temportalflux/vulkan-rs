@@ -33,7 +33,7 @@ impl Default for Attachment {
 	fn default() -> Attachment {
 		Attachment {
 			format: flags::Format::UNDEFINED,
-			samples: flags::SampleCount::_1,
+			samples: flags::SampleCount::TYPE_1,
 			general_ops: Default::default(),
 			stencil_ops: Default::default(),
 			initial_layout: flags::ImageLayout::UNDEFINED,
@@ -76,7 +76,7 @@ impl Attachment {
 
 impl utility::VulkanInfo<backend::vk::AttachmentDescription> for Attachment {
 	fn to_vk(&self) -> backend::vk::AttachmentDescription {
-		backend::vk::AttachmentDescriptionBuilder::new()
+		backend::vk::AttachmentDescription::builder()
 			.format(self.format)
 			.samples(self.samples)
 			.load_op(self.general_ops.load)

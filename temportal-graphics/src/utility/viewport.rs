@@ -28,7 +28,7 @@ impl Viewport {
 
 impl Into<backend::vk::Viewport> for Viewport {
 	fn into(self) -> backend::vk::Viewport {
-		backend::vk::ViewportBuilder::new()
+		backend::vk::Viewport::builder()
 			.x(self.pos.x())
 			.y(self.pos.y())
 			.width(self.size.x())

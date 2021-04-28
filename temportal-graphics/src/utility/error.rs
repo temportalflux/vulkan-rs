@@ -27,8 +27,8 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn as_vulkan_error<T>(erupt_result: backend::utils::VulkanResult<T>) -> Result<T> {
-	match erupt_result.result() {
+pub fn as_vulkan_error<T>(vk_result: backend::prelude::VkResult<T>) -> Result<T> {
+	match vk_result {
 		Ok(v) => Ok(v),
 		Err(vk_result) => match vk_result {
 			backend::vk::Result::SUBOPTIMAL_KHR | backend::vk::Result::ERROR_OUT_OF_DATE_KHR => {
