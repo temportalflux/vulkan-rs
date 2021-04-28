@@ -1,14 +1,13 @@
 use crate::{
-	command,
+	backend, command,
 	device::logical,
 	utility::{self, VulkanObject},
 };
-use erupt;
 use std::rc::Rc;
 
 pub struct Pool {
 	_device: Rc<logical::Device>,
-	_internal: erupt::vk::CommandPool,
+	_internal: backend::vk::CommandPool,
 }
 
 impl Pool {
@@ -28,13 +27,13 @@ impl Pool {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::CommandPool`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::CommandPool`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::CommandPool> for Pool {
-	fn unwrap(&self) -> &erupt::vk::CommandPool {
+impl VulkanObject<backend::vk::CommandPool> for Pool {
+	fn unwrap(&self) -> &backend::vk::CommandPool {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::CommandPool {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::CommandPool {
 		&mut self._internal
 	}
 }

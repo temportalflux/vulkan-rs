@@ -1,9 +1,9 @@
 use crate::{
+	backend,
 	device::{logical, physical},
 	instance::Instance,
 	utility::{self, VulkanObject},
 };
-use erupt;
 
 pub struct DeviceQueue {
 	pub queue_family_index: usize,
@@ -20,7 +20,7 @@ pub struct Info {
 	layer_names_raw: Vec<utility::CStrPtr>,
 
 	queues: Vec<DeviceQueue>,
-	features: erupt::vk::PhysicalDeviceFeatures,
+	features: backend::vk::PhysicalDeviceFeatures,
 }
 
 impl Default for Info {
@@ -33,7 +33,7 @@ impl Default for Info {
 			layer_names_raw: Vec::new(),
 
 			queues: Vec::new(),
-			features: erupt::vk::PhysicalDeviceFeatures::default(),
+			features: backend::vk::PhysicalDeviceFeatures::default(),
 		}
 	}
 }
@@ -98,14 +98,14 @@ impl Info {
 			.queues
 			.iter()
 			.map(|queue| {
-				erupt::vk::DeviceQueueCreateInfoBuilder::new()
+				backend::vk::DeviceQueueCreateInfoBuilder::new()
 					.queue_family_index(queue.queue_family_index as u32)
 					.queue_priorities(&queue.priorities)
 					.build()
 			})
 			.collect::<Vec<_>>();
 
-		let mut info = erupt::vk::DeviceCreateInfo::default();
+		let mut info = backend::vk::DeviceCreateInfo::default();
 
 		info.pp_enabled_extension_names = self.extension_names_raw.as_ptr() as _;
 		info.enabled_extension_count = self.extension_names_raw.len() as _;
@@ -118,7 +118,7 @@ impl Info {
 
 		info.p_enabled_features = &self.features as _;
 
-		let loader = match erupt::DeviceLoader::new(
+		let loader = match backend::DeviceLoader::new(
 			&instance.unwrap(),
 			*physical_device.unwrap(),
 			&info,
@@ -126,10 +126,10 @@ impl Info {
 		) {
 			Ok(inst) => inst,
 			Err(err) => match err {
-				erupt::LoaderError::VulkanError(res) => {
+				backend::LoaderError::VulkanError(res) => {
 					return Err(utility::Error::VulkanError(res))
 				}
-				erupt::LoaderError::SymbolNotAvailable => {
+				backend::LoaderError::SymbolNotAvailable => {
 					return Err(utility::Error::InstanceSymbolNotAvailable())
 				}
 			},

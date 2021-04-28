@@ -1,5 +1,4 @@
-use crate::{flags, utility};
-use erupt;
+use crate::{backend, flags, utility};
 
 /// The load and store operations that can be performed on an image
 /// that is attached to a ['Render Pass'](crate::renderpass::Pass)
@@ -75,9 +74,9 @@ impl Attachment {
 	}
 }
 
-impl utility::VulkanInfo<erupt::vk::AttachmentDescription> for Attachment {
-	fn to_vk(&self) -> erupt::vk::AttachmentDescription {
-		erupt::vk::AttachmentDescriptionBuilder::new()
+impl utility::VulkanInfo<backend::vk::AttachmentDescription> for Attachment {
+	fn to_vk(&self) -> backend::vk::AttachmentDescription {
+		backend::vk::AttachmentDescriptionBuilder::new()
 			.format(self.format)
 			.samples(self.samples)
 			.load_op(self.general_ops.load)

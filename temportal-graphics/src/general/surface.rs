@@ -1,18 +1,17 @@
-use crate::{instance, utility::VulkanObject};
-use erupt;
+use crate::{backend, instance, utility::VulkanObject};
 use std::rc::Rc;
 
-/// The wrapper for the [`Vulkan Surface`](erupt::vk::SurfaceKHR).
+/// The wrapper for the [`Vulkan Surface`](backend::vk::SurfaceKHR).
 /// This represents the canvas/display within the provided [`window`](raw_window_handle::HasRawWindowHandle)
 /// that Vulkan should draw to. (see [`create_surface`](crate::instance::Instance::create_surface))
 pub struct Surface {
 	_instance: Rc<instance::Instance>,
-	_internal: erupt::vk::SurfaceKHR,
+	_internal: backend::vk::SurfaceKHR,
 }
 
 impl Surface {
 	/// The internal constructor. Users should use [`create_surface`](crate::instance::Instance::create_surface) to create a surface.
-	pub fn from(_instance: Rc<instance::Instance>, _internal: erupt::vk::SurfaceKHR) -> Surface {
+	pub fn from(_instance: Rc<instance::Instance>, _internal: backend::vk::SurfaceKHR) -> Surface {
 		Surface {
 			_instance,
 			_internal,
@@ -20,13 +19,13 @@ impl Surface {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::SurfaceKHR`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::SurfaceKHR`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::SurfaceKHR> for Surface {
-	fn unwrap(&self) -> &erupt::vk::SurfaceKHR {
+impl VulkanObject<backend::vk::SurfaceKHR> for Surface {
+	fn unwrap(&self) -> &backend::vk::SurfaceKHR {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::SurfaceKHR {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::SurfaceKHR {
 		&mut self._internal
 	}
 }

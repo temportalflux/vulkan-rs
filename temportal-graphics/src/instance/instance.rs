@@ -1,22 +1,23 @@
 use crate::{
+	backend,
 	device::physical,
 	general::Surface,
 	utility::{self, VulkanObject},
 };
-use erupt;
+
 use raw_window_handle;
 use std::rc::Rc;
 
-/// A user-owned singleton for the [`Vulkan Instance`](erupt::InstanceLoader)
+/// A user-owned singleton for the [`Vulkan Instance`](backend::InstanceLoader)
 pub struct Instance {
-	_internal: erupt::InstanceLoader,
-	debug_messenger: Option<erupt::extensions::ext_debug_utils::DebugUtilsMessengerEXT>,
+	_internal: backend::InstanceLoader,
+	debug_messenger: Option<backend::extensions::ext_debug_utils::DebugUtilsMessengerEXT>,
 }
 
 impl Instance {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
 	pub fn from(
-		_internal: erupt::InstanceLoader,
+		_internal: backend::InstanceLoader,
 		enable_validation: bool,
 	) -> utility::Result<Instance> {
 		let mut instance = Instance {
@@ -25,15 +26,15 @@ impl Instance {
 		};
 
 		if enable_validation {
-			let messenger_info = erupt::vk::DebugUtilsMessengerCreateInfoEXTBuilder::new()
+			let messenger_info = backend::vk::DebugUtilsMessengerCreateInfoEXTBuilder::new()
 				.message_severity(
-					erupt::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR_EXT
-						| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING_EXT, //| erupt::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
+					backend::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR_EXT
+						| backend::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING_EXT, //| backend::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
 				)
 				.message_type(
-					erupt::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION_EXT
-						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT
-						| erupt::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT,
+					backend::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION_EXT
+						| backend::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE_EXT
+						| backend::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL_EXT,
 				)
 				.pfn_user_callback(Some(debug_callback));
 			instance.debug_messenger = Some(utility::as_vulkan_error(unsafe {
@@ -52,13 +53,13 @@ impl Instance {
 		handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> utility::Result<Surface> {
 		utility::as_vulkan_error(unsafe {
-			erupt::utils::surface::create_surface(&instance._internal, handle, None)
+			backend::utils::surface::create_surface(&instance._internal, handle, None)
 		})
 		.map(|ok| Surface::from(instance.clone(), ok))
 	}
 
 	#[doc(hidden)]
-	pub fn destroy_surface(&self, value: erupt::vk::SurfaceKHR) {
+	pub fn destroy_surface(&self, value: backend::vk::SurfaceKHR) {
 		unsafe {
 			self._internal.destroy_surface_khr(Some(value), None);
 		}
@@ -93,13 +94,13 @@ impl Instance {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::InstanceLoader`].
+/// A trait exposing the internal value for the wrapped [`backend::InstanceLoader`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::InstanceLoader> for Instance {
-	fn unwrap(&self) -> &erupt::InstanceLoader {
+impl VulkanObject<backend::InstanceLoader> for Instance {
+	fn unwrap(&self) -> &backend::InstanceLoader {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::InstanceLoader {
+	fn unwrap_mut(&mut self) -> &mut backend::InstanceLoader {
 		&mut self._internal
 	}
 }
@@ -120,15 +121,15 @@ impl Drop for Instance {
 impl Instance {
 	pub fn get_physical_device_properties(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-	) -> erupt::vk::PhysicalDeviceProperties {
+		device: &backend::vk::PhysicalDevice,
+	) -> backend::vk::PhysicalDeviceProperties {
 		unsafe { self._internal.get_physical_device_properties(*device, None) }
 	}
 
 	pub fn get_physical_device_queue_family_properties(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-	) -> Vec<erupt::vk::QueueFamilyProperties> {
+		device: &backend::vk::PhysicalDevice,
+	) -> Vec<backend::vk::QueueFamilyProperties> {
 		unsafe {
 			self._internal
 				.get_physical_device_queue_family_properties(*device, None)
@@ -137,9 +138,9 @@ impl Instance {
 
 	pub fn does_physical_device_surface_support_khr(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
+		device: &backend::vk::PhysicalDevice,
 		queue_family_index: usize,
-		surface: &erupt::vk::SurfaceKHR,
+		surface: &backend::vk::SurfaceKHR,
 	) -> bool {
 		unsafe {
 			self._internal.get_physical_device_surface_support_khr(
@@ -154,9 +155,9 @@ impl Instance {
 
 	pub fn get_physical_device_surface_formats(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-		surface: &erupt::vk::SurfaceKHR,
-	) -> Vec<erupt::vk::SurfaceFormatKHR> {
+		device: &backend::vk::PhysicalDevice,
+		surface: &backend::vk::SurfaceKHR,
+	) -> Vec<backend::vk::SurfaceFormatKHR> {
 		unsafe {
 			self._internal
 				.get_physical_device_surface_formats_khr(*device, *surface, None)
@@ -166,9 +167,9 @@ impl Instance {
 
 	pub fn get_physical_device_surface_present_modes(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-		surface: &erupt::vk::SurfaceKHR,
-	) -> Vec<erupt::vk::PresentModeKHR> {
+		device: &backend::vk::PhysicalDevice,
+		surface: &backend::vk::SurfaceKHR,
+	) -> Vec<backend::vk::PresentModeKHR> {
 		unsafe {
 			self._internal
 				.get_physical_device_surface_present_modes_khr(*device, *surface, None)
@@ -178,8 +179,8 @@ impl Instance {
 
 	pub fn enumerate_device_extension_properties(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-	) -> Vec<erupt::vk::ExtensionProperties> {
+		device: &backend::vk::PhysicalDevice,
+	) -> Vec<backend::vk::ExtensionProperties> {
 		unsafe {
 			self._internal
 				.enumerate_device_extension_properties(*device, None, None)
@@ -189,9 +190,9 @@ impl Instance {
 
 	pub fn get_physical_device_surface_capabilities(
 		&self,
-		device: &erupt::vk::PhysicalDevice,
-		surface: &erupt::vk::SurfaceKHR,
-	) -> erupt::vk::SurfaceCapabilitiesKHR {
+		device: &backend::vk::PhysicalDevice,
+		surface: &backend::vk::SurfaceKHR,
+	) -> backend::vk::SurfaceCapabilitiesKHR {
 		unsafe {
 			self._internal
 				.get_physical_device_surface_capabilities_khr(*device, *surface, None)
@@ -202,19 +203,19 @@ impl Instance {
 
 #[doc(hidden)]
 unsafe extern "system" fn debug_callback(
-	message_severity: erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT,
-	_message_types: erupt::vk::DebugUtilsMessageTypeFlagsEXT,
-	p_callback_data: *const erupt::vk::DebugUtilsMessengerCallbackDataEXT,
+	message_severity: backend::vk::DebugUtilsMessageSeverityFlagBitsEXT,
+	_message_types: backend::vk::DebugUtilsMessageTypeFlagsEXT,
+	p_callback_data: *const backend::vk::DebugUtilsMessengerCallbackDataEXT,
 	_p_user_data: *mut std::ffi::c_void,
-) -> erupt::vk::Bool32 {
+) -> backend::vk::Bool32 {
 	let log_level = match message_severity {
-		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::VERBOSE_EXT => log::Level::Trace,
-		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::INFO_EXT => log::Level::Info,
-		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::WARNING_EXT => log::Level::Warn,
-		erupt::vk::DebugUtilsMessageSeverityFlagBitsEXT::ERROR_EXT => log::Level::Error,
+		backend::vk::DebugUtilsMessageSeverityFlagBitsEXT::VERBOSE_EXT => log::Level::Trace,
+		backend::vk::DebugUtilsMessageSeverityFlagBitsEXT::INFO_EXT => log::Level::Info,
+		backend::vk::DebugUtilsMessageSeverityFlagBitsEXT::WARNING_EXT => log::Level::Warn,
+		backend::vk::DebugUtilsMessageSeverityFlagBitsEXT::ERROR_EXT => log::Level::Error,
 		_ => log::Level::Debug,
 	};
 	let message = std::ffi::CStr::from_ptr((*p_callback_data).p_message).to_string_lossy();
 	log::log!(target: "vulkan", log_level, "{}", message);
-	erupt::vk::FALSE
+	backend::vk::FALSE
 }

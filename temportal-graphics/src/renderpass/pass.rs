@@ -1,28 +1,28 @@
-use crate::{device::logical, utility::VulkanObject};
-use erupt;
+use crate::{backend, device::logical, utility::VulkanObject};
+
 use std::rc::Rc;
 
-/// The [`Render Pass`](erupt::vk::RenderPass) used by Vulkan
+/// The [`Render Pass`](backend::vk::RenderPass) used by Vulkan
 /// to define when pipeline instructions can be issued
 /// and what attachments are used.
 pub struct Pass {
 	_device: Rc<logical::Device>,
-	_internal: erupt::vk::RenderPass,
+	_internal: backend::vk::RenderPass,
 }
 
 impl Pass {
-	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::RenderPass) -> Pass {
+	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::RenderPass) -> Pass {
 		Pass { _device, _internal }
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::RenderPass`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::RenderPass`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::RenderPass> for Pass {
-	fn unwrap(&self) -> &erupt::vk::RenderPass {
+impl VulkanObject<backend::vk::RenderPass> for Pass {
+	fn unwrap(&self) -> &backend::vk::RenderPass {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::RenderPass {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::RenderPass {
 		&mut self._internal
 	}
 }

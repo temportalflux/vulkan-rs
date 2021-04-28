@@ -1,20 +1,21 @@
 use crate::into_builders;
 use crate::{
+	backend,
 	device::logical,
 	pipeline, renderpass, shader,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use erupt;
+
 use std::rc::Rc;
 
 /// Information used to construct a [`Pipeline`](pipeline::Pipeline).
 pub struct Info {
-	shaders: Vec<erupt::vk::PipelineShaderStageCreateInfo>,
-	vertex_input: erupt::vk::PipelineVertexInputStateCreateInfo,
-	input_assembly: erupt::vk::PipelineInputAssemblyStateCreateInfo,
+	shaders: Vec<backend::vk::PipelineShaderStageCreateInfo>,
+	vertex_input: backend::vk::PipelineVertexInputStateCreateInfo,
+	input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo,
 	viewport_state: pipeline::ViewportState,
 	rasterization_state: pipeline::RasterizationState,
-	multisampling: erupt::vk::PipelineMultisampleStateCreateInfo,
+	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
 	color_blending: pipeline::ColorBlendState,
 }
 
@@ -22,16 +23,16 @@ impl Default for Info {
 	fn default() -> Info {
 		Info {
 			shaders: Vec::new(),
-			vertex_input: erupt::vk::PipelineVertexInputStateCreateInfo::default(),
-			input_assembly: erupt::vk::PipelineInputAssemblyStateCreateInfoBuilder::new()
-				.topology(erupt::vk::PrimitiveTopology::TRIANGLE_LIST)
+			vertex_input: backend::vk::PipelineVertexInputStateCreateInfo::default(),
+			input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfoBuilder::new()
+				.topology(backend::vk::PrimitiveTopology::TRIANGLE_LIST)
 				.primitive_restart_enable(false)
 				.build(),
 			viewport_state: pipeline::ViewportState::default(),
 			rasterization_state: pipeline::RasterizationState::default(),
-			multisampling: erupt::vk::PipelineMultisampleStateCreateInfoBuilder::new()
+			multisampling: backend::vk::PipelineMultisampleStateCreateInfoBuilder::new()
 				.sample_shading_enable(false)
-				.rasterization_samples(erupt::vk::SampleCountFlagBits::_1)
+				.rasterization_samples(backend::vk::SampleCountFlagBits::_1)
 				.build(),
 			color_blending: pipeline::ColorBlendState::default(),
 		}
@@ -77,12 +78,12 @@ impl Info {
 		let multisampling = self.multisampling.into_builder();
 
 		let color_blend_attachments = into_builders!(self.color_blending.attachments);
-		let color_blending = erupt::vk::PipelineColorBlendStateCreateInfoBuilder::new()
+		let color_blending = backend::vk::PipelineColorBlendStateCreateInfoBuilder::new()
 			.logic_op_enable(false)
 			.attachments(color_blend_attachments)
 			.build();
 
-		let info = erupt::vk::GraphicsPipelineCreateInfoBuilder::new()
+		let info = backend::vk::GraphicsPipelineCreateInfoBuilder::new()
 			.stages(&shader_stages)
 			.vertex_input_state(&vertex_input)
 			.input_assembly_state(&input_assembly)

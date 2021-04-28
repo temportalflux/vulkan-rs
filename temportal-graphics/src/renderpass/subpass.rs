@@ -1,11 +1,10 @@
-use crate::{flags, utility::VulkanInfo};
-use erupt;
+use crate::{backend, flags, utility::VulkanInfo};
 
 /// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
 /// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
 pub struct Subpass {
 	bind_point: flags::PipelineBindPoint,
-	attachment_refs: Vec<erupt::vk::AttachmentReference>,
+	attachment_refs: Vec<backend::vk::AttachmentReference>,
 }
 
 impl Default for Subpass {
@@ -24,7 +23,7 @@ impl Subpass {
 		layout: flags::ImageLayout,
 	) -> Self {
 		self.attachment_refs.push(
-			erupt::vk::AttachmentReferenceBuilder::new()
+			backend::vk::AttachmentReferenceBuilder::new()
 				.attachment(attachment_index as u32)
 				.layout(layout)
 				.build(),
@@ -33,9 +32,9 @@ impl Subpass {
 	}
 }
 
-impl VulkanInfo<erupt::vk::SubpassDescription> for Subpass {
-	fn to_vk(&self) -> erupt::vk::SubpassDescription {
-		erupt::vk::SubpassDescriptionBuilder::new()
+impl VulkanInfo<backend::vk::SubpassDescription> for Subpass {
+	fn to_vk(&self) -> backend::vk::SubpassDescription {
+		backend::vk::SubpassDescriptionBuilder::new()
 			.pipeline_bind_point(self.bind_point)
 			.color_attachments(&crate::into_builders!(self.attachment_refs))
 			.build()

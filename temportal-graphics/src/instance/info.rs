@@ -1,10 +1,10 @@
 use crate::{
+	backend,
 	context::Context,
 	instance,
 	utility::{self, VulkanInfo, VulkanInfoMut},
 	AppInfo,
 };
-use erupt;
 
 /// Information used to construct a [`Vulkan Instance`](instance::Instance).
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct Info {
 	layers: Vec<String>,
 	validation_enabled: bool,
 
-	app_info_raw: erupt::vk::ApplicationInfo,
+	app_info_raw: backend::vk::ApplicationInfo,
 	extensions_raw: Vec<utility::CStrPtr>,
 	layers_raw: Vec<utility::CStrPtr>,
 }
@@ -27,7 +27,7 @@ impl Default for Info {
 			layers: Vec::new(),
 			validation_enabled: false,
 
-			app_info_raw: erupt::vk::ApplicationInfo::default(),
+			app_info_raw: backend::vk::ApplicationInfo::default(),
 			extensions_raw: Vec::new(),
 			layers_raw: Vec::new(),
 		}
@@ -103,7 +103,7 @@ impl Info {
 		mut self,
 		window_handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> Self {
-		use erupt::utils::surface::enumerate_required_extensions;
+		use backend::utils::surface::enumerate_required_extensions;
 		let window_extensions = enumerate_required_extensions(window_handle).unwrap();
 		self.append_raw_extensions(window_extensions);
 		self
@@ -136,13 +136,13 @@ impl Info {
 			return Err(utility::Error::InvalidInstanceLayer(layer));
 		}
 		let create_info = self.to_vk();
-		let instance_loader = match erupt::InstanceLoader::new(&ctx.loader, &create_info, None) {
+		let instance_loader = match backend::InstanceLoader::new(&ctx.loader, &create_info, None) {
 			Ok(inst) => inst,
 			Err(err) => match err {
-				erupt::LoaderError::VulkanError(res) => {
+				backend::LoaderError::VulkanError(res) => {
 					return Err(utility::Error::VulkanError(res))
 				}
-				erupt::LoaderError::SymbolNotAvailable => {
+				backend::LoaderError::SymbolNotAvailable => {
 					return Err(utility::Error::InstanceSymbolNotAvailable())
 				}
 			},
@@ -151,10 +151,10 @@ impl Info {
 	}
 }
 
-impl utility::VulkanInfoMut<erupt::vk::InstanceCreateInfo> for Info {
-	/// Converts the [`Info`] into the [`erupt::vk::InstanceCreateInfo`] struct
+impl utility::VulkanInfoMut<backend::vk::InstanceCreateInfo> for Info {
+	/// Converts the [`Info`] into the [`backend::vk::InstanceCreateInfo`] struct
 	/// used to create a [`instance::Instance`].
-	fn to_vk(&mut self) -> erupt::vk::InstanceCreateInfo {
+	fn to_vk(&mut self) -> backend::vk::InstanceCreateInfo {
 		self.app_info_raw = self.app_info.to_vk();
 		self.extensions_raw = self
 			.extensions
@@ -166,7 +166,7 @@ impl utility::VulkanInfoMut<erupt::vk::InstanceCreateInfo> for Info {
 			.iter()
 			.map(|owned| utility::to_cstr_ptr(&owned))
 			.collect();
-		erupt::vk::InstanceCreateInfoBuilder::new()
+		backend::vk::InstanceCreateInfoBuilder::new()
 			.application_info(&self.app_info_raw)
 			.enabled_extension_names(&self.extensions_raw)
 			.enabled_layer_names(&self.layers_raw)

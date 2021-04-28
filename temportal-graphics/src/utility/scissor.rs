@@ -1,4 +1,4 @@
-use crate::structs::Extent2D;
+use crate::{backend, structs::Extent2D};
 use temportal_math::Vector;
 
 /// A 4-int struct representing a portion of a [`Viewport`](crate::utility::Viewport).
@@ -24,10 +24,10 @@ impl Scissor {
 	}
 }
 
-impl Into<erupt::vk::Rect2D> for Scissor {
-	fn into(self) -> erupt::vk::Rect2D {
-		erupt::vk::Rect2DBuilder::new()
-			.offset(erupt::vk::Offset2D {
+impl Into<backend::vk::Rect2D> for Scissor {
+	fn into(self) -> backend::vk::Rect2D {
+		backend::vk::Rect2DBuilder::new()
+			.offset(backend::vk::Offset2D {
 				x: self.offset.x(),
 				y: self.offset.y(),
 			})

@@ -1,4 +1,5 @@
 use crate::{
+	backend,
 	flags::{CullMode, FrontFace, PolygonMode},
 	utility::VulkanInfo,
 };
@@ -72,9 +73,9 @@ impl RasterizationState {
 	}
 }
 
-impl VulkanInfo<erupt::vk::PipelineRasterizationStateCreateInfo> for RasterizationState {
-	fn to_vk(&self) -> erupt::vk::PipelineRasterizationStateCreateInfo {
-		let mut info = erupt::vk::PipelineRasterizationStateCreateInfoBuilder::new()
+impl VulkanInfo<backend::vk::PipelineRasterizationStateCreateInfo> for RasterizationState {
+	fn to_vk(&self) -> backend::vk::PipelineRasterizationStateCreateInfo {
+		let mut info = backend::vk::PipelineRasterizationStateCreateInfoBuilder::new()
 			.depth_clamp_enable(self.depth_clamp_enabled)
 			.rasterizer_discard_enable(self.rasterizer_discard_enabled)
 			.polygon_mode(self.polygon_mode)

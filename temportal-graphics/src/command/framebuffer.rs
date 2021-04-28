@@ -1,7 +1,6 @@
 use crate::{
-	device::logical, image, renderpass, structs::Extent2D, utility, utility::VulkanObject,
+	backend, device::logical, image, renderpass, structs::Extent2D, utility, utility::VulkanObject,
 };
-use erupt;
 use std::rc::Rc;
 
 /// Information used to construct a [`Framebuffer`].
@@ -32,7 +31,7 @@ impl Info {
 		device: &Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		let attachments = vec![*swapchain_image_view.unwrap()];
-		let info = erupt::vk::FramebufferCreateInfoBuilder::new()
+		let info = backend::vk::FramebufferCreateInfoBuilder::new()
 			.width(self.extent.width)
 			.height(self.extent.height)
 			.layers(self.layer_count)
@@ -46,22 +45,22 @@ impl Info {
 
 pub struct Framebuffer {
 	_device: Rc<logical::Device>,
-	_internal: erupt::vk::Framebuffer,
+	_internal: backend::vk::Framebuffer,
 }
 
 impl Framebuffer {
-	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::Framebuffer) -> Framebuffer {
+	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::Framebuffer) -> Framebuffer {
 		Framebuffer { _device, _internal }
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::Framebuffer`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::Framebuffer`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::Framebuffer> for Framebuffer {
-	fn unwrap(&self) -> &erupt::vk::Framebuffer {
+impl VulkanObject<backend::vk::Framebuffer> for Framebuffer {
+	fn unwrap(&self) -> &backend::vk::Framebuffer {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::Framebuffer {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::Framebuffer {
 		&mut self._internal
 	}
 }

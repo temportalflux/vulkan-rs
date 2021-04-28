@@ -1,9 +1,9 @@
-use crate::flags::ColorComponent;
+use crate::{backend, flags::ColorComponent};
 
 /// Struct containing information about how a [`Pipeline`](crate::pipeline::Pipeline)
 /// blends the color of its [`attachments`](crate::renderpass::Attachment).
 pub struct ColorBlendState {
-	pub attachments: Vec<erupt::vk::PipelineColorBlendAttachmentState>,
+	pub attachments: Vec<backend::vk::PipelineColorBlendAttachmentState>,
 }
 
 impl Default for ColorBlendState {
@@ -22,7 +22,7 @@ pub struct ColorBlendAttachment {
 impl ColorBlendState {
 	pub fn add_attachment(mut self, attachment: ColorBlendAttachment) -> Self {
 		self.attachments.push(
-			erupt::vk::PipelineColorBlendAttachmentStateBuilder::new()
+			backend::vk::PipelineColorBlendAttachmentStateBuilder::new()
 				.color_write_mask(attachment.color_flags)
 				.blend_enable(false)
 				.build(),

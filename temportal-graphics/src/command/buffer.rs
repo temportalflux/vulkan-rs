@@ -1,19 +1,18 @@
 use crate::{
-	command,
+	backend, command,
 	device::logical,
 	flags, pipeline, renderpass,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use erupt;
 use std::rc::Rc;
 
 pub struct Buffer {
 	device: Rc<logical::Device>,
-	_internal: erupt::vk::CommandBuffer,
+	_internal: backend::vk::CommandBuffer,
 }
 
 impl Buffer {
-	pub fn from(device: Rc<logical::Device>, internal: erupt::vk::CommandBuffer) -> Buffer {
+	pub fn from(device: Rc<logical::Device>, internal: backend::vk::CommandBuffer) -> Buffer {
 		Buffer {
 			device,
 			_internal: internal,
@@ -39,7 +38,7 @@ impl Buffer {
 			.iter()
 			.map(|value| value.to_vk())
 			.collect::<Vec<_>>();
-		let info = erupt::vk::RenderPassBeginInfoBuilder::new()
+		let info = backend::vk::RenderPassBeginInfoBuilder::new()
 			.render_pass(*render_pass.unwrap())
 			.framebuffer(*frame_buffer.unwrap())
 			.render_area(info.render_area)
@@ -83,13 +82,13 @@ impl Buffer {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::CommandBuffer`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::CommandBuffer`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::CommandBuffer> for Buffer {
-	fn unwrap(&self) -> &erupt::vk::CommandBuffer {
+impl VulkanObject<backend::vk::CommandBuffer> for Buffer {
+	fn unwrap(&self) -> &backend::vk::CommandBuffer {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::CommandBuffer {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::CommandBuffer {
 		&mut self._internal
 	}
 }

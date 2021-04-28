@@ -1,9 +1,12 @@
-use crate::utility::{Scissor, Viewport, VulkanInfo};
+use crate::{
+	backend,
+	utility::{Scissor, Viewport, VulkanInfo},
+};
 
 /// Information about the portion of the viewport a [`Pipeline`](crate::pipeline::Pipeline) should render to.
 pub struct ViewportState {
-	viewports: Vec<erupt::vk::Viewport>,
-	scissors: Vec<erupt::vk::Rect2D>,
+	viewports: Vec<backend::vk::Viewport>,
+	scissors: Vec<backend::vk::Rect2D>,
 }
 
 impl Default for ViewportState {
@@ -27,9 +30,9 @@ impl ViewportState {
 	}
 }
 
-impl VulkanInfo<erupt::vk::PipelineViewportStateCreateInfo> for ViewportState {
-	fn to_vk(&self) -> erupt::vk::PipelineViewportStateCreateInfo {
-		let mut info = erupt::vk::PipelineViewportStateCreateInfo::default();
+impl VulkanInfo<backend::vk::PipelineViewportStateCreateInfo> for ViewportState {
+	fn to_vk(&self) -> backend::vk::PipelineViewportStateCreateInfo {
+		let mut info = backend::vk::PipelineViewportStateCreateInfo::default();
 		info.viewport_count = self.viewports.len() as u32;
 		info.p_viewports = self.viewports.as_ptr() as _;
 		info.scissor_count = self.scissors.len() as u32;

@@ -1,11 +1,12 @@
 use crate::{
+	backend,
 	device::logical,
 	flags::{ComponentSwizzle, Format, ImageViewType},
 	image,
 	structs::{ComponentMapping, ImageSubresourceRange},
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use erupt;
+
 use std::rc::Rc;
 
 pub struct ViewInfo {
@@ -51,11 +52,11 @@ impl ViewInfo {
 	}
 }
 
-impl VulkanInfo<erupt::vk::ImageViewCreateInfo> for ViewInfo {
-	/// Converts the [`ViewInfo`] into the [`erupt::vk::ImageViewCreateInfo`] struct
+impl VulkanInfo<backend::vk::ImageViewCreateInfo> for ViewInfo {
+	/// Converts the [`ViewInfo`] into the [`backend::vk::ImageViewCreateInfo`] struct
 	/// used to create a [`image::View`].
-	fn to_vk(&self) -> erupt::vk::ImageViewCreateInfo {
-		erupt::vk::ImageViewCreateInfoBuilder::new()
+	fn to_vk(&self) -> backend::vk::ImageViewCreateInfo {
+		backend::vk::ImageViewCreateInfoBuilder::new()
 			.view_type(self.view_type)
 			.format(self.format)
 			.components(self.components)

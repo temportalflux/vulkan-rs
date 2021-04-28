@@ -1,9 +1,10 @@
 use crate::{
+	backend,
 	device::logical,
 	flags, renderpass,
 	utility::{self, VulkanInfo},
 };
-use erupt;
+
 use std::rc::Rc;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
@@ -94,22 +95,22 @@ impl Info {
 			.dependencies
 			.iter()
 			.map(|(src, dst)| {
-				erupt::vk::SubpassDependencyBuilder::new()
+				backend::vk::SubpassDependencyBuilder::new()
 					.src_subpass(
 						src.subpass_index
-							.unwrap_or(erupt::vk::SUBPASS_EXTERNAL as usize) as u32,
+							.unwrap_or(backend::vk::SUBPASS_EXTERNAL as usize) as u32,
 					)
 					.src_stage_mask(src.stage_mask)
 					.src_access_mask(src.access_mask)
 					.dst_subpass(
 						dst.subpass_index
-							.unwrap_or(erupt::vk::SUBPASS_EXTERNAL as usize) as u32,
+							.unwrap_or(backend::vk::SUBPASS_EXTERNAL as usize) as u32,
 					)
 					.dst_stage_mask(dst.stage_mask)
 					.dst_access_mask(dst.access_mask)
 			})
 			.collect::<Vec<_>>();
-		let vk_info = erupt::vk::RenderPassCreateInfoBuilder::new()
+		let vk_info = backend::vk::RenderPassCreateInfoBuilder::new()
 			.attachments(&attachments)
 			.subpasses(&subpasses)
 			.dependencies(&dependencies)

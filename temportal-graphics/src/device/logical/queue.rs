@@ -1,17 +1,17 @@
-use crate::{command, device::logical, utility};
-use erupt;
+use crate::{backend, command, device::logical, utility};
+
 use std::rc::Rc;
 
 pub struct Queue {
 	queue_family_index: usize,
-	_internal: erupt::vk::Queue,
+	_internal: backend::vk::Queue,
 	device: Rc<logical::Device>,
 }
 
 impl Queue {
 	pub fn from(
 		device: Rc<logical::Device>,
-		_internal: erupt::vk::Queue,
+		_internal: backend::vk::Queue,
 		queue_family_index: usize,
 	) -> Queue {
 		Queue {
@@ -38,13 +38,13 @@ impl Queue {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::Queue`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::Queue`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl utility::VulkanObject<erupt::vk::Queue> for Queue {
-	fn unwrap(&self) -> &erupt::vk::Queue {
+impl utility::VulkanObject<backend::vk::Queue> for Queue {
+	fn unwrap(&self) -> &backend::vk::Queue {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::Queue {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::Queue {
 		&mut self._internal
 	}
 }

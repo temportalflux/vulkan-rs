@@ -1,4 +1,4 @@
-use crate::structs::Extent2D;
+use crate::{backend, structs::Extent2D};
 use temportal_math::Vector;
 
 /// A 6-float struct representing the viewport of a window.
@@ -26,9 +26,9 @@ impl Viewport {
 	}
 }
 
-impl Into<erupt::vk::Viewport> for Viewport {
-	fn into(self) -> erupt::vk::Viewport {
-		erupt::vk::ViewportBuilder::new()
+impl Into<backend::vk::Viewport> for Viewport {
+	fn into(self) -> backend::vk::Viewport {
+		backend::vk::ViewportBuilder::new()
 			.x(self.pos.x())
 			.y(self.pos.y())
 			.width(self.size.x())

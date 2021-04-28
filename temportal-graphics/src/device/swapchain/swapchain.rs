@@ -1,17 +1,17 @@
-use crate::{command, device::logical, image::Image, utility};
-use erupt;
+use crate::{backend, command, device::logical, image::Image, utility};
+
 use std::rc::Rc;
 
-/// A wrapper struct for [`erupt::vk::SwapchainKHR`] to handle swapping out
+/// A wrapper struct for [`backend::vk::SwapchainKHR`] to handle swapping out
 /// displayed images on the [`Surface`](crate::Surface).
 pub struct Swapchain {
 	_device: Rc<logical::Device>,
-	_internal: erupt::vk::SwapchainKHR,
+	_internal: backend::vk::SwapchainKHR,
 }
 
 impl Swapchain {
 	/// The internal constructor. Users should use [`create_object`](crate::device::swapchain::Info::create_object) to create a surface.
-	pub fn from(_device: Rc<logical::Device>, _internal: erupt::vk::SwapchainKHR) -> Swapchain {
+	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::SwapchainKHR) -> Swapchain {
 		Swapchain { _device, _internal }
 	}
 
@@ -36,13 +36,13 @@ impl Swapchain {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::SwapchainKHR`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::SwapchainKHR`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl utility::VulkanObject<erupt::vk::SwapchainKHR> for Swapchain {
-	fn unwrap(&self) -> &erupt::vk::SwapchainKHR {
+impl utility::VulkanObject<backend::vk::SwapchainKHR> for Swapchain {
+	fn unwrap(&self) -> &backend::vk::SwapchainKHR {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::SwapchainKHR {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::SwapchainKHR {
 		&mut self._internal
 	}
 }

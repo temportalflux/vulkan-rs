@@ -1,4 +1,5 @@
 use crate::{
+	backend,
 	context::Context,
 	utility::{self, VulkanInfo},
 };
@@ -97,10 +98,10 @@ impl AppInfo {
 	}
 }
 
-impl VulkanInfo<erupt::vk::ApplicationInfo> for AppInfo {
-	/// Converts the [`AppInfo`] into the [`erupt::vk::ApplicationInfo`] struct
-	fn to_vk(&self) -> erupt::vk::ApplicationInfo {
-		erupt::vk::ApplicationInfoBuilder::new()
+impl VulkanInfo<backend::vk::ApplicationInfo> for AppInfo {
+	/// Converts the [`AppInfo`] into the [`backend::vk::ApplicationInfo`] struct
+	fn to_vk(&self) -> backend::vk::ApplicationInfo {
+		backend::vk::ApplicationInfoBuilder::new()
 			.api_version(self.api_version)
 			.engine_name(&self.engine_name_c)
 			.engine_version(self.engine_version)

@@ -1,16 +1,16 @@
-use erupt;
+use crate::backend;
 use std::error::Error;
 
 /// A user-owned singleton which holds data about allocators and api-level availability.
 pub struct Context {
-	pub loader: erupt::DefaultEntryLoader,
+	pub loader: backend::DefaultEntryLoader,
 	pub valid_instance_extensions: Vec<String>,
 	pub valid_instance_layers: Vec<String>,
 }
 
 impl Context {
 	pub fn new() -> Result<Context, Box<dyn Error>> {
-		let loader = erupt::EntryLoader::new()?;
+		let loader = backend::EntryLoader::new()?;
 		let valid_instance_extensions = Context::get_instance_extensions(&loader);
 		let valid_instance_layers = Context::get_instance_layers(&loader);
 		Ok(Context {
@@ -20,7 +20,7 @@ impl Context {
 		})
 	}
 
-	fn get_instance_extensions(loader: &erupt::DefaultEntryLoader) -> Vec<String> {
+	fn get_instance_extensions(loader: &backend::DefaultEntryLoader) -> Vec<String> {
 		let mut valid_instance_extensions: Vec<String> = Vec::new();
 		unsafe {
 			let ext_props = loader
@@ -39,7 +39,7 @@ impl Context {
 		valid_instance_extensions
 	}
 
-	fn get_instance_layers<T>(loader: &erupt::EntryLoader<T>) -> Vec<String> {
+	fn get_instance_layers<T>(loader: &backend::EntryLoader<T>) -> Vec<String> {
 		let mut valid_instance_layers: Vec<String> = Vec::new();
 		unsafe {
 			let layer_props = loader.enumerate_instance_layer_properties(None).unwrap();

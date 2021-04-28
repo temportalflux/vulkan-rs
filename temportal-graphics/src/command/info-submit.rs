@@ -1,17 +1,16 @@
 use crate::{
-	command, flags,
+	backend, command, flags,
 	utility::{VulkanInfo, VulkanObject},
 };
-use erupt;
 
 /// Data used to submit commands to a [`Queue`](crate::device::logical::Queue).
 /// It is NOT safe to keep this struct around for more than 1 stack,
 /// as it stores unsafe Vulkan handles/pointers.
 pub struct SubmitInfo {
-	semaphores_to_wait_for: Vec<erupt::vk::Semaphore>,
+	semaphores_to_wait_for: Vec<backend::vk::Semaphore>,
 	stages_waited_for: Vec<flags::PipelineStage>,
-	buffers: Vec<erupt::vk::CommandBuffer>,
-	semaphors_to_signal_when_complete: Vec<erupt::vk::Semaphore>,
+	buffers: Vec<backend::vk::CommandBuffer>,
+	semaphors_to_signal_when_complete: Vec<backend::vk::Semaphore>,
 }
 
 impl Default for SubmitInfo {
@@ -44,9 +43,9 @@ impl SubmitInfo {
 	}
 }
 
-impl VulkanInfo<erupt::vk::SubmitInfo> for SubmitInfo {
-	fn to_vk(&self) -> erupt::vk::SubmitInfo {
-		erupt::vk::SubmitInfoBuilder::new()
+impl VulkanInfo<backend::vk::SubmitInfo> for SubmitInfo {
+	fn to_vk(&self) -> backend::vk::SubmitInfo {
+		backend::vk::SubmitInfoBuilder::new()
 			.wait_semaphores(&self.semaphores_to_wait_for)
 			.wait_dst_stage_mask(&self.stages_waited_for)
 			.command_buffers(&self.buffers)

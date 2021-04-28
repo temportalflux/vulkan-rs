@@ -1,30 +1,31 @@
 use crate::{
+	backend,
 	device::logical,
 	utility::{self, VulkanObject},
 };
-use erupt;
+
 use std::rc::Rc;
 
 pub struct Layout {
 	_device: Rc<logical::Device>,
-	_internal: erupt::vk::PipelineLayout,
+	_internal: backend::vk::PipelineLayout,
 }
 
 impl Layout {
 	pub fn create(_device: Rc<logical::Device>) -> utility::Result<Layout> {
-		let vk_info = erupt::vk::PipelineLayoutCreateInfoBuilder::new().build();
+		let vk_info = backend::vk::PipelineLayoutCreateInfoBuilder::new().build();
 		let _internal = _device.create_pipeline_layout(vk_info)?;
 		Ok(Layout { _device, _internal })
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::PipelineLayout`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::PipelineLayout`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::PipelineLayout> for Layout {
-	fn unwrap(&self) -> &erupt::vk::PipelineLayout {
+impl VulkanObject<backend::vk::PipelineLayout> for Layout {
+	fn unwrap(&self) -> &backend::vk::PipelineLayout {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::PipelineLayout {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::PipelineLayout {
 		&mut self._internal
 	}
 }

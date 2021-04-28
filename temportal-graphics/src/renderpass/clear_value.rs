@@ -1,5 +1,5 @@
-use crate::utility::VulkanInfo;
-use erupt;
+use crate::{backend, utility::VulkanInfo};
+
 use temportal_math::Vector;
 
 #[derive(Copy, Clone, Debug)]
@@ -8,16 +8,16 @@ pub enum ClearValue {
 	DepthStencil(f32, u32),
 }
 
-impl VulkanInfo<erupt::vk::ClearValue> for ClearValue {
-	fn to_vk(&self) -> erupt::vk::ClearValue {
+impl VulkanInfo<backend::vk::ClearValue> for ClearValue {
+	fn to_vk(&self) -> backend::vk::ClearValue {
 		match *self {
-			ClearValue::Color(values) => erupt::vk::ClearValue {
-				color: erupt::vk::ClearColorValue {
+			ClearValue::Color(values) => backend::vk::ClearValue {
+				color: backend::vk::ClearColorValue {
 					float32: *values.data(),
 				},
 			},
-			ClearValue::DepthStencil(depth, stencil) => erupt::vk::ClearValue {
-				depth_stencil: erupt::vk::ClearDepthStencilValue { depth, stencil },
+			ClearValue::DepthStencil(depth, stencil) => backend::vk::ClearValue {
+				depth_stencil: backend::vk::ClearDepthStencilValue { depth, stencil },
 			},
 		}
 	}

@@ -17,3 +17,4 @@ default-members = [
 	"crystal-sphinx", "crystal-sphinx-editor",
 	"temportal-math"
 ]
+exclude = ["vk-mem-rs-erupt"]

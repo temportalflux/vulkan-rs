@@ -1,4 +1,5 @@
 use crate::{
+	backend,
 	device::physical,
 	flags::{ColorSpace, Format, PresentMode, QueueFlags, SurfaceTransform},
 	instance::Instance,
@@ -9,17 +10,17 @@ use crate::{
 use std::collections::hash_map::HashMap;
 use std::rc::{Rc, Weak};
 
-pub use erupt::vk::PhysicalDeviceType as Kind;
+pub use backend::vk::PhysicalDeviceType as Kind;
 
 struct QueueFamily {
 	index: usize,
-	properties: erupt::vk::QueueFamilyProperties,
+	properties: backend::vk::QueueFamilyProperties,
 	supports_surface: bool,
 }
 
 pub struct SurfaceSupport {
-	surface_capabilities: erupt::vk::SurfaceCapabilitiesKHR,
-	surface_formats: Vec<erupt::vk::SurfaceFormatKHR>,
+	surface_capabilities: backend::vk::SurfaceCapabilitiesKHR,
+	surface_formats: Vec<backend::vk::SurfaceFormatKHR>,
 	present_modes: Vec<PresentMode>,
 }
 
@@ -38,16 +39,16 @@ impl SurfaceSupport {
 	}
 }
 
-/// The wrapper for [`Vulkan PhysicalDevice`](erupt::vk::PhysicalDevice) objects.
+/// The wrapper for [`Vulkan PhysicalDevice`](backend::vk::PhysicalDevice) objects.
 /// Represents a literal GPU.
 pub struct Device {
 	pub selected_present_mode: PresentMode,
 
-	properties: erupt::vk::PhysicalDeviceProperties,
+	properties: backend::vk::PhysicalDeviceProperties,
 	queue_families: Vec<QueueFamily>,
-	extension_properties: HashMap<String, erupt::vk::ExtensionProperties>,
+	extension_properties: HashMap<String, backend::vk::ExtensionProperties>,
 
-	_internal: erupt::vk::PhysicalDevice,
+	_internal: backend::vk::PhysicalDevice,
 	surface: Weak<Surface>,
 	instance: Weak<Instance>,
 }
@@ -56,7 +57,7 @@ impl Device {
 	/// The internal constructor. Users should use [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device) to create a vulkan instance.
 	pub fn from(
 		instance: &Rc<Instance>,
-		vk: erupt::vk::PhysicalDevice,
+		vk: backend::vk::PhysicalDevice,
 		surface: &Rc<Surface>,
 	) -> Device {
 		Device {
@@ -143,13 +144,13 @@ impl Device {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`erupt::vk::PhysicalDevice`].
+/// A trait exposing the internal value for the wrapped [`backend::vk::PhysicalDevice`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<erupt::vk::PhysicalDevice> for Device {
-	fn unwrap(&self) -> &erupt::vk::PhysicalDevice {
+impl VulkanObject<backend::vk::PhysicalDevice> for Device {
+	fn unwrap(&self) -> &backend::vk::PhysicalDevice {
 		&self._internal
 	}
-	fn unwrap_mut(&mut self) -> &mut erupt::vk::PhysicalDevice {
+	fn unwrap_mut(&mut self) -> &mut backend::vk::PhysicalDevice {
 		&mut self._internal
 	}
 }

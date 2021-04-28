@@ -1,4 +1,5 @@
 use crate::{
+	backend,
 	device::{logical, physical, swapchain::*},
 	flags::{
 		ColorSpace, CompositeAlpha, Format, ImageUsageFlags, PresentMode, SharingMode,
@@ -8,7 +9,7 @@ use crate::{
 	structs::Extent2D,
 	utility::{self, VulkanObject},
 };
-use erupt;
+
 use std::rc::Rc;
 use temportal_math::Vector;
 
@@ -127,7 +128,7 @@ impl Info {
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
 		let vk = device.create_swapchain(
-			erupt::vk::SwapchainCreateInfoKHRBuilder::new()
+			backend::vk::SwapchainCreateInfoKHRBuilder::new()
 				.surface(*surface.unwrap())
 				.min_image_count(self.image_count)
 				.image_format(self.image_format)
@@ -140,7 +141,9 @@ impl Info {
 				.composite_alpha(self.composite_alpha)
 				.present_mode(self.present_mode)
 				.clipped(self.is_clipped)
-				.old_swapchain(old.map_or(erupt::vk::SwapchainKHR::null(), |chain| *chain.unwrap()))
+				.old_swapchain(
+					old.map_or(backend::vk::SwapchainKHR::null(), |chain| *chain.unwrap()),
+				)
 				.build(),
 		)?;
 		Ok(Swapchain::from(device.clone(), vk))

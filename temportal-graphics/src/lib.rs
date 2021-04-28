@@ -1,16 +1,22 @@
 extern crate sdl2;
 extern crate vk_mem;
 
+pub use erupt as backend;
+
 /// Various forwarded/exposed structures from Vulkan/Erupt
 pub mod structs {
-	pub use erupt::vk::ComponentMapping;
-	pub use erupt::vk::Extent2D;
-	pub use erupt::vk::ImageSubresourceRange;
-	pub use erupt::vk::Offset2D;
-	pub use erupt::vk::Rect2D;
+	pub use crate::backend::vk::ComponentMapping;
+	pub use crate::backend::vk::Extent2D;
+	pub use crate::backend::vk::Extent3D;
+	pub use crate::backend::vk::ImageSubresourceRange;
+	pub use crate::backend::vk::Offset2D;
+	pub use crate::backend::vk::Rect2D;
 }
 
 pub static LOG: &'static str = "graphics";
+
+mod allocator;
+pub use allocator::*;
 
 /// Various forwarded/exposed enumerations from Vulkan/Erupt
 #[path = "flags/_.rs"]
