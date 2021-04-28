@@ -20,36 +20,36 @@ pub mod flags;
 mod context;
 pub use context::Context;
 
-#[path = "general/lib.rs"]
+#[path = "general/_.rs"]
 mod general;
 pub use general::*;
 
-#[path = "object/lib.rs"]
+#[path = "object/_.rs"]
 mod object;
 pub use object::*;
 
 /// Instruction related structs.
-#[path = "command/lib.rs"]
+#[path = "command/_.rs"]
 pub mod command;
 
 /// Vulkan Instance related structs.
-#[path = "instance/lib.rs"]
+#[path = "instance/_.rs"]
 pub mod instance;
 
 /// Physical (GPU) and Logical device related structs.
-#[path = "device/lib.rs"]
+#[path = "device/_.rs"]
 pub mod device;
 
 /// General-use traits and macros.
-#[path = "utility/lib.rs"]
+#[path = "utility/_.rs"]
 pub mod utility;
 
 /// Structs used in the creation or representation of Pipelines and Pipeline Layouts.
-#[path = "pipeline/lib.rs"]
+#[path = "pipeline/_.rs"]
 pub mod pipeline;
 
 /// Structs used in the creation or representation of a Render Pass.
-#[path = "renderpass/lib.rs"]
+#[path = "renderpass/_.rs"]
 pub mod renderpass;
 
 pub mod shader;
