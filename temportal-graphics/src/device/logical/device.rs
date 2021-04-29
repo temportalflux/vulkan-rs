@@ -7,7 +7,7 @@ use crate::{
 use backend::version::DeviceV1_0;
 use std::rc::Rc;
 
-/// A wrapper for a [`Vulkan LogicalDevice`](backend::DeviceLoader),
+/// A wrapper for a [`Vulkan LogicalDevice`](backend::Device),
 /// which can send logical commands to the hardware.
 pub struct Device {
 	swapchain: backend::extensions::khr::Swapchain,
@@ -140,7 +140,7 @@ impl Device {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::DeviceLoader`].
+/// A trait exposing the internal value for the wrapped [`backend::Device`].
 /// Crates using `temportal_graphics` should NOT use this.
 impl utility::VulkanObject<backend::Device> for Device {
 	fn unwrap(&self) -> &backend::Device {

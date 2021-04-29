@@ -8,6 +8,7 @@ pub use backend::vk::ColorSpaceKHR as ColorSpace;
 pub use backend::vk::ComponentSwizzle;
 pub use backend::vk::CompositeAlphaFlagsKHR as CompositeAlpha;
 pub use backend::vk::CullModeFlags as CullMode;
+pub use backend::vk::DescriptorType as DescriptorKind;
 pub use backend::vk::FenceCreateFlags as FenceState;
 pub use backend::vk::Format;
 pub use backend::vk::FrontFace;

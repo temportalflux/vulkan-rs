@@ -26,6 +26,9 @@ pub mod flags;
 mod context;
 pub use context::Context;
 
+#[path = "descriptor/_.rs"]
+pub mod descriptor;
+
 #[path = "general/_.rs"]
 mod general;
 pub use general::*;

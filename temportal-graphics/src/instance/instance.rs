@@ -9,7 +9,7 @@ use crate::{
 use raw_window_handle;
 use std::rc::Rc;
 
-/// A user-owned singleton for the [`Vulkan Instance`](backend::InstanceLoader)
+/// A user-owned singleton for the [`Vulkan Instance`](backend::Instance)
 pub struct Instance {
 	debug_messenger: Option<backend::vk::DebugUtilsMessengerEXT>,
 	surface_ext: backend::extensions::khr::Surface,
