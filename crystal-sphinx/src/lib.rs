@@ -1,11 +1,15 @@
 use engine::{
-	display, graphics,
+	display,
 	math::Vector,
 	utility::{AnyError, VoidResult},
 	Engine,
 };
 use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
+
+#[path = "graphics/_.rs"]
+mod graphics;
+use graphics::TextRender;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
@@ -46,9 +50,11 @@ pub fn run() -> VoidResult {
 		.create_render_chain(&mut display.borrow_mut(), create_render_pass_info())?;
 	render_chain
 		.borrow_mut()
-		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
-			0.0, 0.0, 0.0, 1.0,
-		])));
+		.add_clear_value(engine::graphics::renderpass::ClearValue::Color(
+			Vector::new([0.0, 0.0, 0.0, 1.0]),
+		));
+
+	let _text_render = TextRender::new(&engine.borrow(), &mut render_chain.borrow_mut());
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
@@ -59,8 +65,8 @@ pub fn run() -> VoidResult {
 	Ok(())
 }
 
-fn vulkan_device_constraints() -> Vec<graphics::device::physical::Constraint> {
-	use graphics::{
+fn vulkan_device_constraints() -> Vec<engine::graphics::device::physical::Constraint> {
+	use engine::graphics::{
 		device::physical::{Constraint::*, Kind},
 		flags,
 	};
@@ -87,8 +93,8 @@ fn vulkan_device_constraints() -> Vec<graphics::device::physical::Constraint> {
 	]
 }
 
-fn create_render_pass_info() -> graphics::renderpass::Info {
-	use graphics::{flags, renderpass};
+fn create_render_pass_info() -> engine::graphics::renderpass::Info {
+	use engine::graphics::{flags, renderpass};
 	let mut rp_info = renderpass::Info::default();
 
 	let frame_attachment_index = rp_info.attach(

@@ -18,7 +18,10 @@ impl Allocator {
 			instance: instance.unwrap().clone(),
 			physical_device: *physical.unwrap(),
 			device: logical.unwrap().clone(),
-			..Default::default()
+			flags: vk_mem::AllocatorCreateFlags::NONE,
+			preferred_large_heap_block_size: 0,
+			frame_in_use_count: 0,
+			heap_size_limits: None,
 		};
 		Ok(Allocator {
 			internal: utility::as_alloc_error(vk_mem::Allocator::new(&info))?,

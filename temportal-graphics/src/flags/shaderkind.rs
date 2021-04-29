@@ -2,7 +2,7 @@ use crate::backend::vk::ShaderStageFlags as ShaderStageKind;
 use serde::{Deserialize, Serialize};
 use shaderc;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ShaderKind {
 	Vertex,
 	Fragment,

@@ -1,0 +1,48 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run (Crystal Sphinx)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin",
+				"crystal-sphinx",
+				"--",
+				"-v"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run Editor (Crystal Sphinx)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin",
+				"crystal-sphinx-editor",
+				"--",
+				"-v"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Build Assets (Crystal Sphinx)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin",
+				"crystal-sphinx-editor",
+				"--",
+				"-v",
+				"-build-assets",
+				"-package"
+			],
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

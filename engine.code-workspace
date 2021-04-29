@@ -57,5 +57,8 @@
 			"path": "install-externs"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"editor.detectIndentation": false,
+		"editor.insertSpaces": false
+	}
 }
