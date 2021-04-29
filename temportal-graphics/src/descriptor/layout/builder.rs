@@ -41,7 +41,7 @@ impl Builder {
 
 impl VulkanInfo<backend::vk::DescriptorSetLayoutCreateInfo> for Builder {
 	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`image::Image`].
+	/// used to create a [`crate::image::Image`].
 	fn to_vk(&self) -> backend::vk::DescriptorSetLayoutCreateInfo {
 		backend::vk::DescriptorSetLayoutCreateInfo::builder()
 			.bindings(&self.bindings)
@@ -50,7 +50,7 @@ impl VulkanInfo<backend::vk::DescriptorSetLayoutCreateInfo> for Builder {
 }
 
 impl Builder {
-	/// Creates an [`descriptor::layout::SetLayout`] object, thereby consuming the info.
+	/// Creates an [`crate::descriptor::layout::SetLayout`] object, thereby consuming the info.
 	pub fn build(self, device: &Rc<logical::Device>) -> utility::Result<layout::SetLayout> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();

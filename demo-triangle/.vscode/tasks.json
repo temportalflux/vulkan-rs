@@ -4,12 +4,12 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Crystal Sphinx - Run Game",
+			"label": "Triangle - Run Demo",
 			"command": "cargo",
 			"args": [
 				"run",
 				"--bin",
-				"crystal-sphinx",
+				"demo-triangle",
 				"--",
 				"-v"
 			],

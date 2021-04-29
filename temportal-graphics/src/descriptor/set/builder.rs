@@ -28,7 +28,7 @@ impl Builder {
 }
 
 impl Builder {
-	/// Creates an vec of [`descriptor::set::Set`] objects, thereby consuming the info.
+	/// Creates an vec of [`crate::descriptor::set::Set`] objects, thereby consuming the info.
 	pub fn build(
 		self,
 		device: &Rc<logical::Device>,

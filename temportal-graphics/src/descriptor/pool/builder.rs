@@ -42,7 +42,7 @@ impl Builder {
 
 impl VulkanInfo<backend::vk::DescriptorPoolCreateInfo> for Builder {
 	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`image::Image`].
+	/// used to create a [`crate::image::Image`].
 	fn to_vk(&self) -> backend::vk::DescriptorPoolCreateInfo {
 		backend::vk::DescriptorPoolCreateInfo::builder()
 			.max_sets(self.max_sets)
@@ -52,7 +52,7 @@ impl VulkanInfo<backend::vk::DescriptorPoolCreateInfo> for Builder {
 }
 
 impl Builder {
-	/// Creates an [`descriptor::pool::Pool`] object, thereby consuming the info.
+	/// Creates an [`crate::descriptor::pool::Pool`] object, thereby consuming the info.
 	pub fn build(self, device: &Rc<logical::Device>) -> utility::Result<pool::Pool> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();

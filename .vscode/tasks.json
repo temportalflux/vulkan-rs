@@ -36,55 +36,12 @@
 			"args": [
 				"test"
 			],
-			"group": "build",
-			"problemMatcher": []
-		},
-		{
-			"label": "Run (Demo Triangle)",
-			"command": "cargo",
-			"args": [
-				"run",
-				"--bin",
-				"demo-triangle",
-				"--",
-				"-v"
-			],
-			"group": "build",
-			"problemMatcher": []
-		},
-		{
-			"label": "Run Editor (Demo Triangle)",
-			"command": "cargo",
-			"args": [
-				"run",
-				"--bin",
-				"demo-triangle-editor",
-				"--",
-				"-v"
-			],
-			"group": "build",
-			"problemMatcher": []
-		},
-		{
-			"label": "Build Assets (Demo Triangle)",
-			"command": "cargo",
-			"args": [
-				"run",
-				"--bin",
-				"demo-triangle-editor",
-				"--",
-				"-v",
-				"-build-assets",
-				"-package"
-			],
-			"group": "build",
 			"problemMatcher": []
 		},
 		{
 			"label": "Open Optick",
 			"command": "./tools/Optick.exe",
 			"args": [],
-			"group": "build",
 			"problemMatcher": []
 		}
 	]

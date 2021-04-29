@@ -59,6 +59,8 @@
 	],
 	"settings": {
 		"editor.detectIndentation": false,
-		"editor.insertSpaces": false
+		"editor.insertSpaces": false,
+		"task.quickOpen.history": 0,
+		"task.quickOpen.detail": false
 	}
 }
