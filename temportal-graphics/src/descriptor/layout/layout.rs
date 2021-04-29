@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, utility::VulkanObject};
+use crate::{backend, descriptor::layout::Builder, device::logical, utility::VulkanObject};
 use std::rc::Rc;
 
 pub struct SetLayout {
@@ -7,6 +7,10 @@ pub struct SetLayout {
 }
 
 impl SetLayout {
+	pub fn builder() -> Builder {
+		Builder::default()
+	}
+
 	pub fn from(
 		device: Rc<logical::Device>,
 		internal: backend::vk::DescriptorSetLayout,

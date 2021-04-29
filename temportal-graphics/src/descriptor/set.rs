@@ -1,13 +1,13 @@
-use crate::{backend, descriptor::layout, utility::VulkanObject};
+use crate::{backend, descriptor, utility::VulkanObject};
 use std::rc::Rc;
 
 pub struct Set {
 	internal: backend::vk::DescriptorSet,
-	_layout: Rc<layout::SetLayout>,
+	_layout: Rc<descriptor::SetLayout>,
 }
 
 impl Set {
-	pub fn from(layout: Rc<layout::SetLayout>, internal: backend::vk::DescriptorSet) -> Set {
+	pub fn from(layout: Rc<descriptor::SetLayout>, internal: backend::vk::DescriptorSet) -> Set {
 		Set {
 			_layout: layout,
 			internal,

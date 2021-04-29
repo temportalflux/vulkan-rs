@@ -4,7 +4,11 @@ use crate::engine::{
 	utility::{self, AnyError},
 	Engine,
 };
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{
+	cell::RefCell,
+	collections::HashMap,
+	rc::{Rc, Weak},
+};
 
 struct ShaderItem {
 	kind: flags::ShaderKind,
@@ -46,6 +50,8 @@ impl ShaderItem {
 pub struct TextRender {
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
+	font_atlas_descriptor_set: Weak<graphics::descriptor::Set>,
+	font_atlas_descriptor_layout: Option<Rc<graphics::descriptor::SetLayout>>,
 	shaders: HashMap<flags::ShaderKind, ShaderItem>,
 }
 
@@ -65,6 +71,8 @@ impl TextRender {
 		let mut instance = TextRender {
 			pipeline_layout: None,
 			pipeline: None,
+			font_atlas_descriptor_layout: None,
+			font_atlas_descriptor_set: Weak::new(),
 			shaders: HashMap::new(),
 		};
 
@@ -111,10 +119,54 @@ impl TextRender {
 
 impl graphics::RenderChainElement for TextRender {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+		use graphics::descriptor::*;
+		let font_sampler_binding_number = 0;
+
+		self.font_atlas_descriptor_layout = Some(Rc::new(utility::as_graphics_error(
+			SetLayout::builder()
+				.with_binding(
+					font_sampler_binding_number,
+					flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
+					1,
+					flags::ShaderKind::Fragment,
+				)
+				.build(&render_chain.logical()),
+		)?));
+
+		self.font_atlas_descriptor_set = utility::as_graphics_error(
+			render_chain
+				.persistent_descriptor_pool()
+				.borrow_mut()
+				.allocate_descriptor_sets(&vec![self
+					.font_atlas_descriptor_layout
+					.as_ref()
+					.unwrap()
+					.clone()]),
+		)?
+		.pop()
+		.unwrap();
+
+		SetUpdate::default()
+			.with(UpdateOperation::Write(WriteOp {
+				destination: UpdateOperationSet {
+					set: self.font_atlas_descriptor_set.clone(),
+					binding_index: 0,
+					array_element: 0,
+				},
+				kind: graphics::flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
+				objects: ObjectKind::Image(vec![/*ImageKind {
+				sampler: Rc::new(),
+				view: Rc::new(),
+				layout: flags::ImageLayout::UNDEFINED,
+			}*/]),
+			}))
+			.apply(&render_chain.logical());
+
 		self.shader_item_mut(flags::ShaderKind::Vertex)
 			.create_module(render_chain)?;
 		self.shader_item_mut(flags::ShaderKind::Fragment)
 			.create_module(render_chain)?;
+
 		Ok(())
 	}
 
