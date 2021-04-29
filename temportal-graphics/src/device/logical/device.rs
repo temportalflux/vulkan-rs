@@ -1,7 +1,7 @@
 use crate::{
 	backend, command,
 	device::{logical, swapchain::Swapchain},
-	flags, instance, pipeline,
+	flags, image, instance, pipeline,
 	utility::{self, VulkanInfo, VulkanObject},
 };
 use backend::version::DeviceV1_0;
@@ -160,6 +160,14 @@ impl Drop for Device {
 }
 
 #[doc(hidden)]
+impl image::Owner for Device {
+	fn destroy(&self, obj: &image::Image, _: Option<&vk_mem::Allocation>) -> utility::Result<()> {
+		unsafe { self.internal.destroy_image(*obj.unwrap(), None) };
+		Ok(())
+	}
+}
+
+#[doc(hidden)]
 impl Device {
 	pub fn get_device_queue(&self, queue_family_index: u32) -> backend::vk::Queue {
 		unsafe {
@@ -184,10 +192,6 @@ impl Device {
 		swapchain: &backend::vk::SwapchainKHR,
 	) -> utility::Result<Vec<backend::vk::Image>> {
 		utility::as_vulkan_error(unsafe { self.swapchain.get_swapchain_images(*swapchain) })
-	}
-
-	pub fn destroy_image(&self, value: backend::vk::Image) {
-		unsafe { self.internal.destroy_image(value, None) };
 	}
 
 	pub fn create_image_view(

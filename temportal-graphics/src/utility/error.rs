@@ -5,6 +5,7 @@ pub enum Error {
 	InvalidInstanceLayer(String),
 	InstanceSymbolNotAvailable(),
 	VulkanError(backend::vk::Result),
+	AllocatorError(vk_mem::error::Error),
 	RequiresRenderChainUpdate(),
 	General(std::io::Error),
 }
@@ -19,6 +20,7 @@ impl std::fmt::Display for Error {
 			}
 			Error::InstanceSymbolNotAvailable() => write!(f, "Instance symbol not available"),
 			Error::VulkanError(ref vk_result) => vk_result.fmt(f),
+			Error::AllocatorError(ref vk_mem_error) => vk_mem_error.fmt(f),
 			Error::RequiresRenderChainUpdate() => write!(f, "Render chain is out of date"),
 			Error::General(ref e) => e.fmt(f),
 		}
@@ -37,4 +39,8 @@ pub fn as_vulkan_error<T>(vk_result: backend::prelude::VkResult<T>) -> Result<T>
 			_ => Err(Error::VulkanError(vk_result)),
 		},
 	}
+}
+
+pub fn as_alloc_error<T>(result: vk_mem::Result<T>) -> Result<T> {
+	result.or_else(|err| Err(Error::AllocatorError(err)))
 }

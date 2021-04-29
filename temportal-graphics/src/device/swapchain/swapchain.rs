@@ -21,7 +21,7 @@ impl Swapchain {
 			.get_swapchain_images(&self._internal)?
 			.into_iter()
 			// no device reference is passed in because the images are a part of the swapchain
-			.map(|image| Image::from(None, image))
+			.map(|image| Image::from_swapchain(image))
 			.collect())
 	}
 

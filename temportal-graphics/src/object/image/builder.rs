@@ -1,23 +1,26 @@
 use crate::{
 	backend,
 	flags::{Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode},
+	image,
 	object::AllocationInfo,
 	structs::Extent3D,
-	utility::VulkanInfo,
+	utility::{self, VulkanInfo, VulkanObject},
+	Allocator,
 };
+use std::rc::Rc;
 
 pub struct Builder {
-	mem_info: AllocationInfo,
-	image_type: ImageType,
-	format: Format,
-	extent: Extent3D,
-	mip_levels: u32,
-	array_layers: u32,
-	samples: SampleCount,
-	tiling: ImageTiling,
-	usage: ImageUsage,
-	sharing_mode: SharingMode,
-	initial_layout: ImageLayout,
+	pub mem_info: AllocationInfo,
+	pub image_type: ImageType,
+	pub format: Format,
+	pub extent: Extent3D,
+	pub mip_levels: u32,
+	pub array_layers: u32,
+	pub samples: SampleCount,
+	pub tiling: ImageTiling,
+	pub usage: ImageUsage,
+	pub sharing_mode: SharingMode,
+	pub initial_layout: ImageLayout,
 }
 
 impl Default for Builder {
@@ -61,7 +64,20 @@ impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`image::Image`] object, thereby consuming the info.
-	pub fn create_object(self) -> Result<(), ()> {
-		Ok(())
+	pub fn build(self, allocator: &Rc<Allocator>) -> utility::Result<image::Image> {
+		let image_info = self.to_vk();
+		let alloc_create_info = self.mem_info.to_vk();
+		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(
+			allocator
+				.unwrap()
+				.create_image(&image_info, &alloc_create_info),
+		)?;
+		Ok(image::Image::new(
+			allocator.clone(),
+			internal,
+			Some(alloc_handle),
+			Some(alloc_info),
+			Some(self),
+		))
 	}
 }
