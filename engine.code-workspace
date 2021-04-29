@@ -1,0 +1,61 @@
+{
+	"folders": [
+		{
+      "name": "Workspace",
+			"path": "."
+		},
+		{
+			"name": "Temportal (Graphics)",
+			"path": "temportal-graphics"
+		},
+		{
+			"name": "Temportal (Math)",
+			"path": "temportal-math"
+		},
+		{
+			"name": "Temportal (Graphics)",
+			"path": "temportal-graphics"
+		},
+		{
+			"name": "Temportal Engine",
+			"path": "temportal-engine"
+		},
+		{
+			"name": "Temportal Engine (Editor)",
+			"path": "temportal-engine-editor"
+		},
+		{
+			"name": "Triangle (Demo)",
+			"path": "demo-triangle"
+		},
+		{
+			"name": "Triangle (Editor)",
+			"path": "demo-triangle-editor"
+		},
+		{
+			"name": "Boid (Demo)",
+			"path": "boid"
+		},
+		{
+			"name": "Boid (Editor)",
+			"path": "boid-editor"
+		},
+		{
+			"name": "Crystal Sphinx (Game)",
+			"path": "crystal-sphinx"
+		},
+		{
+			"name": "Crystal Sphinx (Editor)",
+			"path": "crystal-sphinx-editor"
+		},
+		{
+			"name": "extern-reader",
+			"path": "extern-reader"
+		},
+		{
+			"name": "install-externs",
+			"path": "install-externs"
+		}
+	],
+	"settings": {}
+}

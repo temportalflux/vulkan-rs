@@ -28,8 +28,7 @@ pub fn package(module_name: &str) -> VoidResult {
 		zip::write::FileOptions::default().compression_method(zip::CompressionMethod::BZIP2);
 
 	let files = crate::asset::build::collect_file_paths(&output_dir_path, &Vec::new())?;
-	for file_path in files.iter()
-	{
+	for file_path in files.iter() {
 		let relative_path = file_path
 			.as_path()
 			.strip_prefix(&output_dir_path)?
@@ -41,7 +40,7 @@ pub fn package(module_name: &str) -> VoidResult {
 	}
 
 	zipper.finish()?;
-	
+
 	log::info!(
 		target: asset::LOG,
 		"Packaged {} assets into {:?}",
