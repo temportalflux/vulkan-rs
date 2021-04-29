@@ -1,5 +1,7 @@
 use crate::{
-	asset, engine, graphics,
+	asset,
+	engine::{self, utility::AnyError},
+	graphics,
 	settings::{self, Settings},
 };
 use std::{cell::RefCell, rc::Rc};
@@ -17,7 +19,7 @@ impl Editor {
 	pub fn new(
 		engine: Rc<RefCell<engine::Engine>>,
 		module_name: &str,
-	) -> Result<Rc<RefCell<Editor>>, engine::utility::AnyError> {
+	) -> Result<Rc<RefCell<Editor>>, AnyError> {
 		log::info!(target: EDITOR_LOG, "Initializing editor");
 		let mut editor = Editor {
 			engine,
@@ -44,5 +46,25 @@ impl Editor {
 
 	pub fn asset_manager_mut(&mut self) -> &mut asset::Manager {
 		&mut self.asset_manager
+	}
+
+	pub fn run_commandlets(&self) -> Result<bool, AnyError> {
+		let mut args = std::env::args();
+		let should_build_assets = args.any(|arg| arg == "-build-assets");
+		let should_package_assets = args.any(|arg| arg == "-package");
+		if should_build_assets || should_package_assets {
+			if should_build_assets {
+				asset::build(
+					self.asset_manager(),
+					&self.module_name,
+					args.any(|arg| arg == "-force"),
+				)?;
+			}
+			if should_package_assets {
+				asset::package(&self.module_name)?;
+			}
+			return Ok(true);
+		}
+		return Ok(false);
 	}
 }

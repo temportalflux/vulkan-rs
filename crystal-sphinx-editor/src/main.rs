@@ -15,6 +15,9 @@ fn main() -> VoidResult {
 	engine::logging::init(name())?;
 
 	let editor = editor::Editor::new(crystal_sphinx::create_engine()?, crystal_sphinx::name())?;
+	if editor.borrow().run_commandlets()? {
+		return Ok(());
+	}
 
 	let display = engine::Engine::create_display_manager(editor.borrow().engine())?;
 	let mut ui = editor::ui::Ui::new(&display.borrow(), "Crystal Sphinx Editor", 1280, 720)?;

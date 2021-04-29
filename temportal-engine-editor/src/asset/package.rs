@@ -1,4 +1,4 @@
-use crate::engine::utility::VoidResult;
+use crate::engine::{asset, utility::VoidResult};
 use std::{self, fs, io::Write, path::PathBuf};
 use zip;
 
@@ -12,6 +12,13 @@ pub fn package(module_name: &str) -> VoidResult {
 	let mut zip_path = module_dir.clone();
 	zip_path.push(format!("{}.pak", module_name));
 
+	log::info!(
+		target: asset::LOG,
+		"Packaging {} assets into {:?}",
+		module_name,
+		zip_path.file_name().unwrap()
+	);
+
 	let zip_file = fs::OpenOptions::new()
 		.write(true)
 		.create(true)
@@ -20,7 +27,8 @@ pub fn package(module_name: &str) -> VoidResult {
 	let zip_options =
 		zip::write::FileOptions::default().compression_method(zip::CompressionMethod::BZIP2);
 
-	for file_path in crate::asset::build::collect_file_paths(&output_dir_path, &Vec::new())?.iter()
+	let files = crate::asset::build::collect_file_paths(&output_dir_path, &Vec::new())?;
+	for file_path in files.iter()
 	{
 		let relative_path = file_path
 			.as_path()
@@ -33,6 +41,13 @@ pub fn package(module_name: &str) -> VoidResult {
 	}
 
 	zipper.finish()?;
+	
+	log::info!(
+		target: asset::LOG,
+		"Packaged {} assets into {:?}",
+		files.len(),
+		zip_path.file_name().unwrap()
+	);
 
 	Ok(())
 }

@@ -7,6 +7,9 @@ fn main() -> VoidResult {
 	engine::logging::init(demo_triangle::name())?;
 
 	let editor = editor::Editor::new(demo_triangle::create_engine()?, demo_triangle::name())?;
+	if editor.borrow().run_commandlets()? {
+		return Ok(());
+	}
 
 	let display = engine::Engine::create_display_manager(editor.borrow().engine())?;
 	let mut ui = editor::ui::Ui::new(&display.borrow(), "Triangle Editor", 1280, 720)?;
