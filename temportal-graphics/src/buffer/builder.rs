@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 pub struct Builder {
 	pub mem_info: alloc::Info,
-	pub size: u64,
+	pub size: usize,
 	pub usage: BufferUsage,
 	pub sharing_mode: SharingMode,
 	pub queue_families: Vec<u32>,
@@ -33,7 +33,7 @@ impl Builder {
 	}
 
 	pub fn with_size(mut self, size: usize) -> Self {
-		self.size = size as u64;
+		self.size = size;
 		self
 	}
 
@@ -58,7 +58,7 @@ impl utility::VulkanInfo<backend::vk::BufferCreateInfo> for Builder {
 	/// used to create a [`image::Image`].
 	fn to_vk(&self) -> backend::vk::BufferCreateInfo {
 		backend::vk::BufferCreateInfo::builder()
-			.size(self.size)
+			.size(self.size as u64)
 			.usage(self.usage)
 			.sharing_mode(self.sharing_mode)
 			.queue_family_indices(&self.queue_families[..])
@@ -81,6 +81,7 @@ impl Builder {
 			internal,
 			alloc_handle,
 			alloc_info,
+			self,
 		))
 	}
 }

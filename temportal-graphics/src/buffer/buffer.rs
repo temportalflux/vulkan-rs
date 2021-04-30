@@ -10,6 +10,7 @@ pub struct Buffer {
 	allocation_handle: Rc<vk_mem::Allocation>,
 	allocation_info: vk_mem::AllocationInfo,
 	allocator: Rc<alloc::Allocator>,
+	size: usize,
 }
 
 impl Buffer {
@@ -22,12 +23,14 @@ impl Buffer {
 		internal: backend::vk::Buffer,
 		allocation_handle: vk_mem::Allocation,
 		allocation_info: vk_mem::AllocationInfo,
+		builder: buffer::Builder,
 	) -> Buffer {
 		Buffer {
 			allocator,
 			internal,
 			allocation_handle: Rc::new(allocation_handle),
 			allocation_info,
+			size: builder.size,
 		}
 	}
 
@@ -91,6 +94,10 @@ impl alloc::Object for Buffer {
 }
 
 impl Buffer {
+	pub fn size(&self) -> usize {
+		self.size
+	}
+
 	pub fn memory_size(&self) -> usize {
 		self.allocation_info.get_size()
 	}

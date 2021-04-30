@@ -138,7 +138,6 @@ impl ImageBarrier {
 		self.range = range;
 		self
 	}
-
 }
 
 impl VulkanInfo<backend::vk::ImageMemoryBarrier> for ImageBarrier {

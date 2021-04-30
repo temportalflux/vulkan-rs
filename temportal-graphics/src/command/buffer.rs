@@ -104,6 +104,33 @@ impl Buffer {
 		}
 	}
 
+	pub fn copy_buffer_to_buffer(
+		&self,
+		src: &buffer::Buffer,
+		dst: &buffer::Buffer,
+		regions: Vec<command::CopyBufferRange>,
+	) {
+		use backend::version::DeviceV1_0;
+		let regions = regions
+			.into_iter()
+			.map(|region| {
+				backend::vk::BufferCopy::builder()
+					.src_offset(region.start_in_src as u64)
+					.dst_offset(region.start_in_dst as u64)
+					.size(region.size as u64)
+					.build()
+			})
+			.collect::<Vec<_>>();
+		unsafe {
+			self.device.unwrap().cmd_copy_buffer(
+				self.internal,
+				*src.unwrap(),
+				*dst.unwrap(),
+				&regions[..],
+			);
+		}
+	}
+
 	pub fn start_render_pass(
 		&self,
 		frame_buffer: &command::framebuffer::Framebuffer,

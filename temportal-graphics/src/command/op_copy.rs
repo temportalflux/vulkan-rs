@@ -7,3 +7,9 @@ pub struct CopyBufferToImage {
 	pub offset: Vector<i32, 3>,
 	pub size: Vector<usize, 3>,
 }
+
+pub struct CopyBufferRange {
+	pub start_in_src: usize,
+	pub start_in_dst: usize,
+	pub size: usize,
+}

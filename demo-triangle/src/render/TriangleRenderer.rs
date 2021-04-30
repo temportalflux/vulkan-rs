@@ -149,6 +149,13 @@ impl graphics::RenderChainElement for TriangleRenderer {
 				.build(&render_chain.allocator()),
 		)?));
 
+		graphics::TaskCopyImageToGpu::new(&render_chain)?
+			.begin()?
+			.stage(&verticies[..])?
+			.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
+			.end()?
+			.wait_until_idle()?;
+
 		Ok(())
 	}
 
