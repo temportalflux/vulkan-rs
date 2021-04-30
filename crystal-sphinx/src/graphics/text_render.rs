@@ -103,7 +103,7 @@ impl TextRender {
 			.shader_item_mut(flags::ShaderKind::Fragment)
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
-		let _font_image = {
+		let font_image = {
 			optick::event!("load-font-image");
 			use std::io::Write;
 
@@ -208,8 +208,17 @@ impl TextRender {
 				pool.free_buffers(vec![cmd_buffer]);
 			}
 
-			image
+			Rc::new(image)
 		};
+
+		let _font_view = graphics::image_view::View::builder()
+			.for_image(&font_image)
+			.with_view_type(flags::ImageViewType::TYPE_2D)
+			.with_format(flags::Format::R8G8B8A8_SRGB)
+			.with_range(
+				structs::subresource::Range::default().with_aspect(flags::ImageAspect::COLOR),
+			)
+			.build(&render_chain.logical())?;
 
 		let strong = Rc::new(RefCell::new(instance));
 		render_chain.add_render_chain_element(strong.clone())?;
