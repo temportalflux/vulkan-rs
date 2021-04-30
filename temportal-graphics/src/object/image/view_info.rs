@@ -3,7 +3,7 @@ use crate::{
 	device::logical,
 	flags::{ComponentSwizzle, Format, ImageViewType},
 	image,
-	structs::{ComponentMapping, ImageSubresourceRange},
+	structs::{subresource, ComponentMapping},
 	utility::{self, VulkanInfo, VulkanObject},
 };
 
@@ -13,7 +13,7 @@ pub struct ViewInfo {
 	view_type: ImageViewType,
 	format: Format,
 	components: ComponentMapping,
-	subresource_range: ImageSubresourceRange,
+	subresource_range: subresource::Range,
 }
 
 impl ViewInfo {
@@ -27,7 +27,7 @@ impl ViewInfo {
 				b: ComponentSwizzle::B,
 				a: ComponentSwizzle::A,
 			},
-			subresource_range: ImageSubresourceRange::default(),
+			subresource_range: subresource::Range::default(),
 		}
 	}
 
@@ -46,7 +46,7 @@ impl ViewInfo {
 		self
 	}
 
-	pub fn set_subresource_range(mut self, subresource_range: ImageSubresourceRange) -> Self {
+	pub fn set_subresource_range(mut self, subresource_range: subresource::Range) -> Self {
 		self.subresource_range = subresource_range;
 		self
 	}
@@ -60,7 +60,7 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for ViewInfo {
 			.view_type(self.view_type)
 			.format(self.format)
 			.components(self.components)
-			.subresource_range(self.subresource_range)
+			.subresource_range(self.subresource_range.to_vk())
 			.build()
 	}
 }

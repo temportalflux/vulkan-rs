@@ -1,22 +1,22 @@
-#[path = "framebuffer.rs"]
-pub mod framebuffer;
+mod barrier;
+pub use barrier::*;
 
-#[path = "buffer.rs"]
 mod buffer;
 pub use buffer::*;
 
-#[path = "info-present.rs"]
-mod present;
-pub use present::*;
+pub mod framebuffer;
 
-#[path = "info-submit.rs"]
-mod submit;
-pub use submit::*;
+mod op_copy;
+pub use op_copy::*;
 
-#[path = "pool.rs"]
+mod op_present;
+pub use op_present::*;
+
+mod op_submit;
+pub use op_submit::*;
+
 mod pool;
 pub use pool::*;
 
-#[path = "syncing.rs"]
 mod syncing;
 pub use syncing::*;
