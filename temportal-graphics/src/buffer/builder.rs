@@ -37,6 +37,11 @@ impl Builder {
 		self
 	}
 
+	pub fn with_size_of<T: Sized>(mut self, slice: &[T]) -> Self {
+		self.size = std::mem::size_of::<T>() * slice.len();
+		self
+	}
+
 	pub fn with_usage(mut self, usage: BufferUsage) -> Self {
 		self.usage |= usage;
 		self

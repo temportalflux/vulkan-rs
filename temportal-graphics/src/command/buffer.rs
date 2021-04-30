@@ -219,6 +219,18 @@ impl Buffer {
 		};
 	}
 
+	pub fn bind_index_buffer(&self, buffer: &buffer::Buffer, offset: u64) {
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device.unwrap().cmd_bind_index_buffer(
+				self.internal,
+				*buffer.unwrap(),
+				offset,
+				backend::vk::IndexType::UINT32,
+			)
+		};
+	}
+
 	pub fn draw_vertices(&self, vertex_count: u32) {
 		use backend::version::DeviceV1_0;
 		unsafe {
@@ -234,21 +246,21 @@ impl Buffer {
 
 	pub fn draw(
 		&self,
-		index_count: u32,
-		first_index: u32,
-		instance_count: u32,
-		first_instance: u32,
-		vertex_offset: i32,
+		index_count: usize,
+		first_index: usize,
+		instance_count: usize,
+		first_instance: usize,
+		vertex_offset: usize,
 	) {
 		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device.unwrap().cmd_draw_indexed(
 				self.internal,
-				index_count,
-				instance_count,
-				first_index,
-				vertex_offset,
-				first_instance,
+				index_count as u32,
+				instance_count as u32,
+				first_index as u32,
+				vertex_offset as i32,
+				first_instance as u32,
 			)
 		};
 	}

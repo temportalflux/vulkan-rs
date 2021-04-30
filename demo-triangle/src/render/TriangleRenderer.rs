@@ -10,6 +10,8 @@ use std::{cell::RefCell, rc::Rc};
 pub struct TriangleRenderer {
 	index_buffer: Option<Rc<buffer::Buffer>>,
 	vertex_buffer: Option<Rc<buffer::Buffer>>,
+	indices: Vec<u32>,
+	vertices: Vec<Vertex>,
 	vert_bytes: Vec<u8>,
 	frag_bytes: Vec<u8>,
 	vert_shader: Option<Rc<shader::Module>>,
@@ -53,6 +55,21 @@ impl TriangleRenderer {
 			frag_bytes,
 			vert_shader: None,
 			frag_shader: None,
+			vertices: vec![
+				Vertex {
+					pos: Vector::new([0.0, -0.5, 0.0, 0.0]),
+					color: Vector::new([1.0, 0.0, 0.0, 1.0]),
+				},
+				Vertex {
+					pos: Vector::new([0.5, 0.5, 0.0, 0.0]),
+					color: Vector::new([0.0, 1.0, 0.0, 1.0]),
+				},
+				Vertex {
+					pos: Vector::new([-0.5, 0.5, 0.0, 0.0]),
+					color: Vector::new([0.0, 0.0, 1.0, 1.0]),
+				},
+			],
+			indices: vec![0, 1, 2],
 			vertex_buffer: None,
 			index_buffer: None,
 		}));
@@ -119,27 +136,11 @@ impl graphics::RenderChainElement for TriangleRenderer {
 			),
 		)?));
 
-		let verticies = vec![
-			Vertex {
-				pos: Vector::new([0.0, -0.5, 0.0, 0.0]),
-				color: Vector::new([1.0, 0.0, 0.0, 1.0]),
-			},
-			Vertex {
-				pos: Vector::new([0.5, 0.5, 0.0, 0.0]),
-				color: Vector::new([0.0, 1.0, 0.0, 1.0]),
-			},
-			Vertex {
-				pos: Vector::new([-0.5, 0.5, 0.0, 0.0]),
-				color: Vector::new([0.0, 0.0, 1.0, 1.0]),
-			},
-		];
-		let vertex_data_size = std::mem::size_of::<Vertex>() * verticies.len();
-
 		self.vertex_buffer = Some(Rc::new(utility::as_graphics_error(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
-				.with_size(vertex_data_size)
+				.with_size_of(&self.vertices[..])
 				.with_alloc(
 					graphics::alloc::Info::default()
 						.with_usage(flags::MemoryUsage::GpuOnly)
@@ -151,8 +152,29 @@ impl graphics::RenderChainElement for TriangleRenderer {
 
 		graphics::TaskCopyImageToGpu::new(&render_chain)?
 			.begin()?
-			.stage(&verticies[..])?
+			.stage(&self.vertices[..])?
 			.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
+			.end()?
+			.wait_until_idle()?;
+
+		self.index_buffer = Some(Rc::new(utility::as_graphics_error(
+			graphics::buffer::Buffer::builder()
+				.with_usage(flags::BufferUsage::INDEX_BUFFER)
+				.with_usage(flags::BufferUsage::TRANSFER_DST)
+				.with_size_of(&self.indices[..])
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::GpuOnly)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL),
+				)
+				.with_sharing(flags::SharingMode::EXCLUSIVE)
+				.build(&render_chain.allocator()),
+		)?));
+
+		graphics::TaskCopyImageToGpu::new(&render_chain)?
+			.begin()?
+			.stage(&self.indices[..])?
+			.copy_stage_to_buffer(&self.index_buffer.as_ref().unwrap())
 			.end()?
 			.wait_until_idle()?;
 
@@ -212,7 +234,8 @@ impl graphics::CommandRecorder for TriangleRenderer {
 			flags::PipelineBindPoint::GRAPHICS,
 		);
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
-		//cmd_buffer.draw(3, 0, 1, 0, 0);
+		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
+		buffer.draw(self.indices.len(), 0, 1, 0, 0);
 		Ok(())
 	}
 }
