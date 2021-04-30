@@ -69,6 +69,8 @@ impl TextRender {
 		engine: &Engine,
 		render_chain: &mut RenderChain,
 	) -> Result<Rc<RefCell<TextRender>>, AnyError> {
+		optick::event!();
+
 		let mut instance = TextRender {
 			pipeline_layout: None,
 			pipeline: None,
@@ -101,7 +103,8 @@ impl TextRender {
 			.shader_item_mut(flags::ShaderKind::Fragment)
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
-		{
+		let _font_image = {
+			optick::event!("load-font-image");
 			use std::io::Write;
 
 			let asset = engine.assets.loader.load_sync(
@@ -145,6 +148,7 @@ impl TextRender {
 			);
 
 			{
+				optick::event!("copy-to-gpu");
 				let pool = render_chain.transient_command_pool();
 				let cmd_buffer = pool
 					.allocate_buffers(1, flags::CommandBufferLevel::PRIMARY)?
@@ -203,7 +207,9 @@ impl TextRender {
 
 				pool.free_buffers(vec![cmd_buffer]);
 			}
-		}
+
+			image
+		};
 
 		let strong = Rc::new(RefCell::new(instance));
 		render_chain.add_render_chain_element(strong.clone())?;

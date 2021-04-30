@@ -7,17 +7,6 @@
 		{
 			"type": "lldb",
 			"request": "launch",
-			"name": "Crystal Sphinx - Editor (Debug)",
-			"program": "${workspaceRoot}/target/debug/crystal-sphinx-editor",
-			"args": ["-v"],
-			"cwd": "${workspaceRoot}/target/debug/",
-			"sourceLanguages": [
-				"rust"
-			]
-		},
-		{
-			"type": "lldb",
-			"request": "launch",
 			"name": "Crystal Sphinx - Game (Debug)",
 			"program": "${workspaceRoot}/target/debug/crystal-sphinx",
 			"args": ["-v"],

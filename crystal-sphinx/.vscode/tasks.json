@@ -8,10 +8,19 @@
 			"command": "cargo",
 			"args": [
 				"run",
-				"--bin",
-				"crystal-sphinx",
-				"--",
-				"-v"
+				"--bin", "crystal-sphinx",
+				"--", "-v"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Crystal Sphinx - Run Game (Profile)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin", "crystal-sphinx",
+				"--features", "profile",
+				"--", "-v"
 			],
 			"problemMatcher": []
 		}
