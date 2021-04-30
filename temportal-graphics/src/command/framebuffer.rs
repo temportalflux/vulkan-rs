@@ -1,5 +1,6 @@
 use crate::{
-	backend, device::logical, image, renderpass, structs::Extent2D, utility, utility::VulkanObject,
+	backend, device::logical, image_view, renderpass, structs::Extent2D, utility,
+	utility::VulkanObject,
 };
 use std::rc::Rc;
 
@@ -26,7 +27,7 @@ impl Info {
 
 	pub fn create_object(
 		&self,
-		swapchain_image_view: &image::View,
+		swapchain_image_view: &image_view::View,
 		render_pass: &renderpass::Pass,
 		device: &Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {

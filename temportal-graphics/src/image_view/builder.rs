@@ -2,23 +2,23 @@ use crate::{
 	backend,
 	device::logical,
 	flags::{ComponentSwizzle, Format, ImageViewType},
-	image,
+	image, image_view,
 	structs::{subresource, ComponentMapping},
 	utility::{self, VulkanInfo, VulkanObject},
 };
 
 use std::rc::Rc;
 
-pub struct ViewInfo {
+pub struct Builder {
 	view_type: ImageViewType,
 	format: Format,
 	components: ComponentMapping,
 	subresource_range: subresource::Range,
 }
 
-impl ViewInfo {
-	pub fn new() -> ViewInfo {
-		ViewInfo {
+impl Default for Builder {
+	fn default() -> Builder {
+		Builder {
 			view_type: ImageViewType::TYPE_2D,
 			format: Format::UNDEFINED,
 			components: ComponentMapping {
@@ -30,7 +30,9 @@ impl ViewInfo {
 			subresource_range: subresource::Range::default(),
 		}
 	}
+}
 
+impl Builder {
 	pub fn set_view_type(mut self, view_type: ImageViewType) -> Self {
 		self.view_type = view_type;
 		self
@@ -52,7 +54,7 @@ impl ViewInfo {
 	}
 }
 
-impl VulkanInfo<backend::vk::ImageViewCreateInfo> for ViewInfo {
+impl VulkanInfo<backend::vk::ImageViewCreateInfo> for Builder {
 	/// Converts the [`ViewInfo`] into the [`backend::vk::ImageViewCreateInfo`] struct
 	/// used to create a [`image::View`].
 	fn to_vk(&self) -> backend::vk::ImageViewCreateInfo {
@@ -65,18 +67,18 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for ViewInfo {
 	}
 }
 
-impl ViewInfo {
+impl Builder {
 	/// Creates an [`image::View`] object, thereby consuming the info.
 	pub fn create_object(
 		&mut self,
 		device: &Rc<logical::Device>,
 		image: &image::Image, // TODO: The view should require a reference count to the image so the image is always alive while the view is alive
-	) -> Result<image::View, utility::Error> {
+	) -> Result<image_view::View, utility::Error> {
 		use backend::version::DeviceV1_0;
 		let mut info = self.to_vk();
 		info.image = *image.unwrap() as _;
 		let vk =
 			utility::as_vulkan_error(unsafe { device.unwrap().create_image_view(&info, None) })?;
-		Ok(image::View::from(device.clone(), vk))
+		Ok(image_view::View::from(device.clone(), vk))
 	}
 }

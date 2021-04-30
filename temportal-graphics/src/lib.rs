@@ -8,6 +8,10 @@ pub static LOG: &'static str = "graphics";
 #[path = "alloc/_.rs"]
 pub mod alloc;
 
+/// Buffer-relevant structs (for sending/storing chunks of data on the GPU).
+#[path = "buffer/_.rs"]
+pub mod buffer;
+
 #[path = "context.rs"]
 mod context;
 pub use context::Context;
@@ -35,9 +39,12 @@ pub use general::*;
 #[path = "instance/_.rs"]
 pub mod instance;
 
-#[path = "object/_.rs"]
-mod object;
-pub use object::*;
+/// Image-related structs (for storing, editting, and viewing textures or render-pass results on the GPU).
+#[path = "image/_.rs"]
+pub mod image;
+
+#[path = "image_view/_.rs"]
+pub mod image_view;
 
 /// Structs used in the creation or representation of Pipelines and Pipeline Layouts.
 #[path = "pipeline/_.rs"]

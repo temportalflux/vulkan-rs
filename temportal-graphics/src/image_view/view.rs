@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, utility::VulkanObject};
+use crate::{backend, device::logical, image_view::Builder, utility::VulkanObject};
 
 use std::rc::Rc;
 
@@ -9,6 +9,10 @@ pub struct View {
 }
 
 impl View {
+	pub fn builder() -> Builder {
+		Builder::default()
+	}
+
 	pub fn from(device: Rc<logical::Device>, internal: backend::vk::ImageView) -> View {
 		View { device, internal }
 	}

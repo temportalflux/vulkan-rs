@@ -1,4 +1,6 @@
-use crate::{backend, buffer, descriptor, device::logical, flags, image, utility::VulkanObject};
+use crate::{
+	backend, buffer, descriptor, device::logical, flags, image_view, utility::VulkanObject,
+};
 use std::rc::{Rc, Weak};
 
 pub struct SetUpdate {
@@ -37,7 +39,7 @@ pub enum ObjectKind {
 
 pub struct ImageKind {
 	pub sampler: Rc<u8>,
-	pub view: Rc<image::View>,
+	pub view: Rc<image_view::View>,
 	pub layout: flags::ImageLayout,
 }
 
