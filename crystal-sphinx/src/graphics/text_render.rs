@@ -318,9 +318,11 @@ impl graphics::RenderChainElement for TextRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		optick::event!();
-		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
-			render_chain.logical().clone(),
-		))?);
+		self.pipeline_layout = Some(utility::as_graphics_error(
+			pipeline::Layout::builder()
+			.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
+			.build(render_chain.logical().clone()),
+		)?);
 		self.pipeline = Some(utility::as_graphics_error(
 			pipeline::Info::default()
 				.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
@@ -352,13 +354,14 @@ impl graphics::RenderChainElement for TextRender {
 }
 
 impl graphics::CommandRecorder for TextRender {
-	fn record_to_buffer(&self, _buffer: &mut command::Buffer) -> utility::Result<()> {
+	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
 		optick::event!();
-		//buffer.bind_pipeline(
-		//	&self.pipeline.as_ref().unwrap(),
-		//	flags::PipelineBindPoint::GRAPHICS,
-		//);
-		//cmd_buffer.draw(3, 0, 1, 0, 0);
+		buffer.bind_pipeline(
+			&self.pipeline.as_ref().unwrap(),
+			flags::PipelineBindPoint::GRAPHICS,
+		);
+		// TODO: bind descriptor sets
+		buffer.draw(3, 0, 1, 0, 0);
 		Ok(())
 	}
 }

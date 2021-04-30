@@ -75,45 +75,43 @@ impl SetUpdate {
 				.zip(write_buffers_per_operation.iter_mut()),
 		) {
 			match operation {
-				UpdateOperation::Write(op) => {
-					match op.destination.set.upgrade() {
-						Some(set_rc) => {
-							let mut builder = backend::vk::WriteDescriptorSet::builder()
-								.dst_set(*set_rc.unwrap())
-								.dst_binding(op.destination.binding_index)
-								.dst_array_element(op.destination.array_element)
-								.descriptor_type(op.kind);
-							match &op.objects {
-								ObjectKind::Image(infos) => {
-									for info in infos {
-										image_info.push(
-											backend::vk::DescriptorImageInfo::builder()
-												.sampler(*info.sampler.unwrap())
-												.image_view(*info.view.unwrap())
-												.image_layout(info.layout)
-												.build(),
-										);
-									}
-									builder = builder.image_info(&image_info[..]);
+				UpdateOperation::Write(op) => match op.destination.set.upgrade() {
+					Some(set_rc) => {
+						let mut builder = backend::vk::WriteDescriptorSet::builder()
+							.dst_set(*set_rc.unwrap())
+							.dst_binding(op.destination.binding_index)
+							.dst_array_element(op.destination.array_element)
+							.descriptor_type(op.kind);
+						match &op.objects {
+							ObjectKind::Image(infos) => {
+								for info in infos {
+									image_info.push(
+										backend::vk::DescriptorImageInfo::builder()
+											.sampler(*info.sampler.unwrap())
+											.image_view(*info.view.unwrap())
+											.image_layout(info.layout)
+											.build(),
+									);
 								}
-								ObjectKind::Buffer(infos) => {
-									for info in infos {
-										buffer_info.push(
-											backend::vk::DescriptorBufferInfo::builder()
-												.buffer(*info.buffer.unwrap())
-												.offset(info.offset)
-												.range(info.range)
-												.build(),
-										);
-									}
-									builder = builder.buffer_info(&buffer_info[..]);
-								}
+								builder = builder.image_info(&image_info[..]);
 							}
-							writes.push(builder.build());
+							ObjectKind::Buffer(infos) => {
+								for info in infos {
+									buffer_info.push(
+										backend::vk::DescriptorBufferInfo::builder()
+											.buffer(*info.buffer.unwrap())
+											.offset(info.offset)
+											.range(info.range)
+											.build(),
+									);
+								}
+								builder = builder.buffer_info(&buffer_info[..]);
+							}
 						}
-						None => {}
+						writes.push(builder.build());
 					}
-				}
+					None => {}
+				},
 				UpdateOperation::Copy(op) => {
 					match (op.source.set.upgrade(), op.destination.set.upgrade()) {
 						(Some(source_set), Some(destination_set)) => {

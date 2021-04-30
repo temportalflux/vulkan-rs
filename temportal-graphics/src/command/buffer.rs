@@ -1,5 +1,5 @@
 use crate::{
-	backend, buffer, command,
+	backend, buffer, command, descriptor,
 	device::logical,
 	flags, image, pipeline, renderpass, structs,
 	utility::{self, VulkanInfo, VulkanObject},
@@ -146,6 +146,28 @@ impl Buffer {
 			self.device
 				.unwrap()
 				.cmd_bind_pipeline(self.internal, bind_point, *pipeline.unwrap())
+		};
+	}
+
+	pub fn bind_descriptors(
+		&self,
+		bind_point: flags::PipelineBindPoint,
+		layout: &pipeline::Layout,
+		first_set_index: usize,
+		sets: Vec<&descriptor::Set>,
+	) {
+		use backend::version::DeviceV1_0;
+		let vk_sets = sets.iter().map(|set| *set.unwrap()).collect::<Vec<_>>();
+		let offsets = Vec::new();
+		unsafe {
+			self.device.unwrap().cmd_bind_descriptor_sets(
+				self.internal,
+				bind_point,
+				*layout.unwrap(),
+				first_set_index as u32,
+				&vk_sets[..],
+				&offsets[..],
+			)
 		};
 	}
 

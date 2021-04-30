@@ -95,9 +95,9 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		render_chain: &graphics::RenderChain,
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
-		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
-			render_chain.logical().clone(),
-		))?);
+		self.pipeline_layout = Some(utility::as_graphics_error(
+			pipeline::Layout::builder().build(render_chain.logical().clone()),
+		)?);
 		self.pipeline = Some(utility::as_graphics_error(
 			pipeline::Info::default()
 				.add_shader(Rc::downgrade(self.vert_shader.as_ref().unwrap()))
