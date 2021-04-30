@@ -10,7 +10,7 @@ use std::rc::{Rc, Weak};
 /// Information used to construct a [`Pipeline`](pipeline::Pipeline).
 pub struct Info {
 	shaders: Vec<Weak<shader::Module>>,
-	vertex_input: backend::vk::PipelineVertexInputStateCreateInfo,
+	vertex_input: pipeline::vertex::Layout,
 	input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo,
 	viewport_state: pipeline::ViewportState,
 	rasterization_state: pipeline::RasterizationState,
@@ -22,7 +22,7 @@ impl Default for Info {
 	fn default() -> Info {
 		Info {
 			shaders: Vec::new(),
-			vertex_input: backend::vk::PipelineVertexInputStateCreateInfo::default(),
+			vertex_input: pipeline::vertex::Layout::default(),
 			input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo::builder()
 				.topology(backend::vk::PrimitiveTopology::TRIANGLE_LIST)
 				.primitive_restart_enable(false)
@@ -41,6 +41,11 @@ impl Default for Info {
 impl Info {
 	pub fn add_shader(mut self, shader: Weak<shader::Module>) -> Self {
 		self.shaders.push(shader);
+		self
+	}
+
+	pub fn with_vertex_layout(mut self, layout: pipeline::vertex::Layout) -> Self {
+		self.vertex_input = layout;
 		self
 	}
 
@@ -79,6 +84,7 @@ impl Info {
 				None => None,
 			})
 			.collect::<Vec<_>>();
+		let vertex_input = self.vertex_input.to_vk();
 		let viewport_state = self.viewport_state.to_vk();
 		let rasterizer = self.rasterization_state.to_vk();
 
@@ -89,7 +95,7 @@ impl Info {
 
 		let info = backend::vk::GraphicsPipelineCreateInfo::builder()
 			.stages(&shader_stages)
-			.vertex_input_state(&self.vertex_input)
+			.vertex_input_state(&vertex_input)
 			.input_assembly_state(&self.input_assembly)
 			.viewport_state(&viewport_state)
 			.rasterization_state(&rasterizer)

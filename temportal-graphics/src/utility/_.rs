@@ -15,3 +15,5 @@ pub use scissor::*;
 
 mod error;
 pub use error::*;
+
+pub use memoffset::offset_of;

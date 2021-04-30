@@ -1,6 +1,7 @@
 use crate::engine::{
 	self,
 	graphics::{self, command, flags, pipeline, shader, structs, RenderChain},
+	math::Vector,
 	utility::{self, AnyError},
 	Engine,
 };
@@ -59,6 +60,38 @@ impl TriangleRenderer {
 	}
 }
 
+struct Vertex {
+	pos: Vector<f32, 4>,
+	color: Vector<f32, 4>,
+}
+
+impl pipeline::vertex::Object for Vertex {
+	fn attributes() -> Vec<pipeline::vertex::Attribute> {
+		vec![
+			pipeline::vertex::Attribute {
+				offset: graphics::utility::offset_of!(Vertex, pos),
+				format: flags::Format::R32G32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: graphics::utility::offset_of!(Vertex, color),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+ 		]
+	}
+}
+
+#[cfg(test)]
+mod vertex_data {
+	use super::*;
+
+	#[test]
+	fn alignment() {
+		assert_eq!(graphics::utility::offset_of!(Vertex, pos), 0);
+		assert_eq!(graphics::utility::offset_of!(Vertex, color), 16);
+	}
+
+}
+
 impl graphics::RenderChainElement for TriangleRenderer {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
 		self.vert_shader = Some(Rc::new(utility::as_graphics_error(
@@ -102,6 +135,10 @@ impl graphics::RenderChainElement for TriangleRenderer {
 			pipeline::Info::default()
 				.add_shader(Rc::downgrade(self.vert_shader.as_ref().unwrap()))
 				.add_shader(Rc::downgrade(self.frag_shader.as_ref().unwrap()))
+				.with_vertex_layout(
+					pipeline::vertex::Layout::default()
+						.with_object::<Vertex>(0, flags::VertexInputRate::VERTEX),
+				)
 				.set_viewport_state(
 					pipeline::ViewportState::default()
 						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
