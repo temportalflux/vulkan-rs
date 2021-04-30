@@ -6,6 +6,8 @@ pub use backend::vk::AttachmentStoreOp;
 pub use backend::vk::BufferUsageFlags as BufferUsage;
 pub use backend::vk::ColorComponentFlags as ColorComponent;
 pub use backend::vk::ColorSpaceKHR as ColorSpace;
+pub use backend::vk::CommandBufferLevel;
+pub use backend::vk::CommandBufferUsageFlags as CommandBufferUsage;
 pub use backend::vk::ComponentSwizzle;
 pub use backend::vk::CompositeAlphaFlagsKHR as CompositeAlpha;
 pub use backend::vk::CullModeFlags as CullMode;

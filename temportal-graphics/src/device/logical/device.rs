@@ -28,24 +28,6 @@ impl Device {
 		logical::Queue::from(device.clone(), vk, queue_family_index)
 	}
 
-	pub fn allocate_command_buffers(
-		device: &Rc<Self>,
-		pool: &command::Pool,
-		amount: usize,
-	) -> utility::Result<Vec<command::Buffer>> {
-		let info = backend::vk::CommandBufferAllocateInfo::builder()
-			.command_pool(*pool.unwrap())
-			.level(backend::vk::CommandBufferLevel::PRIMARY)
-			.command_buffer_count(amount as u32)
-			.build();
-		let alloc_result =
-			utility::as_vulkan_error(unsafe { device.internal.allocate_command_buffers(&info) });
-		Ok(alloc_result?
-			.into_iter()
-			.map(|vk_buffer| command::Buffer::from(device.clone(), vk_buffer))
-			.collect::<Vec<_>>())
-	}
-
 	pub fn create_semaphores(
 		device: &Rc<Self>,
 		count: usize,
@@ -290,17 +272,6 @@ impl Device {
 
 	pub fn destroy_command_pool(&self, value: backend::vk::CommandPool) {
 		unsafe { self.internal.destroy_command_pool(value, None) };
-	}
-
-	pub fn begin_command_buffer(&self, buffer: &command::Buffer) -> utility::Result<()> {
-		let info = backend::vk::CommandBufferBeginInfo::builder().build();
-		utility::as_vulkan_error(unsafe {
-			self.internal.begin_command_buffer(*buffer.unwrap(), &info)
-		})
-	}
-
-	pub fn end_command_buffer(&self, buffer: &command::Buffer) -> utility::Result<()> {
-		utility::as_vulkan_error(unsafe { self.internal.end_command_buffer(*buffer.unwrap()) })
 	}
 
 	pub fn begin_render_pass(

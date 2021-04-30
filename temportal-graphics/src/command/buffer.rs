@@ -8,23 +8,29 @@ use std::rc::Rc;
 
 pub struct Buffer {
 	device: Rc<logical::Device>,
-	_internal: backend::vk::CommandBuffer,
+	internal: backend::vk::CommandBuffer,
 }
 
 impl Buffer {
 	pub fn from(device: Rc<logical::Device>, internal: backend::vk::CommandBuffer) -> Buffer {
-		Buffer {
-			device,
-			_internal: internal,
-		}
+		Buffer { device, internal }
 	}
 
-	pub fn begin(&self) -> utility::Result<()> {
-		self.device.begin_command_buffer(&self)
+	pub fn begin(&self, usage: Option<flags::CommandBufferUsage>) -> utility::Result<()> {
+		use backend::version::DeviceV1_0;
+		let info = backend::vk::CommandBufferBeginInfo::builder()
+			.flags(usage.unwrap_or(flags::CommandBufferUsage::empty()))
+			.build();
+		utility::as_vulkan_error(unsafe {
+			self.device
+				.unwrap()
+				.begin_command_buffer(self.internal, &info)
+		})
 	}
 
 	pub fn end(&self) -> utility::Result<()> {
-		self.device.end_command_buffer(&self)
+		use backend::version::DeviceV1_0;
+		utility::as_vulkan_error(unsafe { self.device.unwrap().end_command_buffer(self.internal) })
 	}
 
 	pub fn start_render_pass(
@@ -86,10 +92,10 @@ impl Buffer {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::CommandBuffer> for Buffer {
 	fn unwrap(&self) -> &backend::vk::CommandBuffer {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::CommandBuffer {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 

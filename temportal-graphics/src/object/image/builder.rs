@@ -41,12 +41,11 @@ impl Default for Builder {
 }
 
 impl Builder {
-
 	pub fn with_alloc(mut self, mem_info: alloc::Info) -> Self {
 		self.mem_info = mem_info;
 		self
 	}
-	
+
 	pub fn with_size(mut self, size: Vector<usize, 3>) -> Self {
 		self.extent = Extent3D {
 			width: size.x() as u32,
@@ -70,7 +69,6 @@ impl Builder {
 		self.usage |= usage;
 		self
 	}
-
 }
 
 impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {

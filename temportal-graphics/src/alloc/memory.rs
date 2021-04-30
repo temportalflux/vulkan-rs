@@ -1,5 +1,6 @@
 use crate::{
-	utility::{self, VulkanObject}, alloc
+	alloc,
+	utility::{self, VulkanObject},
 };
 use std::{io::Write, rc::Rc};
 

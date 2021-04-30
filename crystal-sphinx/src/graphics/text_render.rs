@@ -124,19 +124,43 @@ impl TextRender {
 				font_sdf_image_mem_size,
 				&render_chain.allocator(),
 			)?;
-			staging_buffer.memory()?.write_all(&font_sdf_image_data[..])?;
+			staging_buffer
+				.memory()?
+				.write_all(&font_sdf_image_data[..])?;
 
 			let image = graphics::image::Image::builder()
 				.with_alloc(
 					graphics::alloc::Info::default()
 						.with_usage(flags::MemoryUsage::GpuOnly)
-						.requires(flags::MemoryProperty::DEVICE_LOCAL)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
 				.with_format(flags::Format::R8G8B8A8_SRGB)
 				.with_size(font.size().subvec::<3>(None).with_z(1))
 				.with_usage(flags::ImageUsage::TRANSFER_DST)
 				.with_usage(flags::ImageUsage::SAMPLED)
 				.build(&render_chain.allocator())?;
+
+			{
+				let pool = render_chain.transient_command_pool();
+				let cmd_buffer = pool
+					.allocate_buffers(1, flags::CommandBufferLevel::PRIMARY)?
+					.pop()
+					.unwrap();
+				cmd_buffer.begin(Some(flags::CommandBufferUsage::ONE_TIME_SUBMIT))?;
+
+				// TODO: Handle transitioning the layout and copying the buffer data
+
+				cmd_buffer.end()?;
+
+				utility::as_graphics_error(render_chain.graphics_queue().submit(
+					vec![command::SubmitInfo::default().add_buffer(&cmd_buffer)],
+					None,
+				))?;
+
+				render_chain.logical().wait_until_idle()?;
+
+				pool.free_buffers(vec![cmd_buffer]);
+			}
 		}
 
 		let strong = Rc::new(RefCell::new(instance));
