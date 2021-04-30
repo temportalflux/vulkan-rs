@@ -320,8 +320,8 @@ impl graphics::RenderChainElement for TextRender {
 		optick::event!();
 		self.pipeline_layout = Some(utility::as_graphics_error(
 			pipeline::Layout::builder()
-			.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
-			.build(render_chain.logical().clone()),
+				.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
+				.build(render_chain.logical().clone()),
 		)?);
 		self.pipeline = Some(utility::as_graphics_error(
 			pipeline::Info::default()
@@ -360,7 +360,12 @@ impl graphics::CommandRecorder for TextRender {
 			&self.pipeline.as_ref().unwrap(),
 			flags::PipelineBindPoint::GRAPHICS,
 		);
-		// TODO: bind descriptor sets
+		buffer.bind_descriptors(
+			flags::PipelineBindPoint::GRAPHICS,
+			self.pipeline_layout.as_ref().unwrap(),
+			0,
+			vec![&self.font_atlas_descriptor_set.upgrade().unwrap()],
+		);
 		buffer.draw(3, 0, 1, 0, 0);
 		Ok(())
 	}
