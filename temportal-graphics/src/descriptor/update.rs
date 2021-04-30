@@ -1,5 +1,5 @@
 use crate::{
-	backend, buffer, descriptor, device::logical, flags, image_view, utility::VulkanObject,
+	backend, buffer, descriptor, device::logical, flags, image_view, sampler, utility::VulkanObject,
 };
 use std::rc::{Rc, Weak};
 
@@ -38,7 +38,7 @@ pub enum ObjectKind {
 }
 
 pub struct ImageKind {
-	pub sampler: Rc<u8>,
+	pub sampler: Rc<sampler::Sampler>,
 	pub view: Rc<image_view::View>,
 	pub layout: flags::ImageLayout,
 }
@@ -88,7 +88,7 @@ impl SetUpdate {
 									for info in infos {
 										image_info.push(
 											backend::vk::DescriptorImageInfo::builder()
-												// TODO: .sampler()
+												.sampler(*info.sampler.unwrap())
 												.image_view(*info.view.unwrap())
 												.image_layout(info.layout)
 												.build(),

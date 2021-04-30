@@ -101,6 +101,10 @@ impl Device {
 		self.properties.device_type
 	}
 
+	pub fn max_sampler_anisotropy(&self) -> f32 {
+		self.properties.limits.max_sampler_anisotropy
+	}
+
 	/// Returns the descriptive name of the device (i.e. "GeForce RTX 2070").
 	pub fn name(&self) -> String {
 		unsafe { std::ffi::CStr::from_ptr(&self.properties.device_name as *const i8) }

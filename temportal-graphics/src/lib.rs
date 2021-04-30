@@ -54,6 +54,9 @@ pub mod pipeline;
 #[path = "renderpass/_.rs"]
 pub mod renderpass;
 
+#[path = "sampler/_.rs"]
+pub mod sampler;
+
 pub mod shader;
 
 /// Various forwarded/exposed structures from Vulkan/Backend

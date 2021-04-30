@@ -1,6 +1,6 @@
 use crate::engine::{
 	self,
-	graphics::{self, command, flags, pipeline, shader, structs, RenderChain},
+	graphics::{self, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain},
 	math::Vector,
 	utility::{self, AnyError},
 	Engine,
@@ -49,11 +49,15 @@ impl ShaderItem {
 }
 
 pub struct TextRender {
-	pipeline: Option<pipeline::Pipeline>,
-	pipeline_layout: Option<pipeline::Layout>,
 	font_atlas_descriptor_set: Weak<graphics::descriptor::Set>,
 	font_atlas_descriptor_layout: Option<Rc<graphics::descriptor::SetLayout>>,
+
+	font_atlas_sampler: Rc<sampler::Sampler>,
+	font_atlas_view: Rc<image_view::View>,
 	shaders: HashMap<flags::ShaderKind, ShaderItem>,
+
+	pipeline: Option<pipeline::Pipeline>,
+	pipeline_layout: Option<pipeline::Layout>,
 }
 
 impl TextRender {
@@ -71,39 +75,7 @@ impl TextRender {
 	) -> Result<Rc<RefCell<TextRender>>, AnyError> {
 		optick::event!();
 
-		let mut instance = TextRender {
-			pipeline_layout: None,
-			pipeline: None,
-			font_atlas_descriptor_layout: None,
-			font_atlas_descriptor_set: Weak::new(),
-			shaders: HashMap::new(),
-		};
-
-		instance.shaders.insert(
-			flags::ShaderKind::Vertex,
-			ShaderItem {
-				kind: flags::ShaderKind::Vertex,
-				bytes: Vec::new(),
-				module: None,
-			},
-		);
-		instance.shaders.insert(
-			flags::ShaderKind::Fragment,
-			ShaderItem {
-				kind: flags::ShaderKind::Fragment,
-				bytes: Vec::new(),
-				module: None,
-			},
-		);
-
-		instance
-			.shader_item_mut(flags::ShaderKind::Vertex)
-			.load_bytes(&engine, &TextRender::vertex_shader_path())?;
-		instance
-			.shader_item_mut(flags::ShaderKind::Fragment)
-			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
-
-		let font_image = {
+		let font_atlas = {
 			optick::event!("load-font-image");
 			use std::io::Write;
 
@@ -211,14 +183,57 @@ impl TextRender {
 			Rc::new(image)
 		};
 
-		let _font_view = graphics::image_view::View::builder()
-			.for_image(&font_image)
-			.with_view_type(flags::ImageViewType::TYPE_2D)
-			.with_format(flags::Format::R8G8B8A8_SRGB)
-			.with_range(
-				structs::subresource::Range::default().with_aspect(flags::ImageAspect::COLOR),
-			)
-			.build(&render_chain.logical())?;
+		let font_atlas_view = Rc::new(
+			graphics::image_view::View::builder()
+				.for_image(&font_atlas)
+				.with_view_type(flags::ImageViewType::TYPE_2D)
+				.with_format(flags::Format::R8G8B8A8_SRGB)
+				.with_range(
+					structs::subresource::Range::default().with_aspect(flags::ImageAspect::COLOR),
+				)
+				.build(&render_chain.logical())?,
+		);
+
+		let font_atlas_sampler = Rc::new(
+			graphics::sampler::Sampler::builder()
+				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
+				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
+				.build(&render_chain.logical())?,
+		);
+
+		let mut instance = TextRender {
+			pipeline_layout: None,
+			pipeline: None,
+			shaders: HashMap::new(),
+			font_atlas_view,
+			font_atlas_sampler,
+			font_atlas_descriptor_layout: None,
+			font_atlas_descriptor_set: Weak::new(),
+		};
+
+		instance.shaders.insert(
+			flags::ShaderKind::Vertex,
+			ShaderItem {
+				kind: flags::ShaderKind::Vertex,
+				bytes: Vec::new(),
+				module: None,
+			},
+		);
+		instance.shaders.insert(
+			flags::ShaderKind::Fragment,
+			ShaderItem {
+				kind: flags::ShaderKind::Fragment,
+				bytes: Vec::new(),
+				module: None,
+			},
+		);
+
+		instance
+			.shader_item_mut(flags::ShaderKind::Vertex)
+			.load_bytes(&engine, &TextRender::vertex_shader_path())?;
+		instance
+			.shader_item_mut(flags::ShaderKind::Fragment)
+			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
 		let strong = Rc::new(RefCell::new(instance));
 		render_chain.add_render_chain_element(strong.clone())?;
@@ -271,15 +286,15 @@ impl graphics::RenderChainElement for TextRender {
 			.with(UpdateOperation::Write(WriteOp {
 				destination: UpdateOperationSet {
 					set: self.font_atlas_descriptor_set.clone(),
-					binding_index: 0,
+					binding_index: font_sampler_binding_number,
 					array_element: 0,
 				},
 				kind: graphics::flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
-				objects: ObjectKind::Image(vec![/*ImageKind {
-				sampler: Rc::new(),
-				view: Rc::new(),
-				layout: flags::ImageLayout::UNDEFINED,
-			}*/]),
+				objects: ObjectKind::Image(vec![ImageKind {
+					sampler: self.font_atlas_sampler.clone(),
+					view: self.font_atlas_view.clone(),
+					layout: flags::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
+				}]),
 			}))
 			.apply(&render_chain.logical());
 
@@ -303,41 +318,41 @@ impl graphics::RenderChainElement for TextRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		optick::event!();
-		//self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
-		//	render_chain.logical().clone(),
-		//))?);
-		//self.pipeline = Some(utility::as_graphics_error(
-		//	pipeline::Info::default()
-		//		.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
-		//		.add_shader(Rc::downgrade(
-		//			self.shader_module(flags::ShaderKind::Fragment),
-		//		))
-		//		.set_viewport_state(
-		//			pipeline::ViewportState::default()
-		//				.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
-		//				.add_scissor(graphics::utility::Scissor::default().set_size(resolution)),
-		//		)
-		//		.set_rasterization_state(pipeline::RasterizationState::default())
-		//		.set_color_blending(pipeline::ColorBlendState::default().add_attachment(
-		//			pipeline::ColorBlendAttachment {
-		//				color_flags: flags::ColorComponent::R
-		//					| flags::ColorComponent::G | flags::ColorComponent::B
-		//					| flags::ColorComponent::A,
-		//			},
-		//		))
-		//		.create_object(
-		//			render_chain.logical().clone(),
-		//			&self.pipeline_layout.as_ref().unwrap(),
-		//			&render_chain.render_pass(),
-		//		),
-		//)?);
+		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
+			render_chain.logical().clone(),
+		))?);
+		self.pipeline = Some(utility::as_graphics_error(
+			pipeline::Info::default()
+				.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
+				.add_shader(Rc::downgrade(
+					self.shader_module(flags::ShaderKind::Fragment),
+				))
+				.set_viewport_state(
+					pipeline::ViewportState::default()
+						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
+						.add_scissor(graphics::utility::Scissor::default().set_size(resolution)),
+				)
+				.set_rasterization_state(pipeline::RasterizationState::default())
+				.set_color_blending(pipeline::ColorBlendState::default().add_attachment(
+					pipeline::ColorBlendAttachment {
+						color_flags: flags::ColorComponent::R
+							| flags::ColorComponent::G | flags::ColorComponent::B
+							| flags::ColorComponent::A,
+					},
+				))
+				.create_object(
+					render_chain.logical().clone(),
+					&self.pipeline_layout.as_ref().unwrap(),
+					&render_chain.render_pass(),
+				),
+		)?);
 
 		Ok(())
 	}
 }
 
 impl graphics::CommandRecorder for TextRender {
-	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
+	fn record_to_buffer(&self, _buffer: &mut command::Buffer) -> utility::Result<()> {
 		optick::event!();
 		//buffer.bind_pipeline(
 		//	&self.pipeline.as_ref().unwrap(),
