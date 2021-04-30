@@ -26,6 +26,7 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 }
 
 fn scan_assets(engine: &mut Engine) -> VoidResult {
+	optick::event!();
 	let pak_path = [
 		std::env!("CARGO_MANIFEST_DIR"),
 		format!("{}.pak", name()).as_str(),

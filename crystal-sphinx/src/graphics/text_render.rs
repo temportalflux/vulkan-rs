@@ -230,6 +230,7 @@ impl TextRender {
 
 impl graphics::RenderChainElement for TextRender {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+		optick::event!();
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
 
@@ -292,6 +293,7 @@ impl graphics::RenderChainElement for TextRender {
 		render_chain: &graphics::RenderChain,
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
+		optick::event!();
 		//self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
 		//	render_chain.logical().clone(),
 		//))?);
@@ -327,6 +329,7 @@ impl graphics::RenderChainElement for TextRender {
 
 impl graphics::CommandRecorder for TextRender {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
+		optick::event!();
 		//buffer.bind_pipeline(
 		//	&self.pipeline.as_ref().unwrap(),
 		//	flags::PipelineBindPoint::GRAPHICS,
