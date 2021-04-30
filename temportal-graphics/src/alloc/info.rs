@@ -3,16 +3,16 @@ use crate::{
 	utility::VulkanInfo,
 };
 
-pub struct AllocationInfo {
+pub struct Info {
 	mem_usage: MemoryUsage,
 	alloc_flags: CreateAllocation,
 	required_properties: MemoryProperty,
 	preferred_properties: MemoryProperty,
 }
 
-impl Default for AllocationInfo {
-	fn default() -> AllocationInfo {
-		AllocationInfo {
+impl Default for Info {
+	fn default() -> Info {
+		Info {
 			mem_usage: MemoryUsage::Unknown,
 			alloc_flags: CreateAllocation::NONE,
 			required_properties: MemoryProperty::empty(),
@@ -21,7 +21,7 @@ impl Default for AllocationInfo {
 	}
 }
 
-impl AllocationInfo {
+impl Info {
 	pub fn with_usage(mut self, usage: MemoryUsage) -> Self {
 		self.mem_usage = usage;
 		self
@@ -33,25 +33,27 @@ impl AllocationInfo {
 	}
 
 	pub fn requires(mut self, property: MemoryProperty) -> Self {
-		self.required_properties &= property;
+		self.required_properties |= property;
 		self
 	}
 
 	pub fn prefers(mut self, property: MemoryProperty) -> Self {
-		self.preferred_properties &= property;
+		self.preferred_properties |= property;
 		self
 	}
 }
 
-impl VulkanInfo<vk_mem::AllocationCreateInfo> for AllocationInfo {
+impl VulkanInfo<vk_mem::AllocationCreateInfo> for Info {
 	/// Converts the [`AllocationInfo`] into the [`vk_mem::AllocationCreateInfo`] struct.
 	fn to_vk(&self) -> vk_mem::AllocationCreateInfo {
 		vk_mem::AllocationCreateInfo {
-			//usage: self.mem_usage,
-			//flags: self.alloc_flags,
-			//required_flags: ash::vk::MemoryPropertyFlags::from_raw(self.required_properties.bits()),
-			//preferred_flags: ash::vk::MemoryPropertyFlags::from_raw(self.preferred_properties.bits()),
-			..Default::default()
+			usage: self.mem_usage,
+			flags: self.alloc_flags,
+			required_flags: self.required_properties,
+			preferred_flags: self.preferred_properties,
+			memory_type_bits: 0,
+			pool: None,
+			user_data: None,
 		}
 	}
 }

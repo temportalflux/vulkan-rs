@@ -3,6 +3,7 @@ use crate::backend;
 pub use backend::vk::AccessFlags as Access;
 pub use backend::vk::AttachmentLoadOp;
 pub use backend::vk::AttachmentStoreOp;
+pub use backend::vk::BufferUsageFlags as BufferUsage;
 pub use backend::vk::ColorComponentFlags as ColorComponent;
 pub use backend::vk::ColorSpaceKHR as ColorSpace;
 pub use backend::vk::ComponentSwizzle;

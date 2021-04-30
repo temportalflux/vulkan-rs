@@ -15,8 +15,8 @@ pub mod structs {
 
 pub static LOG: &'static str = "graphics";
 
-mod allocator;
-pub use allocator::*;
+#[path = "alloc/_.rs"]
+pub mod alloc;
 
 /// Various forwarded/exposed enumerations from Vulkan/Backend
 #[path = "flags/_.rs"]

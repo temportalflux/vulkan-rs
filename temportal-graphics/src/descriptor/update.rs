@@ -1,4 +1,4 @@
-use crate::{backend, descriptor, device::logical, flags, image, utility::VulkanObject};
+use crate::{backend, buffer, descriptor, device::logical, flags, image, utility::VulkanObject};
 use std::rc::{Rc, Weak};
 
 pub struct SetUpdate {
@@ -42,7 +42,7 @@ pub struct ImageKind {
 }
 
 pub struct BufferKind {
-	pub buffer: Weak<u8>,
+	pub buffer: Rc<buffer::Buffer>,
 	pub offset: u64,
 	pub range: u64,
 }
@@ -98,7 +98,7 @@ impl SetUpdate {
 									for info in infos {
 										buffer_info.push(
 											backend::vk::DescriptorBufferInfo::builder()
-												// TODO: .buffer()
+												.buffer(*info.buffer.unwrap())
 												.offset(info.offset)
 												.range(info.range)
 												.build(),

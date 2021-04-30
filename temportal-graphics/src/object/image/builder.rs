@@ -1,16 +1,15 @@
 use crate::{
-	backend,
+	alloc, backend,
 	flags::{Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode},
 	image,
-	object::AllocationInfo,
 	structs::Extent3D,
 	utility::{self, VulkanInfo, VulkanObject},
-	Allocator,
 };
 use std::rc::Rc;
+use temportal_math::Vector;
 
 pub struct Builder {
-	pub mem_info: AllocationInfo,
+	pub mem_info: alloc::Info,
 	pub image_type: ImageType,
 	pub format: Format,
 	pub extent: Extent3D,
@@ -26,7 +25,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			mem_info: AllocationInfo::default(),
+			mem_info: alloc::Info::default(),
 			image_type: ImageType::TYPE_2D,
 			format: Format::UNDEFINED,
 			extent: Extent3D::default(),
@@ -41,7 +40,38 @@ impl Default for Builder {
 	}
 }
 
-impl Builder {}
+impl Builder {
+
+	pub fn with_alloc(mut self, mem_info: alloc::Info) -> Self {
+		self.mem_info = mem_info;
+		self
+	}
+	
+	pub fn with_size(mut self, size: Vector<usize, 3>) -> Self {
+		self.extent = Extent3D {
+			width: size.x() as u32,
+			height: size.y() as u32,
+			depth: size.z() as u32,
+		};
+		self
+	}
+
+	pub fn with_format(mut self, format: Format) -> Self {
+		self.format = format;
+		self
+	}
+
+	pub fn with_tiling(mut self, tiling: ImageTiling) -> Self {
+		self.tiling = tiling;
+		self
+	}
+
+	pub fn with_usage(mut self, usage: ImageUsage) -> Self {
+		self.usage |= usage;
+		self
+	}
+
+}
 
 impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
@@ -64,7 +94,7 @@ impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`image::Image`] object, thereby consuming the info.
-	pub fn build(self, allocator: &Rc<Allocator>) -> utility::Result<image::Image> {
+	pub fn build(self, allocator: &Rc<alloc::Allocator>) -> utility::Result<image::Image> {
 		let image_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
 		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(

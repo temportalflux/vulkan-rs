@@ -100,6 +100,45 @@ impl TextRender {
 			.shader_item_mut(flags::ShaderKind::Fragment)
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
+		{
+			use std::io::Write;
+
+			let asset = engine.assets.loader.load_sync(
+				&engine.assets.types,
+				&engine.assets.library,
+				&engine::asset::Id::new(crate::name(), "font/unispace"),
+			)?;
+			let font = engine::asset::as_asset::<engine::graphics::font::Font>(&asset);
+
+			let font_sdf_image_mem_size =
+				(font.size().x() * font.size().y() * std::mem::size_of::<u8>()) as u64;
+			let font_sdf_image_data: Vec<u8> = font
+				.binary()
+				.iter()
+				.flatten()
+				.map(|alpha| vec![1, 1, 1, *alpha])
+				.flatten()
+				.collect();
+
+			let staging_buffer = graphics::buffer::Buffer::create_staging(
+				font_sdf_image_mem_size,
+				&render_chain.allocator(),
+			)?;
+			staging_buffer.memory()?.write_all(&font_sdf_image_data[..])?;
+
+			let image = graphics::image::Image::builder()
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::GpuOnly)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL)
+				)
+				.with_format(flags::Format::R8G8B8A8_SRGB)
+				.with_size(font.size().subvec::<3>(None).with_z(1))
+				.with_usage(flags::ImageUsage::TRANSFER_DST)
+				.with_usage(flags::ImageUsage::SAMPLED)
+				.build(&render_chain.allocator())?;
+		}
+
 		let strong = Rc::new(RefCell::new(instance));
 		render_chain.add_render_chain_element(strong.clone())?;
 		render_chain.add_command_recorder(strong.clone())?;
@@ -181,34 +220,34 @@ impl graphics::RenderChainElement for TextRender {
 		render_chain: &graphics::RenderChain,
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
-		self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
-			render_chain.logical().clone(),
-		))?);
-		self.pipeline = Some(utility::as_graphics_error(
-			pipeline::Info::default()
-				.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
-				.add_shader(Rc::downgrade(
-					self.shader_module(flags::ShaderKind::Fragment),
-				))
-				.set_viewport_state(
-					pipeline::ViewportState::default()
-						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
-						.add_scissor(graphics::utility::Scissor::default().set_size(resolution)),
-				)
-				.set_rasterization_state(pipeline::RasterizationState::default())
-				.set_color_blending(pipeline::ColorBlendState::default().add_attachment(
-					pipeline::ColorBlendAttachment {
-						color_flags: flags::ColorComponent::R
-							| flags::ColorComponent::G | flags::ColorComponent::B
-							| flags::ColorComponent::A,
-					},
-				))
-				.create_object(
-					render_chain.logical().clone(),
-					&self.pipeline_layout.as_ref().unwrap(),
-					&render_chain.render_pass(),
-				),
-		)?);
+		//self.pipeline_layout = Some(utility::as_graphics_error(pipeline::Layout::create(
+		//	render_chain.logical().clone(),
+		//))?);
+		//self.pipeline = Some(utility::as_graphics_error(
+		//	pipeline::Info::default()
+		//		.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
+		//		.add_shader(Rc::downgrade(
+		//			self.shader_module(flags::ShaderKind::Fragment),
+		//		))
+		//		.set_viewport_state(
+		//			pipeline::ViewportState::default()
+		//				.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
+		//				.add_scissor(graphics::utility::Scissor::default().set_size(resolution)),
+		//		)
+		//		.set_rasterization_state(pipeline::RasterizationState::default())
+		//		.set_color_blending(pipeline::ColorBlendState::default().add_attachment(
+		//			pipeline::ColorBlendAttachment {
+		//				color_flags: flags::ColorComponent::R
+		//					| flags::ColorComponent::G | flags::ColorComponent::B
+		//					| flags::ColorComponent::A,
+		//			},
+		//		))
+		//		.create_object(
+		//			render_chain.logical().clone(),
+		//			&self.pipeline_layout.as_ref().unwrap(),
+		//			&render_chain.render_pass(),
+		//		),
+		//)?);
 
 		Ok(())
 	}
@@ -216,12 +255,11 @@ impl graphics::RenderChainElement for TextRender {
 
 impl graphics::CommandRecorder for TextRender {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
-		buffer.bind_pipeline(
-			&self.pipeline.as_ref().unwrap(),
-			flags::PipelineBindPoint::GRAPHICS,
-		);
+		//buffer.bind_pipeline(
+		//	&self.pipeline.as_ref().unwrap(),
+		//	flags::PipelineBindPoint::GRAPHICS,
+		//);
 		//cmd_buffer.draw(3, 0, 1, 0, 0);
-		buffer.draw_vertices(3);
 		Ok(())
 	}
 }

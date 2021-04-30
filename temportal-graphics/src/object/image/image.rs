@@ -30,6 +30,11 @@ impl Image {
 			image_info: None,
 		}
 	}
+
+	pub fn builder() -> image::Builder {
+		image::Builder::default()
+	}
+
 	pub fn new(
 		owner: Rc<dyn Owner>,
 		internal: backend::vk::Image,

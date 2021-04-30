@@ -40,6 +40,12 @@ impl VulkanObject<vk_mem::Allocator> for Allocator {
 	}
 }
 
+impl Drop for Allocator {
+	fn drop(&mut self) {
+		self.internal.destroy();
+	}
+}
+
 #[doc(hidden)]
 impl image::Owner for Allocator {
 	fn destroy(

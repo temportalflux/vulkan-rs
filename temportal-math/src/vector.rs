@@ -303,6 +303,11 @@ where
 	pub fn x_mut(&mut self) -> &mut T {
 		&mut self.data[0]
 	}
+	
+	pub fn with_x(mut self, x: T) -> Self {
+		self.data[0] = x;
+		self
+	}
 
 	/// Returns a copy of second-dimensional `y` component.
 	/// Will panic if `N < 2`.
@@ -329,6 +334,11 @@ where
 	/// ```
 	pub fn y_mut(&mut self) -> &mut T {
 		&mut self.data[1]
+	}
+	
+	pub fn with_y(mut self, y: T) -> Self {
+		self.data[1] = y;
+		self
 	}
 
 	/// Returns a copy of third-dimensional `z` component.
@@ -357,6 +367,11 @@ where
 	pub fn z_mut(&mut self) -> &mut T {
 		&mut self.data[2]
 	}
+	
+	pub fn with_z(mut self, z: T) -> Self {
+		self.data[2] = z;
+		self
+	}
 
 	/// Returns a copy of fourth-dimensional `w` component.
 	/// Will panic if `N < 4`.
@@ -384,6 +399,12 @@ where
 	pub fn w_mut(&mut self) -> &mut T {
 		&mut self.data[3]
 	}
+	
+	pub fn with_w(mut self, w: T) -> Self {
+		self.data[3] = w;
+		self
+	}
+
 }
 
 #[cfg(test)]
