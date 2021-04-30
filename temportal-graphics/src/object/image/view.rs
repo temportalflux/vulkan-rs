@@ -4,13 +4,13 @@ use std::rc::Rc;
 
 /// A wrapper around [`Image View`](backend::vk::ImageView).
 pub struct View {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::ImageView,
+	internal: backend::vk::ImageView,
+	device: Rc<logical::Device>,
 }
 
 impl View {
-	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::ImageView) -> View {
-		View { _device, _internal }
+	pub fn from(device: Rc<logical::Device>, internal: backend::vk::ImageView) -> View {
+		View { device, internal }
 	}
 }
 
@@ -18,15 +18,16 @@ impl View {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::ImageView> for View {
 	fn unwrap(&self) -> &backend::vk::ImageView {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::ImageView {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for View {
 	fn drop(&mut self) {
-		self._device.destroy_image_view(self._internal);
+		use backend::version::DeviceV1_0;
+		unsafe { self.device.unwrap().destroy_image_view(self.internal, None) };
 	}
 }

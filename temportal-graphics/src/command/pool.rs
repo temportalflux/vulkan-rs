@@ -16,7 +16,12 @@ impl Pool {
 		device: &Rc<logical::Device>,
 		queue_family_index: usize,
 	) -> utility::Result<Pool> {
-		let internal = logical::Device::create_command_pool(&device, queue_family_index as u32)?;
+		use backend::version::DeviceV1_0;
+		let info = backend::vk::CommandPoolCreateInfo::builder()
+			.queue_family_index(queue_family_index as u32)
+			.build();
+		let internal =
+			utility::as_vulkan_error(unsafe { device.unwrap().create_command_pool(&info, None) })?;
 		Ok(Pool {
 			device: device.clone(),
 			internal,
@@ -70,6 +75,11 @@ impl VulkanObject<backend::vk::CommandPool> for Pool {
 
 impl Drop for Pool {
 	fn drop(&mut self) {
-		self.device.destroy_command_pool(self.internal)
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.destroy_command_pool(self.internal, None)
+		};
 	}
 }

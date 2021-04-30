@@ -70,11 +70,13 @@ impl ViewInfo {
 	pub fn create_object(
 		&mut self,
 		device: &Rc<logical::Device>,
-		image: &image::Image,
+		image: &image::Image, // TODO: The view should require a reference count to the image so the image is always alive while the view is alive
 	) -> Result<image::View, utility::Error> {
+		use backend::version::DeviceV1_0;
 		let mut info = self.to_vk();
 		info.image = *image.unwrap() as _;
-		let vk = device.create_image_view(info)?;
+		let vk =
+			utility::as_vulkan_error(unsafe { device.unwrap().create_image_view(&info, None) })?;
 		Ok(image::View::from(device.clone(), vk))
 	}
 }

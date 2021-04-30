@@ -14,10 +14,10 @@ pub struct Info {
 }
 
 pub struct Module {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::ShaderModule,
 	entry_point: std::ffi::CString,
 	kind: ShaderKind,
+	internal: backend::vk::ShaderModule,
+	device: Rc<logical::Device>,
 }
 
 impl Module {
@@ -29,10 +29,9 @@ impl Module {
 
 	/// Creates a shader module from bytes loaded from a `.spirv` file.
 	/// These bytes are created from the engine building a shader asset.
-	pub fn create_from_bytes(
-		_device: Rc<logical::Device>,
-		bytes: &[u8],
-	) -> utility::Result<Module> {
+	pub fn create_from_bytes(device: Rc<logical::Device>, bytes: &[u8]) -> utility::Result<Module> {
+		use backend::version::DeviceV1_0;
+
 		let decoded_bytes = match backend::util::read_spv(&mut std::io::Cursor::new(bytes)) {
 			Ok(bytes) => bytes,
 			Err(e) => return Err(utility::Error::General(e)),
@@ -40,10 +39,12 @@ impl Module {
 		let info = backend::vk::ShaderModuleCreateInfo::builder()
 			.code(&decoded_bytes)
 			.build();
-		let _internal = _device.create_shader_module(info)?;
+
+		let internal =
+			utility::as_vulkan_error(unsafe { device.unwrap().create_shader_module(&info, None) })?;
 		Ok(Module {
-			_device,
-			_internal,
+			device,
+			internal,
 			entry_point: std::ffi::CString::default(),
 			kind: ShaderKind::Vertex,
 		})
@@ -64,16 +65,21 @@ impl Module {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::ShaderModule> for Module {
 	fn unwrap(&self) -> &backend::vk::ShaderModule {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::ShaderModule {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for Module {
 	fn drop(&mut self) {
-		self._device.destroy_shader_module(self._internal);
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.destroy_shader_module(self.internal, None)
+		};
 	}
 }
 

@@ -7,15 +7,18 @@ use crate::{
 use std::rc::Rc;
 
 pub struct Layout {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::PipelineLayout,
+	internal: backend::vk::PipelineLayout,
+	device: Rc<logical::Device>,
 }
 
 impl Layout {
-	pub fn create(_device: Rc<logical::Device>) -> utility::Result<Layout> {
+	pub fn create(device: Rc<logical::Device>) -> utility::Result<Layout> {
+		use backend::version::DeviceV1_0;
 		let vk_info = backend::vk::PipelineLayoutCreateInfo::builder().build();
-		let _internal = _device.create_pipeline_layout(vk_info)?;
-		Ok(Layout { _device, _internal })
+		let internal = utility::as_vulkan_error(unsafe {
+			device.unwrap().create_pipeline_layout(&vk_info, None)
+		})?;
+		Ok(Layout { device, internal })
 	}
 }
 
@@ -23,15 +26,20 @@ impl Layout {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::PipelineLayout> for Layout {
 	fn unwrap(&self) -> &backend::vk::PipelineLayout {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::PipelineLayout {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for Layout {
 	fn drop(&mut self) {
-		self._device.destroy_pipeline_layout(self._internal)
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.destroy_pipeline_layout(self.internal, None)
+		};
 	}
 }

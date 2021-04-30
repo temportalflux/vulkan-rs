@@ -127,25 +127,24 @@ impl Info {
 		surface: &Surface,
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
-		let vk = device.create_swapchain(
-			backend::vk::SwapchainCreateInfoKHR::builder()
-				.surface(*surface.unwrap())
-				.min_image_count(self.image_count)
-				.image_format(self.image_format)
-				.image_color_space(self.image_color_space)
-				.image_extent(self.image_extent)
-				.image_array_layers(self.image_array_layer_count)
-				.image_usage(self.image_usage)
-				.image_sharing_mode(self.sharing_mode)
-				.pre_transform(self.pre_transform)
-				.composite_alpha(self.composite_alpha)
-				.present_mode(self.present_mode)
-				.clipped(self.is_clipped)
-				.old_swapchain(
-					old.map_or(backend::vk::SwapchainKHR::null(), |chain| *chain.unwrap()),
-				)
-				.build(),
-		)?;
+		let info = backend::vk::SwapchainCreateInfoKHR::builder()
+			.surface(*surface.unwrap())
+			.min_image_count(self.image_count)
+			.image_format(self.image_format)
+			.image_color_space(self.image_color_space)
+			.image_extent(self.image_extent)
+			.image_array_layers(self.image_array_layer_count)
+			.image_usage(self.image_usage)
+			.image_sharing_mode(self.sharing_mode)
+			.pre_transform(self.pre_transform)
+			.composite_alpha(self.composite_alpha)
+			.present_mode(self.present_mode)
+			.clipped(self.is_clipped)
+			.old_swapchain(old.map_or(backend::vk::SwapchainKHR::null(), |chain| *chain.unwrap()))
+			.build();
+		let vk = utility::as_vulkan_error(unsafe {
+			device.unwrap_swapchain().create_swapchain(&info, None)
+		})?;
 		Ok(Swapchain::from(device.clone(), vk))
 	}
 }

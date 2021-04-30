@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::logical,
 	flags, renderpass,
-	utility::{self, VulkanInfo},
+	utility::{self, VulkanInfo, VulkanObject},
 };
 
 use std::rc::Rc;
@@ -81,6 +81,7 @@ impl Info {
 
 impl Info {
 	pub fn create_object(&self, device: &Rc<logical::Device>) -> utility::Result<renderpass::Pass> {
+		use backend::version::DeviceV1_0;
 		let attachments = self
 			.attachments
 			.iter()
@@ -112,7 +113,9 @@ impl Info {
 			.subpasses(&subpasses)
 			.dependencies(&dependencies)
 			.build();
-		let vk_obj = device.create_render_pass(vk_info)?;
-		Ok(renderpass::Pass::from(device.clone(), vk_obj))
+		let vk = utility::as_vulkan_error(unsafe {
+			device.unwrap().create_render_pass(&vk_info, None)
+		})?;
+		Ok(renderpass::Pass::from(device.clone(), vk))
 	}
 }

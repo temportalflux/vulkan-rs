@@ -30,6 +30,7 @@ impl Info {
 		render_pass: &renderpass::Pass,
 		device: &Rc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
+		use backend::version::DeviceV1_0;
 		let attachments = vec![*swapchain_image_view.unwrap()];
 		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
@@ -38,19 +39,20 @@ impl Info {
 			.render_pass(*render_pass.unwrap())
 			.attachments(&attachments[..])
 			.build();
-		let vk = device.create_framebuffer(info)?;
+		let vk =
+			utility::as_vulkan_error(unsafe { device.unwrap().create_framebuffer(&info, None) })?;
 		Ok(Framebuffer::from(device.clone(), vk))
 	}
 }
 
 pub struct Framebuffer {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::Framebuffer,
+	internal: backend::vk::Framebuffer,
+	device: Rc<logical::Device>,
 }
 
 impl Framebuffer {
-	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::Framebuffer) -> Framebuffer {
-		Framebuffer { _device, _internal }
+	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Framebuffer) -> Framebuffer {
+		Framebuffer { device, internal }
 	}
 }
 
@@ -58,15 +60,20 @@ impl Framebuffer {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::Framebuffer> for Framebuffer {
 	fn unwrap(&self) -> &backend::vk::Framebuffer {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::Framebuffer {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for Framebuffer {
 	fn drop(&mut self) {
-		self._device.destroy_framebuffer(self._internal)
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.destroy_framebuffer(self.internal, None)
+		};
 	}
 }

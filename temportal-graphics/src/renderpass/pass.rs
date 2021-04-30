@@ -6,13 +6,13 @@ use std::rc::Rc;
 /// to define when pipeline instructions can be issued
 /// and what attachments are used.
 pub struct Pass {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::RenderPass,
+	internal: backend::vk::RenderPass,
+	device: Rc<logical::Device>,
 }
 
 impl Pass {
-	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::RenderPass) -> Pass {
-		Pass { _device, _internal }
+	pub fn from(device: Rc<logical::Device>, internal: backend::vk::RenderPass) -> Pass {
+		Pass { device, internal }
 	}
 }
 
@@ -20,15 +20,20 @@ impl Pass {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::RenderPass> for Pass {
 	fn unwrap(&self) -> &backend::vk::RenderPass {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::RenderPass {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for Pass {
 	fn drop(&mut self) {
-		self._device.destroy_render_pass(self._internal)
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.destroy_render_pass(self.internal, None)
+		};
 	}
 }

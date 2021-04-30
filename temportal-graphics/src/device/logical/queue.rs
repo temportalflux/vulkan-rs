@@ -1,22 +1,26 @@
-use crate::{backend, command, device::logical, utility};
+use crate::{
+	backend, command,
+	device::logical,
+	utility::{self, VulkanInfo, VulkanObject},
+};
 
 use std::rc::Rc;
 
 pub struct Queue {
 	queue_family_index: usize,
-	_internal: backend::vk::Queue,
+	internal: backend::vk::Queue,
 	device: Rc<logical::Device>,
 }
 
 impl Queue {
 	pub fn from(
 		device: Rc<logical::Device>,
-		_internal: backend::vk::Queue,
+		internal: backend::vk::Queue,
 		queue_family_index: usize,
 	) -> Queue {
 		Queue {
 			device,
-			_internal,
+			internal,
 			queue_family_index,
 		}
 	}
@@ -30,22 +34,34 @@ impl Queue {
 		infos: Vec<command::SubmitInfo>,
 		signal_fence_when_complete: Option<&command::Fence>,
 	) -> utility::Result<()> {
-		self.device.submit(&self, infos, signal_fence_when_complete)
+		use backend::version::DeviceV1_0;
+		let infos = infos.iter().map(|info| info.to_vk()).collect::<Vec<_>>();
+		utility::as_vulkan_error(unsafe {
+			self.device.unwrap().queue_submit(
+				self.internal,
+				&infos,
+				signal_fence_when_complete.map_or(backend::vk::Fence::null(), |obj| *obj.unwrap()),
+			)
+		})
 	}
-
 	/// returns true if the swapchain is suboptimal
-	pub fn present(&self, info: command::PresentInfo) -> utility::Result<bool> {
-		self.device.present(&self, info)
+	pub fn present(&self, info: command::PresentInfo) -> utility::Result</*suboptimal*/ bool> {
+		let vk_info = info.to_vk();
+		utility::as_vulkan_error(unsafe {
+			self.device
+				.unwrap_swapchain()
+				.queue_present(self.internal, &vk_info)
+		})
 	}
 }
 
 /// A trait exposing the internal value for the wrapped [`backend::vk::Queue`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl utility::VulkanObject<backend::vk::Queue> for Queue {
+impl VulkanObject<backend::vk::Queue> for Queue {
 	fn unwrap(&self) -> &backend::vk::Queue {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::Queue {
-		&mut self._internal
+		&mut self.internal
 	}
 }

@@ -5,13 +5,13 @@ use std::rc::Rc;
 /// A vulkan Pipeline. A given pipeline is only valid for a specific [`Render Pass`](crate::renderpass::Pass),
 /// and is used to issue commands to the [`GPU`](crate::device::physical::Device).
 pub struct Pipeline {
-	_device: Rc<logical::Device>,
-	_internal: backend::vk::Pipeline,
+	internal: backend::vk::Pipeline,
+	device: Rc<logical::Device>,
 }
 
 impl Pipeline {
-	pub fn from(_device: Rc<logical::Device>, _internal: backend::vk::Pipeline) -> Pipeline {
-		Pipeline { _device, _internal }
+	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Pipeline) -> Pipeline {
+		Pipeline { device, internal }
 	}
 }
 
@@ -19,15 +19,16 @@ impl Pipeline {
 /// Crates using `temportal_graphics` should NOT use this.
 impl VulkanObject<backend::vk::Pipeline> for Pipeline {
 	fn unwrap(&self) -> &backend::vk::Pipeline {
-		&self._internal
+		&self.internal
 	}
 	fn unwrap_mut(&mut self) -> &mut backend::vk::Pipeline {
-		&mut self._internal
+		&mut self.internal
 	}
 }
 
 impl Drop for Pipeline {
 	fn drop(&mut self) {
-		self._device.destroy_pipeline(self._internal)
+		use backend::version::DeviceV1_0;
+		unsafe { self.device.unwrap().destroy_pipeline(self.internal, None) };
 	}
 }

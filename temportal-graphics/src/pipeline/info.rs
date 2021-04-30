@@ -69,6 +69,8 @@ impl Info {
 		layout: &pipeline::Layout,
 		render_pass: &renderpass::Pass,
 	) -> Result<pipeline::Pipeline, utility::Error> {
+		use backend::version::DeviceV1_0;
+
 		let shader_stages = self
 			.shaders
 			.iter()
@@ -98,8 +100,19 @@ impl Info {
 			.subpass(0)
 			.build();
 
-		let pipelines =
-			device.create_graphics_pipelines(backend::vk::PipelineCache::null(), &[info])?;
+		let pipelines = match unsafe {
+			device.unwrap().create_graphics_pipelines(
+				backend::vk::PipelineCache::null(),
+				&[info],
+				None,
+			)
+		} {
+			Ok(pipelines) => Ok(pipelines),
+			Err((pipelines, vk_result)) => match vk_result {
+				backend::vk::Result::SUCCESS => Ok(pipelines),
+				_ => Err(utility::Error::VulkanError(vk_result)),
+			},
+		}?;
 		Ok(pipeline::Pipeline::from(device, pipelines[0]))
 	}
 }

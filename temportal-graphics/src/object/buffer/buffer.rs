@@ -64,7 +64,6 @@ impl VulkanObject<backend::vk::Buffer> for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
-		let mem_address = self.handle();
 		utility::as_alloc_error(
 			self.allocator
 				.unwrap()

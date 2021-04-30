@@ -39,6 +39,7 @@ impl Buffer {
 		render_pass: &renderpass::Pass,
 		info: renderpass::RecordInstruction,
 	) {
+		use backend::version::DeviceV1_0;
 		let clear_values = info
 			.clear_values
 			.iter()
@@ -50,11 +51,18 @@ impl Buffer {
 			.render_area(info.render_area)
 			.clear_values(&clear_values)
 			.build();
-		self.device.begin_render_pass(&self, info);
+		unsafe {
+			self.device.unwrap().cmd_begin_render_pass(
+				self.internal,
+				&info,
+				backend::vk::SubpassContents::INLINE,
+			)
+		};
 	}
 
 	pub fn stop_render_pass(&self) {
-		self.device.end_render_pass(&self);
+		use backend::version::DeviceV1_0;
+		unsafe { self.device.unwrap().cmd_end_render_pass(self.internal) };
 	}
 
 	pub fn bind_pipeline(
@@ -62,11 +70,25 @@ impl Buffer {
 		pipeline: &pipeline::Pipeline,
 		bind_point: flags::PipelineBindPoint,
 	) {
-		self.device.bind_pipeline(&self, &pipeline, bind_point);
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device
+				.unwrap()
+				.cmd_bind_pipeline(self.internal, bind_point, *pipeline.unwrap())
+		};
 	}
 
 	pub fn draw_vertices(&self, vertex_count: u32) {
-		self.device.draw(&self, vertex_count);
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device.unwrap().cmd_draw(
+				self.internal,
+				vertex_count,
+				/*instance count*/ 1,
+				/*fist_index*/ 0,
+				/*fist_instance*/ 0,
+			)
+		};
 	}
 
 	pub fn draw(
@@ -77,14 +99,17 @@ impl Buffer {
 		first_instance: u32,
 		vertex_offset: i32,
 	) {
-		self.device.draw_indexed(
-			&self,
-			index_count,
-			first_index,
-			instance_count,
-			first_instance,
-			vertex_offset,
-		);
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device.unwrap().cmd_draw_indexed(
+				self.internal,
+				index_count,
+				instance_count,
+				first_index,
+				vertex_offset,
+				first_instance,
+			)
+		};
 	}
 }
 
