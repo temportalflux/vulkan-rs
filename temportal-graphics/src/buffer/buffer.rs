@@ -36,7 +36,10 @@ impl Buffer {
 		self.allocation_info.get_device_memory().as_raw()
 	}
 
-	pub fn create_staging(size: u64, allocator: &Rc<alloc::Allocator>) -> utility::Result<Buffer> {
+	pub fn create_staging(
+		size: usize,
+		allocator: &Rc<alloc::Allocator>,
+	) -> utility::Result<Buffer> {
 		Buffer::builder()
 			.with_size(size)
 			.with_usage(BufferUsage::TRANSFER_SRC)

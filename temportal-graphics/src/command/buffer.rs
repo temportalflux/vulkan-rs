@@ -171,6 +171,27 @@ impl Buffer {
 		};
 	}
 
+	pub fn bind_vertex_buffers(
+		&self,
+		first_binding: usize,
+		buffers: Vec<&buffer::Buffer>,
+		offsets: Vec<u64>,
+	) {
+		use backend::version::DeviceV1_0;
+		let vk_buffers = buffers
+			.iter()
+			.map(|buffer| *buffer.unwrap())
+			.collect::<Vec<_>>();
+		unsafe {
+			self.device.unwrap().cmd_bind_vertex_buffers(
+				self.internal,
+				first_binding as u32,
+				&vk_buffers[..],
+				&offsets[..],
+			)
+		};
+	}
+
 	pub fn draw_vertices(&self, vertex_count: u32) {
 		use backend::version::DeviceV1_0;
 		unsafe {

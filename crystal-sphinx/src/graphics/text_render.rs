@@ -1,7 +1,6 @@
 use crate::engine::{
 	self,
 	graphics::{self, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain},
-	math::Vector,
 	utility::{self, AnyError},
 	Engine,
 };
@@ -77,7 +76,6 @@ impl TextRender {
 
 		let font_atlas = {
 			optick::event!("load-font-image");
-			use std::io::Write;
 
 			let asset = engine.assets.loader.load_sync(
 				&engine.assets.types,
@@ -85,24 +83,6 @@ impl TextRender {
 				&engine::asset::Id::new(crate::name(), "font/unispace"),
 			)?;
 			let font = engine::asset::as_asset::<engine::graphics::font::Font>(&asset);
-
-			let font_sdf_image_mem_size =
-				font.size().x() * font.size().y() * std::mem::size_of::<u8>();
-			let font_sdf_image_data: Vec<u8> = font
-				.binary()
-				.iter()
-				.flatten()
-				.map(|alpha| vec![1, 1, 1, *alpha])
-				.flatten()
-				.collect();
-
-			let staging_buffer = graphics::buffer::Buffer::create_staging(
-				font_sdf_image_mem_size as u64,
-				&render_chain.allocator(),
-			)?;
-			staging_buffer
-				.memory()?
-				.write_all(&font_sdf_image_data[..])?;
 
 			let image_size = font.size().subvec::<3>(None).with_z(1);
 			let image = Rc::new(
@@ -119,66 +99,22 @@ impl TextRender {
 					.build(&render_chain.allocator())?,
 			);
 
-			{
-				optick::event!("copy-to-gpu");
-				let pool = render_chain.transient_command_pool();
-				let cmd_buffer = pool
-					.allocate_buffers(1, flags::CommandBufferLevel::PRIMARY)?
-					.pop()
-					.unwrap();
-				cmd_buffer.begin(Some(flags::CommandBufferUsage::ONE_TIME_SUBMIT))?;
+			let font_sdf_image_data: Vec<u8> = font
+				.binary()
+				.iter()
+				.flatten()
+				.map(|alpha| vec![1, 1, 1, *alpha])
+				.flatten()
+				.collect();
 
-				cmd_buffer.mark_pipeline_barrier(command::PipelineBarrier {
-					src_stage: flags::PipelineStage::TOP_OF_PIPE,
-					dst_stage: flags::PipelineStage::TRANSFER,
-					kinds: vec![command::BarrierKind::Image(
-						command::ImageBarrier::default()
-							.prevents(flags::Access::TRANSFER_WRITE)
-							.with_image(Rc::downgrade(&image))
-							.with_layout(
-								flags::ImageLayout::UNDEFINED,
-								flags::ImageLayout::TRANSFER_DST_OPTIMAL,
-							),
-					)],
-				});
-				cmd_buffer.copy_buffer_to_image(
-					&staging_buffer,
-					&image,
-					flags::ImageLayout::TRANSFER_DST_OPTIMAL,
-					vec![command::CopyBufferToImage {
-						buffer_offset: font_sdf_image_mem_size,
-						layers: graphics::structs::subresource::Layers::default()
-							.with_aspect(flags::ImageAspect::COLOR),
-						offset: Vector::filled(0),
-						size: image_size,
-					}],
-				);
-				cmd_buffer.mark_pipeline_barrier(command::PipelineBarrier {
-					src_stage: flags::PipelineStage::TRANSFER,
-					dst_stage: flags::PipelineStage::FRAGMENT_SHADER,
-					kinds: vec![command::BarrierKind::Image(
-						command::ImageBarrier::default()
-							.requires(flags::Access::TRANSFER_WRITE)
-							.prevents(flags::Access::SHADER_READ)
-							.with_image(Rc::downgrade(&image))
-							.with_layout(
-								flags::ImageLayout::TRANSFER_DST_OPTIMAL,
-								flags::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
-							),
-					)],
-				});
-
-				cmd_buffer.end()?;
-
-				utility::as_graphics_error(render_chain.graphics_queue().submit(
-					vec![command::SubmitInfo::default().add_buffer(&cmd_buffer)],
-					None,
-				))?;
-
-				render_chain.logical().wait_until_idle()?;
-
-				pool.free_buffers(vec![cmd_buffer]);
-			}
+			graphics::TaskCopyImageToGpu::new(&render_chain)?
+				.begin()?
+				.format_image_for_write(&image)
+				.stage(&font_sdf_image_data[..])?
+				.copy_stage_to_image(&image)
+				.format_image_for_read(&image)
+				.end()?
+				.wait_until_idle()?;
 
 			Rc::new(image)
 		};
@@ -197,7 +133,7 @@ impl TextRender {
 		let font_atlas_sampler = Rc::new(
 			graphics::sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
-				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
+				// TODO: Turn on the device feature .with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
 				.build(&render_chain.logical())?,
 		);
 

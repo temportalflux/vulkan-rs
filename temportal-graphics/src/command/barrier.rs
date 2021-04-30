@@ -133,6 +133,12 @@ impl ImageBarrier {
 		self.new_layout = next;
 		self
 	}
+
+	pub fn with_range(mut self, range: subresource::Range) -> Self {
+		self.range = range;
+		self
+	}
+
 }
 
 impl VulkanInfo<backend::vk::ImageMemoryBarrier> for ImageBarrier {

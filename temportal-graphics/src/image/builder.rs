@@ -41,6 +41,14 @@ impl Default for Builder {
 }
 
 impl Builder {
+	pub fn size(&self) -> Vector<usize, 3> {
+		Vector::new([
+			self.extent.width as usize,
+			self.extent.height as usize,
+			self.extent.depth as usize,
+		])
+	}
+
 	pub fn with_alloc(mut self, mem_info: alloc::Info) -> Self {
 		self.mem_info = mem_info;
 		self

@@ -1,6 +1,6 @@
 use crate::engine::{
 	self,
-	graphics::{self, command, flags, pipeline, shader, structs, RenderChain},
+	graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
 	math::Vector,
 	utility::{self, AnyError},
 	Engine,
@@ -8,12 +8,14 @@ use crate::engine::{
 use std::{cell::RefCell, rc::Rc};
 
 pub struct TriangleRenderer {
-	pipeline: Option<pipeline::Pipeline>,
-	pipeline_layout: Option<pipeline::Layout>,
+	index_buffer: Option<Rc<buffer::Buffer>>,
+	vertex_buffer: Option<Rc<buffer::Buffer>>,
 	vert_bytes: Vec<u8>,
 	frag_bytes: Vec<u8>,
 	vert_shader: Option<Rc<shader::Module>>,
 	frag_shader: Option<Rc<shader::Module>>,
+	pipeline: Option<pipeline::Pipeline>,
+	pipeline_layout: Option<pipeline::Layout>,
 }
 
 impl TriangleRenderer {
@@ -51,6 +53,8 @@ impl TriangleRenderer {
 			frag_bytes,
 			vert_shader: None,
 			frag_shader: None,
+			vertex_buffer: None,
+			index_buffer: None,
 		}));
 
 		render_chain.add_render_chain_element(strong.clone())?;
@@ -76,7 +80,7 @@ impl pipeline::vertex::Object for Vertex {
 				offset: graphics::utility::offset_of!(Vertex, color),
 				format: flags::Format::R32G32B32A32_SFLOAT,
 			},
- 		]
+		]
 	}
 }
 
@@ -89,7 +93,6 @@ mod vertex_data {
 		assert_eq!(graphics::utility::offset_of!(Vertex, pos), 0);
 		assert_eq!(graphics::utility::offset_of!(Vertex, color), 16);
 	}
-
 }
 
 impl graphics::RenderChainElement for TriangleRenderer {
@@ -104,6 +107,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 				},
 			),
 		)?));
+
 		self.frag_shader = Some(Rc::new(utility::as_graphics_error(
 			shader::Module::create(
 				render_chain.logical().clone(),
@@ -114,6 +118,37 @@ impl graphics::RenderChainElement for TriangleRenderer {
 				},
 			),
 		)?));
+
+		let verticies = vec![
+			Vertex {
+				pos: Vector::new([0.0, -0.5, 0.0, 0.0]),
+				color: Vector::new([1.0, 0.0, 0.0, 1.0]),
+			},
+			Vertex {
+				pos: Vector::new([0.5, 0.5, 0.0, 0.0]),
+				color: Vector::new([0.0, 1.0, 0.0, 1.0]),
+			},
+			Vertex {
+				pos: Vector::new([-0.5, 0.5, 0.0, 0.0]),
+				color: Vector::new([0.0, 0.0, 1.0, 1.0]),
+			},
+		];
+		let vertex_data_size = std::mem::size_of::<Vertex>() * verticies.len();
+
+		self.vertex_buffer = Some(Rc::new(utility::as_graphics_error(
+			graphics::buffer::Buffer::builder()
+				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
+				.with_usage(flags::BufferUsage::TRANSFER_DST)
+				.with_size(vertex_data_size)
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::GpuOnly)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL),
+				)
+				.with_sharing(flags::SharingMode::EXCLUSIVE)
+				.build(&render_chain.allocator()),
+		)?));
+
 		Ok(())
 	}
 
@@ -169,8 +204,8 @@ impl graphics::CommandRecorder for TriangleRenderer {
 			&self.pipeline.as_ref().unwrap(),
 			flags::PipelineBindPoint::GRAPHICS,
 		);
+		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		//cmd_buffer.draw(3, 0, 1, 0, 0);
-		buffer.draw_vertices(3);
 		Ok(())
 	}
 }

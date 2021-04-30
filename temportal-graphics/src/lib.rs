@@ -1,6 +1,6 @@
+extern crate memoffset;
 extern crate sdl2;
 extern crate vk_mem;
-extern crate memoffset;
 
 pub use ash as backend;
 

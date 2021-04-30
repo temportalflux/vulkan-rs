@@ -28,6 +28,16 @@ impl Memory {
 			allocator: obj.allocator().clone(),
 		})
 	}
+
+	pub fn write_slice<T: Sized>(&mut self, buf: &[T]) -> std::io::Result<bool> {
+		let buf_size = std::mem::size_of::<T>() * buf.len();
+		if buf_size > self.size - self.amount_written {
+			return Ok(false);
+		}
+		unsafe { std::ptr::copy(buf.as_ptr(), self.ptr as _, buf_size) }
+		self.amount_written += buf_size;
+		Ok(true)
+	}
 }
 
 impl Drop for Memory {

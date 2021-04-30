@@ -1,10 +1,9 @@
 use crate::{
 	backend, image,
-	structs::Extent3D,
 	utility::{self, VulkanObject},
 };
-
 use std::rc::Rc;
+use temportal_math::Vector;
 
 pub trait Owner {
 	fn destroy(&self, obj: &Image, allocation: Option<&vk_mem::Allocation>) -> utility::Result<()>;
@@ -74,8 +73,8 @@ impl Drop for Image {
 }
 
 impl Image {
-	pub fn image_size(&self) -> &Extent3D {
-		&self.image_info.as_ref().unwrap().extent
+	pub fn image_size(&self) -> Vector<usize, 3> {
+		self.image_info.as_ref().unwrap().size()
 	}
 
 	pub fn memory_size(&self) -> usize {
