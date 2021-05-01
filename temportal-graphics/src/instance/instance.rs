@@ -35,7 +35,8 @@ impl Instance {
 			let messenger_info = backend::vk::DebugUtilsMessengerCreateInfoEXT::builder()
 				.message_severity(
 					backend::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR
-						| backend::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING, //| backend::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE_EXT
+						| backend::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING
+						| backend::vk::DebugUtilsMessageSeverityFlagsEXT::INFO
 				)
 				.message_type(
 					backend::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
@@ -212,19 +213,25 @@ impl Instance {
 
 #[doc(hidden)]
 unsafe extern "system" fn debug_callback(
-	message_severity: backend::vk::DebugUtilsMessageSeverityFlagsEXT,
-	_message_types: backend::vk::DebugUtilsMessageTypeFlagsEXT,
+	severity: backend::vk::DebugUtilsMessageSeverityFlagsEXT,
+	kind: backend::vk::DebugUtilsMessageTypeFlagsEXT,
 	p_callback_data: *const backend::vk::DebugUtilsMessengerCallbackDataEXT,
 	_p_user_data: *mut std::ffi::c_void,
 ) -> backend::vk::Bool32 {
-	let log_level = match message_severity {
+	let log_level = match severity {
 		backend::vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE => log::Level::Trace,
 		backend::vk::DebugUtilsMessageSeverityFlagsEXT::INFO => log::Level::Info,
 		backend::vk::DebugUtilsMessageSeverityFlagsEXT::WARNING => log::Level::Warn,
 		backend::vk::DebugUtilsMessageSeverityFlagsEXT::ERROR => log::Level::Error,
 		_ => log::Level::Debug,
 	};
+	let target = format!("vulkan-{}", match kind {
+		backend::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL => "general",
+		backend::vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE => "performance",
+		backend::vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION => "validation",
+		_ => "unknown",
+	});
 	let message = std::ffi::CStr::from_ptr((*p_callback_data).p_message).to_string_lossy();
-	log::log!(target: "vulkan", log_level, "{}", message);
+	log::log!(target: &target, log_level, "{}", message);
 	backend::vk::FALSE
 }
