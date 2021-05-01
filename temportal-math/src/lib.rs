@@ -72,3 +72,10 @@ macro_rules! assert_vec_approx {
 		}
 	};
 }
+
+#[macro_export]
+macro_rules! vector {
+	($($x:expr),+ $(,)?) => {
+		$crate::Vector::new([$($x),+])
+	};
+}

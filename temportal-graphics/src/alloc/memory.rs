@@ -35,6 +35,7 @@ impl Memory {
 		if buf_size > self.size - self.amount_written {
 			return Ok(false);
 		}
+		/*
 		log::debug!(
 			"writing {} bytes to {:#x} at pos {} and max size {}",
 			buf_size,
@@ -42,6 +43,7 @@ impl Memory {
 			self.amount_written,
 			self.size
 		);
+		*/
 		let src = buf.as_ptr() as *const u8;
 		let dst: *mut u8 = ((self.ptr as usize) + self.amount_written) as *mut u8;
 		unsafe { std::ptr::copy(src, dst, buf_size) }

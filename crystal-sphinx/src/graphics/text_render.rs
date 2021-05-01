@@ -387,7 +387,7 @@ impl graphics::RenderChainElement for TextRender {
 								op: flags::BlendOp::ADD,
 								dst: flags::BlendFactor::ZERO,
 							},
-						})
+						}),
 					},
 				))
 				.create_object(

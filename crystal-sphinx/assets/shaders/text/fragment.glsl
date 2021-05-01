@@ -1,5 +1,6 @@
 #version 450
 
+// Based on https://www.youtube.com/watch?v=d8cfgcJR9Tk&list=PLRIWtICgwaX0u7Rf9zkZhLoLuZVfUksDP&index=34
 layout(location = 0) in vec2 fragTexCoord;
 layout(location = 1) in vec2 fragWidthEdge;
 layout(location = 2) in vec4 fragColor;

@@ -1,13 +1,16 @@
-use crate::engine::{
-	self,
-	graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
-	math::Vector,
-	utility::{self, AnyError},
-	Engine,
+use crate::{
+	engine::{
+		self,
+		graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
+		math::vector,
+		utility::{self, AnyError},
+		Engine,
+	},
+	Vertex,
 };
 use std::{cell::RefCell, rc::Rc};
 
-pub struct TriangleRenderer {
+pub struct Triangle {
 	index_buffer: Option<Rc<buffer::Buffer>>,
 	vertex_buffer: Option<Rc<buffer::Buffer>>,
 	indices: Vec<u32>,
@@ -20,11 +23,11 @@ pub struct TriangleRenderer {
 	pipeline_layout: Option<pipeline::Layout>,
 }
 
-impl TriangleRenderer {
+impl Triangle {
 	pub fn new(
 		engine: &Engine,
 		render_chain: &mut RenderChain,
-	) -> Result<Rc<RefCell<TriangleRenderer>>, AnyError> {
+	) -> Result<Rc<RefCell<Triangle>>, AnyError> {
 		let vert_bytes: Vec<u8>;
 		let frag_bytes: Vec<u8>;
 		{
@@ -48,7 +51,7 @@ impl TriangleRenderer {
 			}
 		}
 
-		let strong = Rc::new(RefCell::new(TriangleRenderer {
+		let strong = Rc::new(RefCell::new(Triangle {
 			pipeline_layout: None,
 			pipeline: None,
 			vert_bytes,
@@ -56,18 +59,15 @@ impl TriangleRenderer {
 			vert_shader: None,
 			frag_shader: None,
 			vertices: vec![
-				Vertex {
-					pos: Vector::new([0.0, -0.5, 0.0, 0.0]),
-					color: Vector::new([1.0, 0.0, 0.0, 1.0]),
-				},
-				Vertex {
-					pos: Vector::new([0.5, 0.5, 0.0, 0.0]),
-					color: Vector::new([0.0, 1.0, 0.0, 1.0]),
-				},
-				Vertex {
-					pos: Vector::new([-0.5, 0.5, 0.0, 0.0]),
-					color: Vector::new([0.0, 0.0, 1.0, 1.0]),
-				},
+				Vertex::default()
+					.with_pos(vector![0.0, -0.5])
+					.with_color(vector![1.0, 0.0, 0.0, 1.0]),
+				Vertex::default()
+					.with_pos(vector![0.5, 0.5])
+					.with_color(vector![0.0, 1.0, 0.0, 1.0]),
+				Vertex::default()
+					.with_pos(vector![-0.5, 0.5])
+					.with_color(vector![0.0, 0.0, 1.0, 1.0]),
 			],
 			indices: vec![0, 1, 2],
 			vertex_buffer: None,
@@ -78,26 +78,6 @@ impl TriangleRenderer {
 		render_chain.add_command_recorder(strong.clone())?;
 
 		Ok(strong)
-	}
-}
-
-struct Vertex {
-	pos: Vector<f32, 4>,
-	color: Vector<f32, 4>,
-}
-
-impl pipeline::vertex::Object for Vertex {
-	fn attributes() -> Vec<pipeline::vertex::Attribute> {
-		vec![
-			pipeline::vertex::Attribute {
-				offset: graphics::utility::offset_of!(Vertex, pos),
-				format: flags::Format::R32G32_SFLOAT,
-			},
-			pipeline::vertex::Attribute {
-				offset: graphics::utility::offset_of!(Vertex, color),
-				format: flags::Format::R32G32B32A32_SFLOAT,
-			},
-		]
 	}
 }
 
@@ -112,7 +92,7 @@ mod vertex_data {
 	}
 }
 
-impl graphics::RenderChainElement for TriangleRenderer {
+impl graphics::RenderChainElement for Triangle {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
 		self.vert_shader = Some(Rc::new(shader::Module::create(
 			render_chain.logical().clone(),
@@ -223,7 +203,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 	}
 }
 
-impl graphics::CommandRecorder for TriangleRenderer {
+impl graphics::CommandRecorder for Triangle {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),

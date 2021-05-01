@@ -9,6 +9,15 @@ pub struct Vector<T, const N: usize> {
 
 // #region Initialization
 
+impl<T, const N: usize> Default for Vector<T, N>
+where
+	T: Default + Copy,
+{
+	fn default() -> Vector<T, N> {
+		Vector::filled(T::default())
+	}
+}
+
 impl<T, const N: usize> Vector<T, N> {
 	/// Creates a new vector with the provided components.
 	///

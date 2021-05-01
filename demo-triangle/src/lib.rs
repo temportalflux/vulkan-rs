@@ -9,9 +9,11 @@ use engine::{
 };
 pub use temportal_engine as engine;
 
-#[path = "render/TriangleRenderer.rs"]
+#[path = "renderer.rs"]
 mod renderer;
-use renderer::TriangleRenderer;
+#[path = "vertex.rs"]
+mod vertex;
+pub use vertex::*;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
@@ -55,7 +57,7 @@ pub fn run(log_name: &str) -> VoidResult {
 			0.0, 0.0, 0.0, 1.0,
 		])));
 
-	let _renderer = TriangleRenderer::new(&engine.borrow(), &mut render_chain.borrow_mut());
+	let _renderer = renderer::Triangle::new(&engine.borrow(), &mut render_chain.borrow_mut());
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
