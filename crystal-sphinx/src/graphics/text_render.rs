@@ -33,15 +33,13 @@ impl ShaderItem {
 	}
 
 	pub fn create_module(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.module = Some(Rc::new(utility::as_graphics_error(
-			shader::Module::create(
-				render_chain.logical().clone(),
-				shader::Info {
-					kind: self.kind,
-					entry_point: String::from("main"),
-					bytes: self.bytes.clone(),
-				},
-			),
+		self.module = Some(Rc::new(shader::Module::create(
+			render_chain.logical().clone(),
+			shader::Info {
+				kind: self.kind,
+				entry_point: String::from("main"),
+				bytes: self.bytes.clone(),
+			},
 		)?));
 		Ok(())
 	}
@@ -194,7 +192,7 @@ impl graphics::RenderChainElement for TextRender {
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
 
-		self.font_atlas_descriptor_layout = Some(Rc::new(utility::as_graphics_error(
+		self.font_atlas_descriptor_layout = Some(Rc::new(
 			SetLayout::builder()
 				.with_binding(
 					font_sampler_binding_number,
@@ -202,21 +200,19 @@ impl graphics::RenderChainElement for TextRender {
 					1,
 					flags::ShaderKind::Fragment,
 				)
-				.build(&render_chain.logical()),
-		)?));
+				.build(&render_chain.logical())?,
+		));
 
-		self.font_atlas_descriptor_set = utility::as_graphics_error(
-			render_chain
-				.persistent_descriptor_pool()
-				.borrow_mut()
-				.allocate_descriptor_sets(&vec![self
-					.font_atlas_descriptor_layout
-					.as_ref()
-					.unwrap()
-					.clone()]),
-		)?
-		.pop()
-		.unwrap();
+		self.font_atlas_descriptor_set = render_chain
+			.persistent_descriptor_pool()
+			.borrow_mut()
+			.allocate_descriptor_sets(&vec![self
+				.font_atlas_descriptor_layout
+				.as_ref()
+				.unwrap()
+				.clone()])?
+			.pop()
+			.unwrap();
 
 		SetUpdate::default()
 			.with(UpdateOperation::Write(WriteOp {
@@ -254,12 +250,12 @@ impl graphics::RenderChainElement for TextRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		optick::event!();
-		self.pipeline_layout = Some(utility::as_graphics_error(
+		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
 				.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
-				.build(render_chain.logical().clone()),
-		)?);
-		self.pipeline = Some(utility::as_graphics_error(
+				.build(render_chain.logical().clone())?,
+		);
+		self.pipeline = Some(
 			pipeline::Info::default()
 				.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
 				.add_shader(Rc::downgrade(
@@ -282,8 +278,8 @@ impl graphics::RenderChainElement for TextRender {
 					render_chain.logical().clone(),
 					&self.pipeline_layout.as_ref().unwrap(),
 					&render_chain.render_pass(),
-				),
-		)?);
+				)?,
+		);
 
 		Ok(())
 	}

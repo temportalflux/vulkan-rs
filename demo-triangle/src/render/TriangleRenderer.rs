@@ -114,29 +114,25 @@ mod vertex_data {
 
 impl graphics::RenderChainElement for TriangleRenderer {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.vert_shader = Some(Rc::new(utility::as_graphics_error(
-			shader::Module::create(
-				render_chain.logical().clone(),
-				shader::Info {
-					kind: flags::ShaderKind::Vertex,
-					entry_point: String::from("main"),
-					bytes: self.vert_bytes.clone(),
-				},
-			),
+		self.vert_shader = Some(Rc::new(shader::Module::create(
+			render_chain.logical().clone(),
+			shader::Info {
+				kind: flags::ShaderKind::Vertex,
+				entry_point: String::from("main"),
+				bytes: self.vert_bytes.clone(),
+			},
 		)?));
 
-		self.frag_shader = Some(Rc::new(utility::as_graphics_error(
-			shader::Module::create(
-				render_chain.logical().clone(),
-				shader::Info {
-					kind: flags::ShaderKind::Fragment,
-					entry_point: String::from("main"),
-					bytes: self.frag_bytes.clone(),
-				},
-			),
+		self.frag_shader = Some(Rc::new(shader::Module::create(
+			render_chain.logical().clone(),
+			shader::Info {
+				kind: flags::ShaderKind::Fragment,
+				entry_point: String::from("main"),
+				bytes: self.frag_bytes.clone(),
+			},
 		)?));
 
-		self.vertex_buffer = Some(Rc::new(utility::as_graphics_error(
+		self.vertex_buffer = Some(Rc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -147,8 +143,8 @@ impl graphics::RenderChainElement for TriangleRenderer {
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
 				.with_sharing(flags::SharingMode::EXCLUSIVE)
-				.build(&render_chain.allocator()),
-		)?));
+				.build(&render_chain.allocator())?,
+		));
 
 		graphics::TaskCopyImageToGpu::new(&render_chain)?
 			.begin()?
@@ -157,7 +153,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 			.end()?
 			.wait_until_idle()?;
 
-		self.index_buffer = Some(Rc::new(utility::as_graphics_error(
+		self.index_buffer = Some(Rc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::INDEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -168,8 +164,8 @@ impl graphics::RenderChainElement for TriangleRenderer {
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
 				.with_sharing(flags::SharingMode::EXCLUSIVE)
-				.build(&render_chain.allocator()),
-		)?));
+				.build(&render_chain.allocator())?,
+		));
 
 		graphics::TaskCopyImageToGpu::new(&render_chain)?
 			.begin()?
@@ -192,10 +188,9 @@ impl graphics::RenderChainElement for TriangleRenderer {
 		render_chain: &graphics::RenderChain,
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
-		self.pipeline_layout = Some(utility::as_graphics_error(
-			pipeline::Layout::builder().build(render_chain.logical().clone()),
-		)?);
-		self.pipeline = Some(utility::as_graphics_error(
+		self.pipeline_layout =
+			Some(pipeline::Layout::builder().build(render_chain.logical().clone())?);
+		self.pipeline = Some(
 			pipeline::Info::default()
 				.add_shader(Rc::downgrade(self.vert_shader.as_ref().unwrap()))
 				.add_shader(Rc::downgrade(self.frag_shader.as_ref().unwrap()))
@@ -220,8 +215,8 @@ impl graphics::RenderChainElement for TriangleRenderer {
 					render_chain.logical().clone(),
 					&self.pipeline_layout.as_ref().unwrap(),
 					&render_chain.render_pass(),
-				),
-		)?);
+				)?,
+		);
 
 		Ok(())
 	}

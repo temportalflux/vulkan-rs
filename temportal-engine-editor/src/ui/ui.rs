@@ -27,15 +27,13 @@ impl Ui {
 		gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
 		gl_attr.set_context_version(3, 0);
 
-		let sdl_window = engine::utility::as_window_error(
-			video
-				.window(title, width, height)
-				.position_centered()
-				.resizable()
-				.opengl()
-				.allow_highdpi()
-				.build(),
-		)?;
+		let sdl_window = video
+			.window(title, width, height)
+			.position_centered()
+			.resizable()
+			.opengl()
+			.allow_highdpi()
+			.build()?;
 
 		let _gl_context = sdl_window
 			.gl_create_context()
