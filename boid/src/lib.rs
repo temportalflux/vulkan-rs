@@ -36,7 +36,7 @@ pub fn run() -> VoidResult {
 
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
-		.title("Boids")
+		.title(engine.borrow().app_info().app_name())
 		.size(1280, 720)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
@@ -46,7 +46,7 @@ pub fn run() -> VoidResult {
 	render_chain
 		.borrow_mut()
 		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
-			0.0, 0.5, 0.5, 1.0,
+			0.0, 0.25, 0.5, 1.0,
 		])));
 
 	while !display.borrow().should_quit() {

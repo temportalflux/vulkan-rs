@@ -5,13 +5,10 @@ members = [
 	"install-externs",
 	"temportal-math",
 	"temportal-graphics",
-	"temportal-engine",
-	"temportal-engine-editor",
-	"demo-triangle",
-	"demo-triangle-editor",
+	"temportal-engine", "temportal-engine-editor",
+	"demo-triangle", "demo-triangle-editor",
 	"boid", "boid-editor",
-	"crystal-sphinx",
-	"crystal-sphinx-editor"
+	"crystal-sphinx", "crystal-sphinx-editor"
 ]
 default-members = [
 	"temportal-math",
