@@ -29,7 +29,7 @@ pub struct UpdateOperationSet {
 pub struct WriteOp {
 	pub destination: UpdateOperationSet,
 	pub kind: flags::DescriptorKind,
-	pub objects: ObjectKind,
+	pub object: ObjectKind,
 }
 
 pub enum ObjectKind {
@@ -69,23 +69,21 @@ impl SetUpdate {
 			Vec::with_capacity(self.operations.len());
 		let mut writes = Vec::new();
 		let mut copies = Vec::new();
-		for (operation, (image_info, buffer_info)) in self.operations.iter().zip(
-			write_images_per_operation
-				.iter_mut()
-				.zip(write_buffers_per_operation.iter_mut()),
-		) {
+		for (idx, operation) in self.operations.iter().enumerate() {
 			match operation {
-				UpdateOperation::Write(op) => match op.destination.set.upgrade() {
-					Some(set_rc) => {
+				UpdateOperation::Write(op) => {
+					if let Some(set_rc) = op.destination.set.upgrade() {
 						let mut builder = backend::vk::WriteDescriptorSet::builder()
 							.dst_set(*set_rc.unwrap())
 							.dst_binding(op.destination.binding_index)
 							.dst_array_element(op.destination.array_element)
 							.descriptor_type(op.kind);
-						match &op.objects {
+						match &op.object {
 							ObjectKind::Image(infos) => {
+								let idx_ops = write_images_per_operation.len();
+								write_images_per_operation.push(Vec::new());
 								for info in infos {
-									image_info.push(
+									write_images_per_operation[idx_ops].push(
 										backend::vk::DescriptorImageInfo::builder()
 											.sampler(*info.sampler.unwrap())
 											.image_view(*info.view.unwrap())
@@ -93,11 +91,13 @@ impl SetUpdate {
 											.build(),
 									);
 								}
-								builder = builder.image_info(&image_info[..]);
+								builder = builder.image_info(&write_images_per_operation[idx_ops][..]);
 							}
 							ObjectKind::Buffer(infos) => {
+								let idx_ops = write_buffers_per_operation.len();
+								write_buffers_per_operation.push(Vec::new());
 								for info in infos {
-									buffer_info.push(
+									write_buffers_per_operation[idx_ops].push(
 										backend::vk::DescriptorBufferInfo::builder()
 											.buffer(*info.buffer.unwrap())
 											.offset(info.offset)
@@ -105,13 +105,16 @@ impl SetUpdate {
 											.build(),
 									);
 								}
-								builder = builder.buffer_info(&buffer_info[..]);
+								builder = builder.buffer_info(&write_buffers_per_operation[idx_ops][..]);
 							}
 						}
 						writes.push(builder.build());
 					}
-					None => {}
-				},
+					else
+					{
+						log::error!("Encounted invalid descriptor set for write operate, will skip operation {}", idx);
+					}
+				}
 				UpdateOperation::Copy(op) => {
 					match (op.source.set.upgrade(), op.destination.set.upgrade()) {
 						(Some(source_set), Some(destination_set)) => {

@@ -33,7 +33,9 @@ impl Default for Info {
 			layer_names_raw: Vec::new(),
 
 			queues: Vec::new(),
-			features: backend::vk::PhysicalDeviceFeatures::default(),
+			features: backend::vk::PhysicalDeviceFeatures::builder()
+				.sampler_anisotropy(true)
+				.build(),
 		}
 	}
 }

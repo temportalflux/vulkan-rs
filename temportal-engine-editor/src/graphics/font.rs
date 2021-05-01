@@ -74,8 +74,11 @@ impl TypeEditorMetadata for FontEditorMetadata {
 			.with_padding(Vector::new([8; 4]))
 			.with_minimum_atlas_size(Vector::new([1024, 512]))
 			.build(&font_library)?;
+			
+		let mut png_path = json_path.parent().unwrap().to_path_buf();
+		png_path.push(json_path.file_stem().unwrap());
+		png_path.set_extension("png");
 
-		/*
 		let mut img = image::RgbaImage::new(sdf.size.x() as u32, sdf.size.y() as u32);
 		for x in 0..sdf.size.x() {
 			for y in 0..sdf.size.y() {
@@ -86,8 +89,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 				);
 			}
 		}
-		img.save_with_format(PathBuf::from("font.png"), image::ImageFormat::Png)?;
-		*/
+		img.save_with_format(png_path, image::ImageFormat::Png)?;
 
 		asset.set_sdf(sdf);
 

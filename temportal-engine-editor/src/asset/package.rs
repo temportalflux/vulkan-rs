@@ -22,6 +22,7 @@ pub fn package(module_name: &str) -> VoidResult {
 	let zip_file = fs::OpenOptions::new()
 		.write(true)
 		.create(true)
+		.truncate(true)
 		.open(&zip_path)?;
 	let mut zipper = zip::ZipWriter::new(zip_file);
 	let zip_options =

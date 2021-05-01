@@ -1,6 +1,9 @@
 use crate::engine::{
 	self,
-	graphics::{self, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain},
+	graphics::{
+		self, buffer, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain,
+	},
+	math::Vector,
 	utility::{self, AnyError},
 	Engine,
 };
@@ -45,7 +48,37 @@ impl ShaderItem {
 	}
 }
 
+struct Vertex {
+	pos_and_width_edge: Vector<f32, 4>,
+	tex_coord: Vector<f32, 4>,
+	color: Vector<f32, 4>,
+}
+
+impl pipeline::vertex::Object for Vertex {
+	fn attributes() -> Vec<pipeline::vertex::Attribute> {
+		vec![
+			pipeline::vertex::Attribute {
+				offset: graphics::utility::offset_of!(Vertex, pos_and_width_edge),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: graphics::utility::offset_of!(Vertex, tex_coord),
+				format: flags::Format::R32G32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: graphics::utility::offset_of!(Vertex, color),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+		]
+	}
+}
+
 pub struct TextRender {
+	index_buffer: Option<Rc<buffer::Buffer>>,
+	vertex_buffer: Option<Rc<buffer::Buffer>>,
+	indices: Vec<u32>,
+	vertices: Vec<Vertex>,
+
 	font_atlas_descriptor_set: Weak<graphics::descriptor::Set>,
 	font_atlas_descriptor_layout: Option<Rc<graphics::descriptor::SetLayout>>,
 
@@ -97,11 +130,11 @@ impl TextRender {
 					.build(&render_chain.allocator())?,
 			);
 
-			let font_sdf_image_data: Vec<u8> = font
+			let font_sdf_image_data: Vec<f32> = font
 				.binary()
 				.iter()
 				.flatten()
-				.map(|alpha| vec![1, 1, 1, *alpha])
+				.map(|alpha| vec![1.0, 1.0, 1.0, (*alpha as f32) / 255.0])
 				.flatten()
 				.collect();
 
@@ -131,7 +164,7 @@ impl TextRender {
 		let font_atlas_sampler = Rc::new(
 			graphics::sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
-				// TODO: Turn on the device feature .with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
+				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
 				.build(&render_chain.logical())?,
 		);
 
@@ -143,6 +176,32 @@ impl TextRender {
 			font_atlas_sampler,
 			font_atlas_descriptor_layout: None,
 			font_atlas_descriptor_set: Weak::new(),
+
+			vertices: vec![
+				Vertex {
+					pos_and_width_edge: Vector::new([-1.0, -1.0, 0.0, 0.0]),
+					tex_coord: Vector::new([0.0, 0.0, 0.0, 0.0]),
+					color: Vector::filled(1.0),
+				},
+				Vertex {
+					pos_and_width_edge: Vector::new([1.0, -1.0, 0.0, 0.0]),
+					tex_coord: Vector::new([1.0, 0.0, 0.0, 0.0]),
+					color: Vector::filled(1.0),
+				},
+				Vertex {
+					pos_and_width_edge: Vector::new([1.0, 1.0, 0.0, 0.0]),
+					tex_coord: Vector::new([1.0, 1.0, 0.0, 0.0]),
+					color: Vector::filled(1.0),
+				},
+				Vertex {
+					pos_and_width_edge: Vector::new([-1.0, 1.0, 0.0, 0.0]),
+					tex_coord: Vector::new([0.0, 1.0, 0.0, 0.0]),
+					color: Vector::filled(1.0),
+				},
+			],
+			indices: vec![0, 1, 2, 2, 3, 0],
+			vertex_buffer: None,
+			index_buffer: None,
 		};
 
 		instance.shaders.insert(
@@ -222,7 +281,7 @@ impl graphics::RenderChainElement for TextRender {
 					array_element: 0,
 				},
 				kind: graphics::flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
-				objects: ObjectKind::Image(vec![ImageKind {
+				object: ObjectKind::Image(vec![ImageKind {
 					sampler: self.font_atlas_sampler.clone(),
 					view: self.font_atlas_view.clone(),
 					layout: flags::ImageLayout::SHADER_READ_ONLY_OPTIMAL,
@@ -234,6 +293,48 @@ impl graphics::RenderChainElement for TextRender {
 			.create_module(render_chain)?;
 		self.shader_item_mut(flags::ShaderKind::Fragment)
 			.create_module(render_chain)?;
+
+		self.vertex_buffer = Some(Rc::new(
+			graphics::buffer::Buffer::builder()
+				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
+				.with_usage(flags::BufferUsage::TRANSFER_DST)
+				.with_size_of(&self.vertices[..])
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::GpuOnly)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL),
+				)
+				.with_sharing(flags::SharingMode::EXCLUSIVE)
+				.build(&render_chain.allocator())?,
+		));
+
+		graphics::TaskCopyImageToGpu::new(&render_chain)?
+			.begin()?
+			.stage(&self.vertices[..])?
+			.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
+			.end()?
+			.wait_until_idle()?;
+
+		self.index_buffer = Some(Rc::new(
+			graphics::buffer::Buffer::builder()
+				.with_usage(flags::BufferUsage::INDEX_BUFFER)
+				.with_usage(flags::BufferUsage::TRANSFER_DST)
+				.with_size_of(&self.indices[..])
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::GpuOnly)
+						.requires(flags::MemoryProperty::DEVICE_LOCAL),
+				)
+				.with_sharing(flags::SharingMode::EXCLUSIVE)
+				.build(&render_chain.allocator())?,
+		));
+
+		graphics::TaskCopyImageToGpu::new(&render_chain)?
+			.begin()?
+			.stage(&self.indices[..])?
+			.copy_stage_to_buffer(&self.index_buffer.as_ref().unwrap())
+			.end()?
+			.wait_until_idle()?;
 
 		Ok(())
 	}
@@ -261,6 +362,10 @@ impl graphics::RenderChainElement for TextRender {
 				.add_shader(Rc::downgrade(
 					self.shader_module(flags::ShaderKind::Fragment),
 				))
+				.with_vertex_layout(
+					pipeline::vertex::Layout::default()
+						.with_object::<Vertex>(0, flags::VertexInputRate::VERTEX),
+				)
 				.set_viewport_state(
 					pipeline::ViewportState::default()
 						.add_viewport(graphics::utility::Viewport::default().set_size(resolution))
@@ -298,7 +403,9 @@ impl graphics::CommandRecorder for TextRender {
 			0,
 			vec![&self.font_atlas_descriptor_set.upgrade().unwrap()],
 		);
-		buffer.draw(3, 0, 1, 0, 0);
+		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
+		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
+		buffer.draw(self.indices.len(), 0, 1, 0, 0);
 		Ok(())
 	}
 }
