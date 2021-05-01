@@ -69,7 +69,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 
 		let sdf = SDFBuilder::default()
 			.with_font_path(&self.font_path(json_path, false, false))
-			.with_glyph_height(60)
+			.with_glyph_height(50)
 			.with_spread(10)
 			.with_padding(Vector::new([8; 4]))
 			.with_minimum_atlas_size(Vector::new([1024, 512]))
@@ -80,14 +80,12 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		png_path.set_extension("png");
 
 		let mut img = image::RgbaImage::new(sdf.size.x() as u32, sdf.size.y() as u32);
-		for x in 0..sdf.size.x() {
-			for y in 0..sdf.size.y() {
-				img.put_pixel(
-					x as u32,
-					y as u32,
-					image::Rgba([255, 255, 255, sdf.binary[y][x]]),
-				);
-			}
+		for pos in sdf.size.iter(1) {
+			img.put_pixel(
+				pos.x() as u32,
+				pos.y() as u32,
+				image::Rgba([255, 255, 255, sdf.binary[pos.y()][pos.x()]]),
+			);
 		}
 		img.save_with_format(png_path, image::ImageFormat::Png)?;
 

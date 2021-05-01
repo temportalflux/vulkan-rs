@@ -80,6 +80,10 @@ impl Drop for Buffer {
 }
 
 impl alloc::Object for Buffer {
+	fn size(&self) -> usize {
+		self.size
+	}
+
 	fn info(&self) -> &vk_mem::AllocationInfo {
 		&self.allocation_info
 	}
@@ -94,10 +98,6 @@ impl alloc::Object for Buffer {
 }
 
 impl Buffer {
-	pub fn size(&self) -> usize {
-		self.size
-	}
-
 	pub fn memory_size(&self) -> usize {
 		self.allocation_info.get_size()
 	}

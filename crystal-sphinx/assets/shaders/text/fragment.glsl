@@ -9,15 +9,11 @@ layout(binding = 0) uniform sampler2D fontAtlasSampler;
 layout(location = 0) out vec4 outColor;
 
 void main()
-{
-	vec4 texCoordColor = vec4(fragTexCoord, 0.0, 1.0);
-	//outColor = texCoordColor;
+{	
+	vec4 pixel = texture(fontAtlasSampler, fragTexCoord);	
+	outColor = vec4(1, 0, 0, pixel.r);
 	
-	vec4 pixel = texture(fontAtlasSampler, fragTexCoord);
-	outColor = texCoordColor * pixel;
-	//outColor = fragColor * pixel;
-	
-	//float distance = 1.0 - pixel.a;
-	//float alpha = 1 - smoothstep(fragWidthEdge.x, fragWidthEdge.x + fragWidthEdge.y, distance);
+	float distance = 1.0 - pixel.r;
+	float alpha = 1 - smoothstep(fragWidthEdge.x, fragWidthEdge.x + fragWidthEdge.y, distance);
 	//outColor = fragColor * vec4(1, 1, 1, alpha);
 }

@@ -104,8 +104,8 @@ impl TextRender {
 		render_chain: &mut RenderChain,
 	) -> Result<Rc<RefCell<TextRender>>, AnyError> {
 		optick::event!();
-		log::debug!("TextRender::new");
 
+		let font_atlas_format = flags::Format::R8_SRGB;
 		let font_atlas = {
 			optick::event!("load-font-image");
 
@@ -115,6 +115,8 @@ impl TextRender {
 				&engine::asset::Id::new(crate::name(), "font/unispace"),
 			)?;
 			let font = engine::asset::as_asset::<engine::graphics::font::Font>(&asset);
+			let font_sdf_image_data: Vec<u8> =
+				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 
 			let image_size = font.size().subvec::<3>(None).with_z(1);
 			let image = Rc::new(
@@ -124,20 +126,12 @@ impl TextRender {
 							.with_usage(flags::MemoryUsage::GpuOnly)
 							.requires(flags::MemoryProperty::DEVICE_LOCAL),
 					)
-					.with_format(flags::Format::R8G8B8A8_SRGB)
+					.with_format(font_atlas_format)
 					.with_size(image_size)
 					.with_usage(flags::ImageUsage::TRANSFER_DST)
 					.with_usage(flags::ImageUsage::SAMPLED)
 					.build(&render_chain.allocator())?,
 			);
-
-			let font_sdf_image_data: Vec<f32> = font
-				.binary()
-				.iter()
-				.flatten()
-				.map(|alpha| vec![1.0, 1.0, 1.0, (*alpha as f32) / 255.0])
-				.flatten()
-				.collect();
 
 			graphics::TaskCopyImageToGpu::new(&render_chain)?
 				.begin()?
@@ -155,7 +149,7 @@ impl TextRender {
 			graphics::image_view::View::builder()
 				.for_image(&font_atlas)
 				.with_view_type(flags::ImageViewType::TYPE_2D)
-				.with_format(flags::Format::R8G8B8A8_SRGB)
+				.with_format(font_atlas_format)
 				.with_range(
 					structs::subresource::Range::default().with_aspect(flags::ImageAspect::COLOR),
 				)
@@ -180,22 +174,22 @@ impl TextRender {
 
 			vertices: vec![
 				Vertex {
-					pos_and_width_edge: Vector::new([-1.0, -1.0, 0.0, 0.0]),
+					pos_and_width_edge: Vector::new([-1.0, -1.0, 0.5, 0.1]),
 					tex_coord: Vector::new([0.0, 0.0, 0.0, 0.0]),
 					color: Vector::filled(1.0),
 				},
 				Vertex {
-					pos_and_width_edge: Vector::new([1.0, -1.0, 0.0, 0.0]),
+					pos_and_width_edge: Vector::new([1.0, -1.0, 0.5, 0.1]),
 					tex_coord: Vector::new([1.0, 0.0, 0.0, 0.0]),
 					color: Vector::filled(1.0),
 				},
 				Vertex {
-					pos_and_width_edge: Vector::new([1.0, 1.0, 0.0, 0.0]),
+					pos_and_width_edge: Vector::new([1.0, 1.0, 0.5, 0.1]),
 					tex_coord: Vector::new([1.0, 1.0, 0.0, 0.0]),
 					color: Vector::filled(1.0),
 				},
 				Vertex {
-					pos_and_width_edge: Vector::new([-1.0, 1.0, 0.0, 0.0]),
+					pos_and_width_edge: Vector::new([-1.0, 1.0, 0.5, 0.1]),
 					tex_coord: Vector::new([0.0, 1.0, 0.0, 0.0]),
 					color: Vector::filled(1.0),
 				},
@@ -248,7 +242,6 @@ impl TextRender {
 
 impl graphics::RenderChainElement for TextRender {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		log::debug!("initialize_with");
 		optick::event!();
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
@@ -342,7 +335,6 @@ impl graphics::RenderChainElement for TextRender {
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
-		log::debug!("destroy_render_chain");
 		self.pipeline = None;
 		self.pipeline_layout = None;
 		Ok(())
@@ -354,7 +346,6 @@ impl graphics::RenderChainElement for TextRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		optick::event!();
-		log::debug!("on_render_chain_constructed");
 		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
 				.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
@@ -381,6 +372,22 @@ impl graphics::RenderChainElement for TextRender {
 						color_flags: flags::ColorComponent::R
 							| flags::ColorComponent::G | flags::ColorComponent::B
 							| flags::ColorComponent::A,
+						// finalColor.rgb = (`color.src` * newColor.rgb) `color.op` (`color.dst` * oldColor.rgb);
+						// finalColor.a = (`alpha.src` * newColor.a) `alpha.op` (`alpha.dst` * oldColor.a);
+						blend: Some(pipeline::Blend {
+							// rgb = ((newColor.a) * newColor.rgb) + ((1 - newColor.a) * oldColor.rgb)
+							color: pipeline::BlendExpr {
+								src: flags::BlendFactor::SRC_ALPHA,
+								op: flags::BlendOp::ADD,
+								dst: flags::BlendFactor::ONE_MINUS_SRC_ALPHA,
+							},
+							// a = (1 * newColor.rgb) + (0 * oldColor.rgb)
+							alpha: pipeline::BlendExpr {
+								src: flags::BlendFactor::ONE,
+								op: flags::BlendOp::ADD,
+								dst: flags::BlendFactor::ZERO,
+							},
+						})
 					},
 				))
 				.create_object(

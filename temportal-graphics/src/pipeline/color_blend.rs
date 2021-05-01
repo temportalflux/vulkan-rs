@@ -1,4 +1,7 @@
-use crate::{backend, flags::ColorComponent};
+use crate::{
+	backend,
+	flags::{BlendFactor, BlendOp, ColorComponent},
+};
 
 /// Struct containing information about how a [`Pipeline`](crate::pipeline::Pipeline)
 /// blends the color of its [`attachments`](crate::renderpass::Attachment).
@@ -15,8 +18,23 @@ impl Default for ColorBlendState {
 }
 
 /// The properties of a specific attachment in the pipeline and its color blending.
+#[derive(Clone, Copy)]
 pub struct ColorBlendAttachment {
 	pub color_flags: ColorComponent,
+	pub blend: Option<Blend>,
+}
+
+#[derive(Clone, Copy)]
+pub struct Blend {
+	pub color: BlendExpr,
+	pub alpha: BlendExpr,
+}
+
+#[derive(Clone, Copy)]
+pub struct BlendExpr {
+	pub src: BlendFactor,
+	pub op: BlendOp,
+	pub dst: BlendFactor,
 }
 
 impl ColorBlendState {
@@ -24,7 +42,37 @@ impl ColorBlendState {
 		self.attachments.push(
 			backend::vk::PipelineColorBlendAttachmentState::builder()
 				.color_write_mask(attachment.color_flags)
-				.blend_enable(false)
+				.blend_enable(attachment.blend.is_some())
+				.src_color_blend_factor(
+					attachment
+						.blend
+						.map_or(BlendFactor::ONE, |blend| blend.color.src),
+				)
+				.color_blend_op(
+					attachment
+						.blend
+						.map_or(BlendOp::ADD, |blend| blend.color.op),
+				)
+				.dst_color_blend_factor(
+					attachment
+						.blend
+						.map_or(BlendFactor::ZERO, |blend| blend.color.dst),
+				)
+				.src_alpha_blend_factor(
+					attachment
+						.blend
+						.map_or(BlendFactor::ONE, |blend| blend.alpha.src),
+				)
+				.color_blend_op(
+					attachment
+						.blend
+						.map_or(BlendOp::ADD, |blend| blend.alpha.op),
+				)
+				.dst_alpha_blend_factor(
+					attachment
+						.blend
+						.map_or(BlendFactor::ZERO, |blend| blend.alpha.dst),
+				)
 				.build(),
 		);
 		self

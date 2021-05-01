@@ -5,6 +5,7 @@ use crate::{
 use std::{io::Write, rc::Rc};
 
 pub trait Object {
+	fn size(&self) -> usize;
 	fn info(&self) -> &vk_mem::AllocationInfo;
 	fn handle(&self) -> &Rc<vk_mem::Allocation>;
 	fn allocator(&self) -> &Rc<alloc::Allocator>;
@@ -22,7 +23,7 @@ impl Memory {
 	pub fn new(obj: &impl Object) -> utility::Result<Memory> {
 		Ok(Memory {
 			ptr: obj.allocator().unwrap().map_memory(&obj.handle())?,
-			size: obj.info().get_size(),
+			size: obj.size(),
 			amount_written: 0,
 			handle: obj.handle().clone(),
 			allocator: obj.allocator().clone(),
@@ -34,6 +35,13 @@ impl Memory {
 		if buf_size > self.size - self.amount_written {
 			return Ok(false);
 		}
+		log::debug!(
+			"writing {} bytes to {:#x} at pos {} and max size {}",
+			buf_size,
+			self.ptr as u64,
+			self.amount_written,
+			self.size
+		);
 		let src = buf.as_ptr() as *const u8;
 		let dst: *mut u8 = ((self.ptr as usize) + self.amount_written) as *mut u8;
 		unsafe { std::ptr::copy(src, dst, buf_size) }

@@ -209,6 +209,7 @@ impl graphics::RenderChainElement for TriangleRenderer {
 						color_flags: flags::ColorComponent::R
 							| flags::ColorComponent::G | flags::ColorComponent::B
 							| flags::ColorComponent::A,
+						blend: None,
 					},
 				))
 				.create_object(
