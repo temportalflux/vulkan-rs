@@ -30,7 +30,7 @@ impl RenderBoids {
 						.load_sync(
 							&engine.assets.types,
 							&engine.assets.library,
-							&engine::asset::Id::new("demo-triangle", "triangle_vert"),
+							&engine::asset::Id::new(crate::name(), "vertex"),
 						)?
 						.downcast::<engine::graphics::Shader>()
 						.unwrap();
@@ -51,7 +51,7 @@ impl RenderBoids {
 						.load_sync(
 							&engine.assets.types,
 							&engine.assets.library,
-							&engine::asset::Id::new("demo-triangle", "triangle_frag"),
+							&engine::asset::Id::new(crate::name(), "fragment"),
 						)?
 						.downcast::<engine::graphics::Shader>()
 						.unwrap();
