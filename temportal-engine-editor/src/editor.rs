@@ -33,6 +33,9 @@ impl Editor {
 		editor
 			.asset_manager
 			.register::<engine::graphics::font::Font>(graphics::FontEditorMetadata::boxed());
+		editor
+			.asset_manager
+			.register::<engine::graphics::Texture>(graphics::TextureEditorMetadata::boxed());
 		Ok(Rc::new(RefCell::new(editor)))
 	}
 
