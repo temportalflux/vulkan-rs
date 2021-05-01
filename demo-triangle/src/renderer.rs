@@ -32,21 +32,29 @@ impl Triangle {
 		let frag_bytes: Vec<u8>;
 		{
 			{
-				let asset = engine.assets.loader.load_sync(
-					&engine.assets.types,
-					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_vert"),
-				)?;
-				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+				let shader = engine
+					.assets
+					.loader
+					.load_sync(
+						&engine.assets.types,
+						&engine.assets.library,
+						&engine::asset::Id::new("demo-triangle", "triangle_vert"),
+					)?
+					.downcast::<engine::graphics::Shader>()
+					.unwrap();
 				vert_bytes = shader.contents().clone();
 			}
 			{
-				let asset = engine.assets.loader.load_sync(
-					&engine.assets.types,
-					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_frag"),
-				)?;
-				let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+				let shader = engine
+					.assets
+					.loader
+					.load_sync(
+						&engine.assets.types,
+						&engine.assets.library,
+						&engine::asset::Id::new("demo-triangle", "triangle_frag"),
+					)?
+					.downcast::<engine::graphics::Shader>()
+					.unwrap();
 				frag_bytes = shader.contents().clone();
 			}
 		}

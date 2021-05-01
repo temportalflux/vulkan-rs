@@ -25,12 +25,12 @@ impl ShaderItem {
 		engine: &Engine,
 		asset_id: &engine::asset::Id,
 	) -> Result<(), AnyError> {
-		let asset = engine.assets.loader.load_sync(
-			&engine.assets.types,
-			&engine.assets.library,
-			&asset_id,
-		)?;
-		let shader = engine::asset::as_asset::<engine::graphics::Shader>(&asset);
+		let shader = engine
+			.assets
+			.loader
+			.load_sync(&engine.assets.types, &engine.assets.library, &asset_id)?
+			.downcast::<engine::graphics::Shader>()
+			.unwrap();
 		self.bytes = shader.contents().clone();
 		Ok(())
 	}
@@ -109,12 +109,16 @@ impl TextRender {
 		let font_atlas = {
 			optick::event!("load-font-image");
 
-			let asset = engine.assets.loader.load_sync(
-				&engine.assets.types,
-				&engine.assets.library,
-				&engine::asset::Id::new(crate::name(), "font/unispace"),
-			)?;
-			let font = engine::asset::as_asset::<engine::graphics::font::Font>(&asset);
+			let font = engine
+				.assets
+				.loader
+				.load_sync(
+					&engine.assets.types,
+					&engine.assets.library,
+					&engine::asset::Id::new(crate::name(), "font/unispace"),
+				)?
+				.downcast::<engine::graphics::font::Font>()
+				.unwrap();
 			let font_sdf_image_data: Vec<u8> =
 				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 

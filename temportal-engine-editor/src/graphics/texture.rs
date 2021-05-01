@@ -1,7 +1,7 @@
 use crate::{
 	asset::TypeEditorMetadata,
 	engine::{
-		asset::{as_asset, AssetBox, AssetResult},
+		asset::{AnyBox, AssetResult},
 		graphics::Texture,
 		math::vector,
 		utility::AnyError,
@@ -40,9 +40,9 @@ impl TypeEditorMetadata for TextureEditorMetadata {
 		Ok(Box::new(serde_json::from_str::<Texture>(json_str)?))
 	}
 
-	fn compile(&self, json_path: &Path, asset: &AssetBox) -> Result<Vec<u8>, AnyError> {
+	fn compile(&self, json_path: &Path, asset: AnyBox) -> Result<Vec<u8>, AnyError> {
 		use image::Pixel;
-		let mut asset = as_asset::<Texture>(asset).clone();
+		let mut texture = asset.downcast::<Texture>().unwrap();
 
 		let rgba_image = image::open(Self::image_file_path(json_path))?.into_rgba8();
 		let size = vector![rgba_image.width() as usize, rgba_image.height() as usize];
@@ -54,9 +54,9 @@ impl TypeEditorMetadata for TextureEditorMetadata {
 				}
 			}
 		}
-		asset.set_compiled(size, binary);
+		texture.set_compiled(size, binary);
 
-		let bytes = rmp_serde::to_vec(&asset)?;
+		let bytes = rmp_serde::to_vec(&texture)?;
 		Ok(bytes)
 	}
 }

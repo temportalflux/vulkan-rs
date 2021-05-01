@@ -2,7 +2,7 @@ use crate::{
 	asset,
 	engine::{
 		self,
-		asset::{AssetBox, AssetGeneric, TypeId},
+		asset::{AnyBox, AssetGeneric, TypeId},
 		utility::AnyError,
 	},
 };
@@ -73,7 +73,7 @@ impl Manager {
 	}
 
 	/// Synchronously reads an asset json from a provided path, returning relevant asset loading errors.
-	pub fn read_sync(&self, path: &Path) -> Result<(String, AssetBox), AnyError> {
+	pub fn read_sync(&self, path: &Path) -> Result<(String, AnyBox), AnyError> {
 		let absolute_path = path.canonicalize()?;
 		let file_json = fs::read_to_string(&absolute_path)?;
 		let type_id = Manager::read_asset_type(file_json.as_str())?;
@@ -96,12 +96,12 @@ impl Manager {
 		&self,
 		json_path: &PathBuf,
 		type_id: &String,
-		asset: &engine::asset::AssetBox,
+		asset: engine::asset::AnyBox,
 		write_to: &PathBuf,
 	) -> engine::utility::VoidResult {
 		fs::create_dir_all(&write_to.parent().unwrap())?;
 		let metadata = self.editor_metadata.get(type_id.as_str()).unwrap();
-		let bytes = metadata.compile(&json_path, &asset)?;
+		let bytes = metadata.compile(&json_path, asset)?;
 		fs::write(write_to, bytes)?;
 		Ok(())
 	}

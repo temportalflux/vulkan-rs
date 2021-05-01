@@ -43,7 +43,7 @@ pub fn build(
 				{
 					log::info!(target: asset::LOG, "Building asset {:?}", relative_path);
 					let (type_id, asset) = asset_manager.read_sync(&asset_file_path.as_path())?;
-					asset_manager.compile(&asset_file_path, &type_id, &asset, &binary_file_path)?;
+					asset_manager.compile(&asset_file_path, &type_id, asset, &binary_file_path)?;
 				} else {
 					log::info!(
 						target: asset::LOG,

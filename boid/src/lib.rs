@@ -7,6 +7,9 @@ use engine::{
 use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
 
+#[path = "systems/_.rs"]
+mod systems;
+
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
 }

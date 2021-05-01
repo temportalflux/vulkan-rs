@@ -1,5 +1,5 @@
 use crate::engine::{
-	asset::{AssetBox, AssetResult},
+	asset::{AnyBox, AssetResult},
 	utility::AnyError,
 };
 use std::{path::Path, time::SystemTime};
@@ -9,5 +9,5 @@ pub trait TypeEditorMetadata {
 		Ok(path.metadata()?.modified()?)
 	}
 	fn read(&self, path: &Path, json_str: &str) -> AssetResult;
-	fn compile(&self, json_path: &Path, asset: &AssetBox) -> Result<Vec<u8>, AnyError>;
+	fn compile(&self, json_path: &Path, asset: AnyBox) -> Result<Vec<u8>, AnyError>;
 }

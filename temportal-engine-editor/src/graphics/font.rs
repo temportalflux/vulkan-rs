@@ -1,7 +1,7 @@
 use crate::{
 	asset::TypeEditorMetadata,
 	engine::{
-		asset::{as_asset, AssetBox, AssetResult},
+		asset::{AnyBox, AssetResult},
 		graphics::font::Font,
 		math::Vector,
 		utility::AnyError,
@@ -60,9 +60,9 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		Ok(Box::new(font))
 	}
 
-	fn compile(&self, json_path: &Path, asset: &AssetBox) -> Result<Vec<u8>, AnyError> {
+	fn compile(&self, json_path: &Path, asset: AnyBox) -> Result<Vec<u8>, AnyError> {
 		use freetype::Library;
-		let mut asset = as_asset::<Font>(asset).clone();
+		let mut font = asset.downcast::<Font>().unwrap();
 
 		// TODO: only initialize this once per build
 		let font_library = Library::init()?;
@@ -89,9 +89,9 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		}
 		img.save_with_format(png_path, image::ImageFormat::Png)?;
 
-		asset.set_sdf(sdf);
+		font.set_sdf(sdf);
 
-		let bytes = rmp_serde::to_vec(&asset)?;
+		let bytes = rmp_serde::to_vec(&font)?;
 		Ok(bytes)
 	}
 }

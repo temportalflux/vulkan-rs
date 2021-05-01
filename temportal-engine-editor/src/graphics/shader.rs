@@ -1,6 +1,10 @@
 use crate::{
 	asset::TypeEditorMetadata,
-	engine::{asset, graphics, utility::AnyError},
+	engine::{
+		asset::{AnyBox, AssetResult},
+		graphics,
+		utility::AnyError,
+	},
 };
 use serde_json;
 use std::{
@@ -33,18 +37,14 @@ impl TypeEditorMetadata for ShaderEditorMetadata {
 		Ok(asset_last_modified_at.max(glsl_last_modified_at))
 	}
 
-	fn read(&self, path: &std::path::Path, json_str: &str) -> asset::AssetResult {
+	fn read(&self, path: &std::path::Path, json_str: &str) -> AssetResult {
 		let mut shader: graphics::Shader = serde_json::from_str(json_str)?;
 		shader.set_contents(std::fs::read(self.glsl_path(&path))?);
 		Ok(Box::new(shader))
 	}
 
-	fn compile(
-		&self,
-		json_path: &std::path::Path,
-		asset: &asset::AssetBox,
-	) -> Result<Vec<u8>, AnyError> {
-		let shader = asset::as_asset::<graphics::Shader>(asset);
+	fn compile(&self, json_path: &std::path::Path, asset: AnyBox) -> Result<Vec<u8>, AnyError> {
+		let shader = asset.downcast::<graphics::Shader>().unwrap();
 
 		let mut compiler = shaderc::Compiler::new().unwrap();
 		let mut options = shaderc::CompileOptions::new().unwrap();
