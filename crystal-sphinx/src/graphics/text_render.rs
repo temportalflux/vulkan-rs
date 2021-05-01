@@ -146,12 +146,12 @@ impl TextRender {
 				.end()?
 				.wait_until_idle()?;
 
-			Rc::new(image)
+			image
 		};
 
 		let font_atlas_view = Rc::new(
 			graphics::image_view::View::builder()
-				.for_image(&font_atlas)
+				.for_image(font_atlas.clone())
 				.with_view_type(flags::ImageViewType::TYPE_2D)
 				.with_format(font_atlas_format)
 				.with_range(

@@ -1,5 +1,5 @@
 use crate::{
-	backend, image,
+	backend, flags, image,
 	utility::{self, VulkanObject},
 };
 use std::rc::Rc;
@@ -75,6 +75,10 @@ impl Drop for Image {
 impl Image {
 	pub fn image_size(&self) -> Vector<usize, 3> {
 		self.image_info.as_ref().unwrap().size()
+	}
+
+	pub fn format(&self) -> flags::Format {
+		self.image_info.as_ref().unwrap().format
 	}
 
 	pub fn memory_size(&self) -> usize {

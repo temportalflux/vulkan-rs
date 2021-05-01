@@ -35,8 +35,8 @@ impl Default for Builder {
 }
 
 impl Builder {
-	pub fn for_image(mut self, image: &Rc<image::Image>) -> Self {
-		self.image = Rc::downgrade(image);
+	pub fn for_image(mut self, image: Rc<image::Image>) -> Self {
+		self.image = Rc::downgrade(&image);
 		self
 	}
 
@@ -80,13 +80,10 @@ impl Builder {
 	/// Creates an [`image::View`] object, thereby consuming the info.
 	pub fn build(&mut self, device: &Rc<logical::Device>) -> utility::Result<image_view::View> {
 		use backend::version::DeviceV1_0;
+		let image = self.image.upgrade().unwrap();
 		let info = self.to_vk();
 		let vk =
 			utility::as_vulkan_error(unsafe { device.unwrap().create_image_view(&info, None) })?;
-		Ok(image_view::View::from(
-			device.clone(),
-			self.image.upgrade().unwrap(),
-			vk,
-		))
+		Ok(image_view::View::from(device.clone(), image, vk))
 	}
 }

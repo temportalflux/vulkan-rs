@@ -8,3 +8,7 @@
 [profiling](https://crates.io/crates/profiling)
 [cryptography](https://crates.io/crates/rustls)
 [winit](https://crates.io/crates/winit) to eventually remove SDL dependency
+
+ECS:
+[specs](https://crates.io/crates/specs) [book](https://specs.amethyst.rs/docs/tutorials)
+[anymap](https://crates.io/crates/anymap)

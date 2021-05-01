@@ -1,5 +1,5 @@
 use engine::{
-	display, graphics,
+	display,
 	math::Vector,
 	utility::{AnyError, VoidResult},
 	Engine,
@@ -7,8 +7,11 @@ use engine::{
 use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
 
+#[path = "graphics/_.rs"]
+pub mod graphics;
+
 #[path = "systems/_.rs"]
-mod systems;
+pub mod systems;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")

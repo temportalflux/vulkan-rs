@@ -1,7 +1,7 @@
 use crate::{
 	backend, descriptor,
 	device::logical,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanObject},
 };
 use std::rc::{Rc, Weak};
 
@@ -24,27 +24,23 @@ impl Builder {
 	}
 }
 
-impl VulkanInfo<backend::vk::PipelineLayoutCreateInfo> for Builder {
-	fn to_vk(&self) -> backend::vk::PipelineLayoutCreateInfo {
-		let desc_layouts = self
+impl Builder {
+	pub fn build(self, device: Rc<logical::Device>) -> utility::Result<Layout> {
+		use backend::version::DeviceV1_0;
+
+		let vk_descriptor_layouts = self
 			.descriptor_layouts
 			.iter()
 			.filter_map(|layout| layout.upgrade().map(|rc| *rc.unwrap()))
 			.collect::<Vec<_>>();
-		backend::vk::PipelineLayoutCreateInfo::builder()
-			.set_layouts(&desc_layouts[..])
-			.build()
-	}
-}
+		let vk_info = backend::vk::PipelineLayoutCreateInfo::builder()
+			.set_layouts(&vk_descriptor_layouts[..])
+			.build();
 
-impl Builder {
-	pub fn build(self, device: Rc<logical::Device>) -> utility::Result<Layout> {
-		use backend::version::DeviceV1_0;
-		let vk_info = self.to_vk();
-		let internal = utility::as_vulkan_error(unsafe {
-			device.unwrap().create_pipeline_layout(&vk_info, None)
-		})?;
-		Ok(Layout { device, internal })
+		Ok(Layout {
+			internal: unsafe { device.unwrap().create_pipeline_layout(&vk_info, None) }?,
+			device,
+		})
 	}
 }
 
