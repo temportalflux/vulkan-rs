@@ -91,7 +91,8 @@ impl SetUpdate {
 											.build(),
 									);
 								}
-								builder = builder.image_info(&write_images_per_operation[idx_ops][..]);
+								builder =
+									builder.image_info(&write_images_per_operation[idx_ops][..]);
 							}
 							ObjectKind::Buffer(infos) => {
 								let idx_ops = write_buffers_per_operation.len();
@@ -105,13 +106,12 @@ impl SetUpdate {
 											.build(),
 									);
 								}
-								builder = builder.buffer_info(&write_buffers_per_operation[idx_ops][..]);
+								builder =
+									builder.buffer_info(&write_buffers_per_operation[idx_ops][..]);
 							}
 						}
 						writes.push(builder.build());
-					}
-					else
-					{
+					} else {
 						log::error!("Encounted invalid descriptor set for write operate, will skip operation {}", idx);
 					}
 				}

@@ -104,6 +104,7 @@ impl TextRender {
 		render_chain: &mut RenderChain,
 	) -> Result<Rc<RefCell<TextRender>>, AnyError> {
 		optick::event!();
+		log::debug!("TextRender::new");
 
 		let font_atlas = {
 			optick::event!("load-font-image");
@@ -247,6 +248,7 @@ impl TextRender {
 
 impl graphics::RenderChainElement for TextRender {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+		log::debug!("initialize_with");
 		optick::event!();
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
@@ -340,6 +342,7 @@ impl graphics::RenderChainElement for TextRender {
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
+		log::debug!("destroy_render_chain");
 		self.pipeline = None;
 		self.pipeline_layout = None;
 		Ok(())
@@ -351,6 +354,7 @@ impl graphics::RenderChainElement for TextRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		optick::event!();
+		log::debug!("on_render_chain_constructed");
 		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
 				.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())

@@ -11,6 +11,11 @@
 				"--bin", "crystal-sphinx",
 				"--", "-v"
 			],
+			"options": {
+				"env": {
+					"RUST_BACKTRACE": "1"
+				}
+			},
 			"problemMatcher": []
 		},
 		{

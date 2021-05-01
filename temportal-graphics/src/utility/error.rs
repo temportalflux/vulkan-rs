@@ -30,17 +30,26 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 pub fn as_vulkan_error<T>(vk_result: backend::prelude::VkResult<T>) -> Result<T> {
-	match vk_result {
-		Ok(v) => Ok(v),
-		Err(vk_result) => match vk_result {
+	Ok(vk_result?)
+}
+
+impl From<backend::vk::Result> for Error {
+	fn from(err: backend::vk::Result) -> Error {
+		match err {
 			backend::vk::Result::SUBOPTIMAL_KHR | backend::vk::Result::ERROR_OUT_OF_DATE_KHR => {
-				Err(Error::RequiresRenderChainUpdate())
+				Error::RequiresRenderChainUpdate()
 			}
-			_ => Err(Error::VulkanError(vk_result)),
-		},
+			_ => Error::VulkanError(err),
+		}
+	}
+}
+
+impl From<vk_mem::Error> for Error {
+	fn from(err: vk_mem::Error) -> Error {
+		Error::AllocatorError(err)
 	}
 }
 
 pub fn as_alloc_error<T>(result: vk_mem::Result<T>) -> Result<T> {
-	result.or_else(|err| Err(Error::AllocatorError(err)))
+	Ok(result?)
 }

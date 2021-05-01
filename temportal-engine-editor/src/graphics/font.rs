@@ -74,7 +74,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 			.with_padding(Vector::new([8; 4]))
 			.with_minimum_atlas_size(Vector::new([1024, 512]))
 			.build(&font_library)?;
-			
+
 		let mut png_path = json_path.parent().unwrap().to_path_buf();
 		png_path.push(json_path.file_stem().unwrap());
 		png_path.set_extension("png");

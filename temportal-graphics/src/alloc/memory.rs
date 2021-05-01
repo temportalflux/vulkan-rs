@@ -21,7 +21,7 @@ pub struct Memory {
 impl Memory {
 	pub fn new(obj: &impl Object) -> utility::Result<Memory> {
 		Ok(Memory {
-			ptr: utility::as_alloc_error(obj.allocator().unwrap().map_memory(&obj.handle()))?,
+			ptr: obj.allocator().unwrap().map_memory(&obj.handle())?,
 			size: obj.info().get_size(),
 			amount_written: 0,
 			handle: obj.handle().clone(),
@@ -34,7 +34,9 @@ impl Memory {
 		if buf_size > self.size - self.amount_written {
 			return Ok(false);
 		}
-		unsafe { std::ptr::copy(buf.as_ptr(), self.ptr as _, buf_size) }
+		let src = buf.as_ptr() as *const u8;
+		let dst: *mut u8 = ((self.ptr as usize) + self.amount_written) as *mut u8;
+		unsafe { std::ptr::copy(src, dst, buf_size) }
 		self.amount_written += buf_size;
 		Ok(true)
 	}
@@ -42,7 +44,7 @@ impl Memory {
 
 impl Drop for Memory {
 	fn drop(&mut self) {
-		utility::as_alloc_error(self.allocator.unwrap().unmap_memory(&self.handle)).unwrap();
+		self.allocator.unwrap().unmap_memory(&self.handle).unwrap();
 	}
 }
 
