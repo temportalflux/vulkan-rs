@@ -7,3 +7,4 @@
 [physx](https://crates.io/crates/physx)
 [profiling](https://crates.io/crates/profiling)
 [cryptography](https://crates.io/crates/rustls)
+[winit](https://crates.io/crates/winit) to eventually remove SDL dependency
