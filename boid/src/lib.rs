@@ -52,6 +52,8 @@ pub fn run() -> VoidResult {
 			0.0, 0.25, 0.5, 1.0,
 		])));
 
+	let _renderer = systems::RenderBoids::new(&engine.borrow(), &mut render_chain.borrow_mut());
+
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
 		render_chain.borrow_mut().render_frame()?;
