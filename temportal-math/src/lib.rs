@@ -6,6 +6,9 @@ pub use vector::*;
 mod vector_serde;
 pub use vector_serde::*;
 
+mod matrix;
+pub use matrix::*;
+
 pub mod ops;
 
 #[macro_export]

@@ -200,7 +200,7 @@ impl Buffer {
 
 	pub fn bind_vertex_buffers(
 		&self,
-		first_binding: usize,
+		binding_index: u32,
 		buffers: Vec<&buffer::Buffer>,
 		offsets: Vec<u64>,
 	) {
@@ -212,7 +212,7 @@ impl Buffer {
 		unsafe {
 			self.device.unwrap().cmd_bind_vertex_buffers(
 				self.internal,
-				first_binding as u32,
+				binding_index,
 				&vk_buffers[..],
 				&offsets[..],
 			)

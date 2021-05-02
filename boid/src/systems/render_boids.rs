@@ -16,6 +16,7 @@ use std::{
 };
 
 pub struct RenderBoids {
+	instance_buffer: buffer::Buffer,
 	index_count: usize,
 	index_buffer: buffer::Buffer,
 	vertex_buffer: buffer::Buffer,
@@ -79,6 +80,7 @@ impl RenderBoids {
 			.unwrap();
 
 		let (vertex_buffer, index_buffer, index_count) = Self::create_boid_model(&render_chain)?;
+		let instance_buffer = Self::create_instance_buffer(&render_chain)?;
 
 		let strong = Rc::new(RefCell::new(RenderBoids {
 			pipeline_layout: None,
@@ -93,6 +95,7 @@ impl RenderBoids {
 			vertex_buffer,
 			index_buffer,
 			index_count,
+			instance_buffer,
 		}));
 
 		render_chain.add_render_chain_element(strong.clone())?;
@@ -237,6 +240,33 @@ impl RenderBoids {
 
 		Ok((vertex_buffer, index_buffer, indices.len()))
 	}
+
+	fn create_instance_buffer(render_chain: &RenderChain) -> Result<buffer::Buffer, AnyError> {
+		let instances = vec![Instance::default()
+			.with_pos(vector![0.0, 0.0, 0.0])
+			.with_color(vector![1.0, 0.0, 1.0, 1.0])];
+
+		let buffer = graphics::buffer::Buffer::builder()
+			.with_usage(flags::BufferUsage::VERTEX_BUFFER)
+			.with_usage(flags::BufferUsage::TRANSFER_DST)
+			.with_size_of(&instances[..])
+			.with_alloc(
+				graphics::alloc::Info::default()
+					.with_usage(flags::MemoryUsage::GpuOnly)
+					.requires(flags::MemoryProperty::DEVICE_LOCAL),
+			)
+			.with_sharing(flags::SharingMode::EXCLUSIVE)
+			.build(&render_chain.allocator())?;
+
+		graphics::TaskCopyImageToGpu::new(&render_chain)?
+			.begin()?
+			.stage(&instances[..])?
+			.copy_stage_to_buffer(&buffer)
+			.end()?
+			.wait_until_idle()?;
+
+		Ok(buffer)
+	}
 }
 
 impl graphics::RenderChainElement for RenderBoids {
@@ -285,7 +315,7 @@ impl graphics::RenderChainElement for RenderBoids {
 				.with_vertex_layout(
 					pipeline::vertex::Layout::default()
 						.with_object::<Vertex>(0, flags::VertexInputRate::VERTEX)
-						//.with_object::<Instance>(1, flags::VertexInputRate::INSTANCE),
+						.with_object::<Instance>(1, flags::VertexInputRate::INSTANCE),
 				)
 				.set_viewport_state(
 					pipeline::ViewportState::default()
@@ -340,6 +370,7 @@ impl graphics::CommandRecorder for RenderBoids {
 			vec![&self.image_descriptor_set.upgrade().unwrap()],
 		);
 		buffer.bind_vertex_buffers(0, vec![&self.vertex_buffer], vec![0]);
+		buffer.bind_vertex_buffers(1, vec![&self.instance_buffer], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
 		buffer.draw(self.index_count, 0, 1, 0, 0);
 		Ok(())

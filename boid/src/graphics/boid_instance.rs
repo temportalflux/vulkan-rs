@@ -1,27 +1,26 @@
 use crate::engine::{
 	graphics::{self, flags, pipeline},
-	math::Vector,
+	math::{self, Matrix, Vector},
 };
 
 pub struct Instance {
-	pub pos: Vector<f32, 2>,
-	_pos_padding: [f32; 2],
+	pub model: Matrix<f32, 4, 4>,
 	pub color: Vector<f32, 4>,
 }
 
 impl Default for Instance {
 	fn default() -> Instance {
+		use math::Identity;
 		Instance {
-			pos: Vector::default(),
+			model: Matrix::identity(),
 			color: Vector::default(),
-			_pos_padding: [0.0, 0.0],
 		}
 	}
 }
 
 impl Instance {
-	pub fn with_pos(mut self, pos: Vector<f32, 2>) -> Self {
-		self.pos = pos;
+	pub fn with_pos(mut self, pos: Vector<f32, 3>) -> Self {
+		self.model = Matrix::translate(pos);
 		self
 	}
 	pub fn with_color(mut self, color: Vector<f32, 4>) -> Self {
@@ -32,10 +31,23 @@ impl Instance {
 
 impl pipeline::vertex::Object for Instance {
 	fn attributes() -> Vec<pipeline::vertex::Attribute> {
+		let matrix_offset = graphics::utility::offset_of!(Instance, model);
 		vec![
 			pipeline::vertex::Attribute {
-				offset: graphics::utility::offset_of!(Instance, pos),
-				format: flags::Format::R32G32_SFLOAT,
+				offset: matrix_offset + (std::mem::size_of::<Vector<f32, 4>>() * 0),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: matrix_offset + (std::mem::size_of::<Vector<f32, 4>>() * 1),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: matrix_offset + (std::mem::size_of::<Vector<f32, 4>>() * 2),
+				format: flags::Format::R32G32B32A32_SFLOAT,
+			},
+			pipeline::vertex::Attribute {
+				offset: matrix_offset + (std::mem::size_of::<Vector<f32, 4>>() * 3),
+				format: flags::Format::R32G32B32A32_SFLOAT,
 			},
 			pipeline::vertex::Attribute {
 				offset: graphics::utility::offset_of!(Instance, color),
