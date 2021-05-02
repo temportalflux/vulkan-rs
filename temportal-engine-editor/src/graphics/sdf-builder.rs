@@ -90,9 +90,9 @@ impl SDFBuilder {
 		let face = font_library.new_face(&self.font_path, 0)?;
 		face.set_pixel_sizes(0, self.glyph_height)?;
 
-		let to_f64_vector =
-			|v: freetype::Vector| Vector::new([(v.x as f64) / 64.0, (v.y as f64) / 64.0]);
-		let spread_f = self.field_spread as f64;
+		let to_f32_vector =
+			|v: freetype::Vector| Vector::new([(v.x as f32) / 64.0, (v.y as f32) / 64.0]);
+		let spread_f = self.field_spread as f32;
 		let spread_size = Vector::new([self.field_spread * 2; 2]);
 
 		let mut glyphs: Vec<SDFGlyph> = Vec::new();
@@ -124,27 +124,27 @@ impl SDFBuilder {
 				]);
 
 				let texture_size = metric_size + spread_size;
-				let left_edge_padded = metric_bearing.x() as f64 - spread_f;
-				let top_edge_padded = metric_bearing.y() as f64 + spread_f;
+				let left_edge_padded = metric_bearing.x() as f32 - spread_f;
+				let top_edge_padded = metric_bearing.y() as f32 + spread_f;
 
 				let mut texels: Vec<Vec<u8>> = vec![vec![0; texture_size.x()]; texture_size.y()];
 
 				for glyph_pos in texture_size.iter(1) {
-					let mut min_dist = f64::MAX;
+					let mut min_dist = f32::MAX;
 					let mut total_cross_count = 0;
 					let point = Vector::new([
-						left_edge_padded + (glyph_pos.x() as f64) + 0.5,
-						top_edge_padded - (glyph_pos.y() as f64) - 0.5,
+						left_edge_padded + (glyph_pos.x() as f32) + 0.5,
+						top_edge_padded - (glyph_pos.y() as f32) - 0.5,
 					]);
 
 					for contour in outline.contours_iter() {
 						let start = *contour.start();
-						let mut curve_start = to_f64_vector(start);
+						let mut curve_start = to_f32_vector(start);
 
 						for curve in contour {
 							match curve {
 								Curve::Line(end) => {
-									let curve_end = to_f64_vector(end);
+									let curve_end = to_f32_vector(end);
 
 									min_dist =
 										min_dist.min(math::ops::distance_point_to_line_segment(
@@ -161,8 +161,8 @@ impl SDFBuilder {
 									curve_start = curve_end;
 								}
 								Curve::Bezier2(ctrl, end) => {
-									let control = to_f64_vector(ctrl);
-									let curve_end = to_f64_vector(end);
+									let control = to_f32_vector(ctrl);
+									let curve_end = to_f32_vector(end);
 
 									min_dist = min_dist.min(math::ops::distance_point_to_bezier(
 										point,
@@ -187,7 +187,7 @@ impl SDFBuilder {
 					}
 
 					let dist_signed =
-						(((total_cross_count % 2 == 0) as u32) as f64 * -2.0 + 1.0) * min_dist;
+						(((total_cross_count % 2 == 0) as u32) as f32 * -2.0 + 1.0) * min_dist;
 					let dist_clamped_to_spread = dist_signed.min(spread_f).max(-spread_f);
 					let dist_zero_to_one = (dist_clamped_to_spread + spread_f) / (spread_f * 2.0);
 					let dist_scaled = (dist_zero_to_one * 255.0).round();

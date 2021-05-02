@@ -1060,7 +1060,7 @@ impl<T, const N: usize> Vector<T, N> {
 
 impl<T, const N: usize> Vector<T, N>
 where
-	T: Sized + Copy + Mul<Output = T> + Add<Output = T> + Sum + Into<f64>,
+	T: Sized + Copy + Mul<Output = T> + Add<Output = T> + Sum,
 {
 	/// Calculates the magnitude^2 for the vector, as a float.
 	/// Equivalent to calling dot with itself.
@@ -1071,8 +1071,8 @@ where
 	/// let vec = Vector::new([2.0; 3]);
 	/// assert_eq!(vec.magnitude_sq(), 12.0);
 	/// ```
-	pub fn magnitude_sq(&self) -> f64 {
-		self.dot(&self).into()
+	pub fn magnitude_sq(&self) -> T {
+		self.dot(&self)
 	}
 
 	/// Calculates the length of the vector.
@@ -1088,12 +1088,15 @@ where
 	/// let vec = Vector::new([1.0, 2.0, 3.0]);
 	/// assert_eq!(vec.magnitude(), 14.0_f64.sqrt());
 	/// ```
-	pub fn magnitude(&self) -> f64 {
-		self.magnitude_sq().sqrt()
+	pub fn magnitude(&self) -> f32
+	where
+		T: Into<f32>,
+	{
+		self.magnitude_sq().into().sqrt()
 	}
 }
 
-impl<const N: usize> Vector<f64, N> {
+impl<const N: usize> Vector<f32, N> {
 	/// Mutates the vector so that its length is one, but maintains its direction.
 	///
 	/// # Examples
@@ -1137,10 +1140,10 @@ mod property_tests {
 
 	#[test]
 	fn magnitude() {
-		assert_eq!(Vector::new([0, 0, 0]).magnitude(), 0.0);
-		assert_eq!(Vector::new([0, 0, 1]).magnitude(), 1.0);
-		assert_eq!(Vector::new([0, 2, 0]).magnitude(), 2.0);
-		assert_eq!(Vector::new([2, 1, 2]).magnitude(), 3.0);
+		assert_eq!(Vector::new([0.0, 0.0, 0.0]).magnitude(), 0.0);
+		assert_eq!(Vector::new([0.0, 0.0, 1.0]).magnitude(), 1.0);
+		assert_eq!(Vector::new([0.0, 2.0, 0.0]).magnitude(), 2.0);
+		assert_eq!(Vector::new([2.0, 1.0, 2.0]).magnitude(), 3.0);
 	}
 
 	#[test]

@@ -2,7 +2,7 @@ use crate::{
 	engine::{
 		self,
 		graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
-		math::vector,
+		math::{vector, Vector},
 		utility::{self, AnyError},
 		Engine,
 	},
@@ -212,7 +212,7 @@ impl graphics::RenderChainElement for Triangle {
 }
 
 impl graphics::CommandRecorder for Triangle {
-	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
+	fn record_to_buffer(&self, buffer: &mut command::Buffer, _: usize) -> utility::Result<()> {
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
 			flags::PipelineBindPoint::GRAPHICS,
@@ -220,6 +220,10 @@ impl graphics::CommandRecorder for Triangle {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
+		Ok(())
+	}
+
+	fn update_pre_submit(&mut self, _: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
 		Ok(())
 	}
 }

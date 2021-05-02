@@ -406,7 +406,7 @@ impl graphics::RenderChainElement for TextRender {
 }
 
 impl graphics::CommandRecorder for TextRender {
-	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
+	fn record_to_buffer(&self, buffer: &mut command::Buffer, _: usize) -> utility::Result<()> {
 		optick::event!();
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
@@ -421,6 +421,10 @@ impl graphics::CommandRecorder for TextRender {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
+		Ok(())
+	}
+
+	fn update_pre_submit(&mut self, _: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
 		Ok(())
 	}
 }

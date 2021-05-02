@@ -1,6 +1,6 @@
 use super::*;
 
-pub type Quaternion = Vector<f64, 4>;
+pub type Quaternion = Vector<f32, 4>;
 
 impl Quaternion {
 	pub fn identity() -> Self {
@@ -8,35 +8,35 @@ impl Quaternion {
 	}
 
 	/// Creates a quaternion from an quantity of radians to rotate around an axis.
-	pub fn from_axis_angle(axis: Vector<f64, 3>, radians: f64) -> Quaternion {
-		(axis * f64::sin(radians * 0.5)).subvec(None)
-			+ (Quaternion::identity() * f64::cos(radians * 0.5))
+	pub fn from_axis_angle(axis: Vector<f32, 3>, radians: f32) -> Quaternion {
+		(axis * f32::sin(radians * 0.5)).subvec(None)
+			+ (Quaternion::identity() * f32::cos(radians * 0.5))
 	}
 
 	/// Returns the euler representation of the quaternion.
-	pub fn to_euler(&self) -> Vector<f64, 3> {
+	pub fn to_euler(&self) -> Vector<f32, 3> {
 		// See https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Quaternion_to_Euler_Angles_Conversion
 		let sinp = 2.0 * (self.w() * self.z() - self.y() * self.x());
 		Vector::new([
-			f64::atan2(
+			f32::atan2(
 				2.0 * (self.w() * self.x() + self.y() * self.z()),
 				1.0 - (2.0 * (self.x().powi(2) + self.z().powi(2))),
 			),
-			f64::atan2(
+			f32::atan2(
 				2.0 * (self.w() * self.y() + self.x() * self.z()),
 				1.0 - (2.0 * (self.y().powi(2) + self.z().powi(2))),
 			),
 			if sinp.abs() >= 1.0 {
-				(std::f64::consts::PI / 2.0).copysign(sinp)
+				(std::f32::consts::PI / 2.0).copysign(sinp)
 			} else {
-				f64::asin(sinp)
+				f32::asin(sinp)
 			},
 		])
 	}
 
 	pub fn conjugate(&self) -> Self {
 		// <-x, -y, -z, w>
-		let xyz: Vector<f64, 3> = -self.subvec(None);
+		let xyz: Vector<f32, 3> = -self.subvec(None);
 		xyz.subvec(None) + (Quaternion::identity() * self.w())
 	}
 
@@ -76,7 +76,7 @@ impl Quaternion {
 
 	/// Rotates a vector by the rotation `self`, returning the result.
 	/// Does not modify the provided vector.
-	pub fn rotate(&self, vec: &Vector<f64, 3>) -> Vector<f64, 3> {
+	pub fn rotate(&self, vec: &Vector<f32, 3>) -> Vector<f32, 3> {
 		let real = self.subvec::<3>(None);
 		let a = real * 2.0 * Vector::dot(&real, &vec);
 		let b = (*vec) * (self.w().powi(2) - real.magnitude_sq());
@@ -89,10 +89,10 @@ impl Quaternion {
 mod tests {
 	use super::*;
 
-	fn right_angle() -> (f64, f64, f64) {
-		let angle = f64::to_radians(90.0);
+	fn right_angle() -> (f32, f32, f32) {
+		let angle = f32::to_radians(90.0);
 		let half_angle = angle / 2.0;
-		(angle, f64::sin(half_angle), f64::cos(half_angle))
+		(angle, f32::sin(half_angle), f32::cos(half_angle))
 	}
 
 	#[test]
@@ -102,7 +102,7 @@ mod tests {
 			Quaternion::from_axis_angle(Vector::new([1.0, 0.0, 0.0]), angle),
 			Vector::new([half_sin, 0.0, 0.0, half_cos]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -113,7 +113,7 @@ mod tests {
 			Quaternion::from_axis_angle(Vector::new([0.0, 1.0, 0.0]), angle),
 			Vector::new([0.0, half_sin, 0.0, half_cos]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -124,7 +124,7 @@ mod tests {
 			Quaternion::from_axis_angle(Vector::new([0.0, 0.0, 1.0]), angle),
 			Vector::new([0.0, 0.0, half_sin, half_cos]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -135,7 +135,7 @@ mod tests {
 			Quaternion::new([half_sin, 0.0, 0.0, half_cos]).to_euler(),
 			Vector::new([angle, 0.0, 0.0]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -146,7 +146,7 @@ mod tests {
 			Quaternion::new([0.0, half_sin, 0.0, half_cos]).to_euler(),
 			Vector::new([0.0, angle, 0.0]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -157,7 +157,7 @@ mod tests {
 			Quaternion::new([0.0, 0.0, half_sin, half_cos]).to_euler(),
 			Vector::new([0.0, 0.0, angle]),
 			1.0e-6,
-			std::f64::consts::PI
+			std::f32::consts::PI
 		);
 	}
 
@@ -176,7 +176,7 @@ mod tests {
 	#[test]
 	fn inverse() {
 		let quat = [-2.0, -3.0, -4.0, 1.0];
-		let quat_dot: f64 = 30.0;
+		let quat_dot: f32 = 30.0;
 		let quat_mag = quat_dot.sqrt();
 		let result = [
 			2.0 / quat_mag,

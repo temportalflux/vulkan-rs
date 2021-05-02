@@ -4,10 +4,10 @@ use crate::Vector;
 /// Based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-calculating-the-distance-33io
 /// https://dev-to-uploads.s3.amazonaws.com/i/dkggpi3kk1co139fxpey.png
 pub fn distance_point_to_line_segment(
-	point: Vector<f64, 2>,
-	segment_start: Vector<f64, 2>,
-	segment_end: Vector<f64, 2>,
-) -> f64 {
+	point: Vector<f32, 2>,
+	segment_start: Vector<f32, 2>,
+	segment_end: Vector<f32, 2>,
+) -> f32 {
 	// A vector whose direction is the orientation from `line_start` to `line_end`,
 	// and whose magnitude is the distance between start and end.
 	let line = segment_end - segment_start;
@@ -29,9 +29,9 @@ pub fn distance_point_to_line_segment(
 /// Returns true if the point is to the right of / has crossed a line.
 /// Based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-calculating-the-sign-of-the-distance-6g6
 pub fn has_crossed_line_segment(
-	point: Vector<f64, 2>,
-	segment_start: Vector<f64, 2>,
-	segment_end: Vector<f64, 2>,
+	point: Vector<f32, 2>,
+	segment_start: Vector<f32, 2>,
+	segment_end: Vector<f32, 2>,
 ) -> bool {
 	let line = segment_end - segment_start;
 	// if the line is horizontal, then it is ignored
@@ -53,11 +53,11 @@ pub fn has_crossed_line_segment(
 /// Returns the distance from a point to the closest point on a bezier curve.
 /// Based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-calculating-the-distance-33io
 pub fn distance_point_to_bezier(
-	point: Vector<f64, 2>,
-	start: Vector<f64, 2>,
-	control: Vector<f64, 2>,
-	end: Vector<f64, 2>,
-) -> f64 {
+	point: Vector<f32, 2>,
+	start: Vector<f32, 2>,
+	control: Vector<f32, 2>,
+	end: Vector<f32, 2>,
+) -> f32 {
 	let start_to_control = control - start;
 	let point_to_start = start - point;
 
@@ -89,7 +89,7 @@ pub fn distance_point_to_bezier(
 		let b = (1.0 / 3.0) * ((3.0 * dq) / (2.0 * dp) * (-3.0 / dp).sqrt()).acos();
 		(0..3)
 			.into_iter()
-			.map(|k| a * (b - (2.0 * std::f64::consts::PI * (k as f64) / 3.0)).cos())
+			.map(|k| a * (b - (2.0 * std::f32::consts::PI * (k as f32) / 3.0)).cos())
 			.collect()
 	} else {
 		let a = 3.0 * dq;
@@ -97,7 +97,7 @@ pub fn distance_point_to_bezier(
 	};
 
 	// finally, the minimum distance can be determined based on the roots
-	let mut min_dist = f64::MAX;
+	let mut min_dist = f32::MAX;
 	for root in depressed_roots {
 		let t = (root - d3 / d4).max(0.0).min(1.0);
 		let dist = ((d4 * t.powi(4))
@@ -115,10 +115,10 @@ pub fn distance_point_to_bezier(
 /// Returns the number of times a point-ray crosses a bezier curve.
 /// Based on https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-calculating-the-sign-of-the-distance-6g6
 pub fn count_intercepts_on_bezier(
-	point: Vector<f64, 2>,
-	start: Vector<f64, 2>,
-	control: Vector<f64, 2>,
-	end: Vector<f64, 2>,
+	point: Vector<f32, 2>,
+	start: Vector<f32, 2>,
+	control: Vector<f32, 2>,
+	end: Vector<f32, 2>,
 ) -> u32 {
 	let u = start.y() - 2.0 * control.y() + end.y();
 
@@ -149,7 +149,7 @@ pub fn count_intercepts_on_bezier(
 	let w = w.sqrt();
 	let control_to_start = start - control;
 
-	let intercept = |t: f64| -> f64 {
+	let intercept = |t: f32| -> f32 {
 		let a = 1.0 - t;
 		(a.powi(2) * start.x()) + (2.0 * a * t * control.x()) + (t.powi(2) * end.x())
 	};
@@ -175,7 +175,7 @@ pub fn count_intercepts_on_bezier(
 		let ends_downwards_line = t1 == 1.0 && end_dir.y().is_sign_negative();
 		(is_right_of_line && (starts_upwards_line || ends_downwards_line)) as u32
 	} else {
-		let is_crossing = |x: f64, t: f64| -> bool {
+		let is_crossing = |x: f32, t: f32| -> bool {
 			let is_right_of_line = x > point.x();
 			let between_endpoints = 0.0 < t && t < 1.0;
 			let starts_upwards_line = t == 0.0 && start_dir.y().is_sign_positive();

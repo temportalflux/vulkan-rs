@@ -4,7 +4,7 @@
 layout(location = 0) in vec2 frag_tex_coord;
 layout(location = 1) in vec4 frag_color;
 
-layout(binding = 0) uniform sampler2D boid_texture;
+layout(set = 1, binding = 0) uniform sampler2D boid_texture;
 
 layout(location = 0) out vec4 outColor;
 

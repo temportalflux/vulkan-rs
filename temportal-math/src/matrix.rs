@@ -63,11 +63,17 @@ impl<T, const WIDTH: usize, const HEIGHT: usize> Matrix<T, WIDTH, HEIGHT>
 where
 	T: Sized + Default + Copy,
 {
-	pub fn with_row(mut self, index: usize, row: [T; WIDTH]) -> Self {
+	pub fn with_row(mut self, index: usize, row: &[T; WIDTH]) -> Self {
 		for i in 0..WIDTH {
 			self.columns[i][index] = row[i];
 		}
 		self
+	}
+
+	pub fn set_row(&mut self, index: usize, row: &[T; WIDTH]) {
+		for i in 0..WIDTH {
+			self.columns[i][index] = row[i];
+		}
 	}
 
 	pub fn column(&self, index: usize) -> &[T; HEIGHT] {
@@ -86,6 +92,10 @@ where
 
 	pub fn set_column_vec(&mut self, index: usize, vec: Vector<T, HEIGHT>) {
 		self.set_column(index, vec.data());
+	}
+
+	pub fn set_row_vec(&mut self, index: usize, vec: Vector<T, WIDTH>) {
+		self.set_row(index, vec.data());
 	}
 }
 
@@ -181,7 +191,7 @@ where
 	}
 }
 
-impl From<Quaternion> for Matrix<f64, 4, 4> {
+impl From<Quaternion> for Matrix<f32, 4, 4> {
 	fn from(quat: Quaternion) -> Self {
 		let mut matrix = Self::identity();
 
@@ -211,16 +221,66 @@ impl From<Quaternion> for Matrix<f64, 4, 4> {
 	}
 }
 
-impl Matrix<f64, 4, 4> {
+impl Matrix<f32, 4, 4> {
 	pub fn model_matrix(
-		translation: Vector<f64, 3>,
+		translation: Vector<f32, 3>,
 		rotation: Quaternion,
-		scale: Vector<f64, 3>,
+		scale: Vector<f32, 3>,
 	) -> Self {
 		let mut matrix = Self::translate(translation);
 		matrix *= rotation.into();
 		matrix *= Self::scale(scale);
 		matrix
+	}
+
+	pub fn look_at(eye_pos: Vector<f32, 3>, center: Vector<f32, 3>, up: Vector<f32, 3>) -> Self {
+		let f = (center - eye_pos).normal();
+		let s = Vector::cross(&f, &up).normal();
+		let u = Vector::cross(&s, &f);
+
+		let mut matrix = Self::identity();
+		matrix.set_row_vec(0, s.subvec::<4>(None));
+		matrix.set_row_vec(1, u.subvec::<4>(None));
+		matrix.set_row_vec(2, -f.subvec::<4>(None));
+		matrix[3][0] = -s.dot(&eye_pos);
+		matrix[3][1] = -u.dot(&eye_pos);
+		matrix[3][2] = f.dot(&eye_pos);
+		matrix
+	}
+
+	pub fn perspective_right_hand_depth_zero_to_one(
+		y_fov: f32,
+		aspect_ratio: f32,
+		near_plane: f32,
+		far_plane: f32,
+	) -> Self {
+		/* Based on GLM
+		template<typename T>
+		GLM_FUNC_QUALIFIER mat<4, 4, T, defaultp> perspectiveRH_ZO(T fovy, T aspect, T zNear, T zFar)
+		{
+			assert(abs(aspect - std::numeric_limits<T>::epsilon()) > static_cast<T>(0));
+			T const tanHalfFovy = tan(fovy / static_cast<T>(2));
+			mat<4, 4, T, defaultp> Result(static_cast<T>(0));
+			Result[0][0] = static_cast<T>(1) / (aspect * tanHalfFovy);
+			Result[1][1] = static_cast<T>(1) / (tanHalfFovy);
+			Result[2][2] = zFar / (zNear - zFar);
+			Result[2][3] = - static_cast<T>(1);
+			Result[3][2] = -(zFar * zNear) / (zFar - zNear);
+			return Result;
+		}
+		*/
+
+		// A tweet about handedness in different engines: https://twitter.com/FreyaHolmer/status/644881436982575104
+
+		assert!(f32::abs(aspect_ratio - f32::EPSILON) > 0.0);
+		let tan_half_fov_y = f32::tan(y_fov / 2.0);
+		let mut perspective = Self::default();
+		perspective[0][0] = 1.0 / (aspect_ratio * tan_half_fov_y);
+		perspective[1][1] = -1.0 / (tan_half_fov_y);
+		perspective[2][2] = far_plane / (near_plane - far_plane);
+		perspective[2][3] = -1.0;
+		perspective[3][2] = -(far_plane * near_plane) / (far_plane - near_plane);
+		return perspective;
 	}
 }
 

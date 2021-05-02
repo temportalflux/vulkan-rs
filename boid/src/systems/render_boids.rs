@@ -1,7 +1,7 @@
 use crate::{
 	engine::{
 		self, asset,
-		math::vector,
+		math::*,
 		utility::{self, AnyError},
 		Engine,
 	},
@@ -15,6 +15,11 @@ use std::{
 	rc::{Rc, Weak},
 };
 
+struct CameraViewProjection {
+	view: Matrix<f32, 4, 4>,
+	projection: Matrix<f32, 4, 4>,
+}
+
 pub struct RenderBoids {
 	instance_buffer: buffer::Buffer,
 	index_count: usize,
@@ -23,9 +28,12 @@ pub struct RenderBoids {
 
 	image_descriptor_set: Weak<graphics::descriptor::Set>,
 	image_descriptor_layout: Rc<graphics::descriptor::SetLayout>,
-	image_descriptor_binding: u32,
 	image_sampler: Rc<sampler::Sampler>,
 	image_view: Rc<image_view::View>,
+
+	camera_buffers: Vec<Rc<buffer::Buffer>>,
+	camera_descriptor_sets: Vec<Weak<graphics::descriptor::Set>>,
+	camera_descriptor_layout: Rc<graphics::descriptor::SetLayout>,
 
 	vert_shader: Rc<shader::Module>,
 	frag_shader: Rc<shader::Module>,
@@ -59,12 +67,51 @@ impl RenderBoids {
 				.build(&render_chain.logical())?,
 		);
 
-		let image_descriptor_binding = 0;
+		let camera_descriptor_layout = Rc::new(
+			graphics::descriptor::SetLayout::builder()
+				.with_binding(
+					0,
+					flags::DescriptorKind::UNIFORM_BUFFER,
+					1,
+					flags::ShaderKind::Vertex,
+				)
+				.build(&render_chain.logical())?,
+		);
+
+		let camera_descriptor_sets = render_chain
+			.persistent_descriptor_pool()
+			.borrow_mut()
+			.allocate_descriptor_sets(&vec![
+				camera_descriptor_layout.clone();
+				render_chain.frame_count()
+			])?;
+
+		let camera_view_projection = CameraViewProjection {
+			view: Matrix::identity(),
+			projection: Matrix::identity(),
+		};
+		let mut camera_buffers = Vec::new();
+		for _ in 0..render_chain.frame_count() {
+			let buffer = graphics::buffer::Buffer::builder()
+				.with_usage(flags::BufferUsage::UNIFORM_BUFFER)
+				.with_size(std::mem::size_of::<CameraViewProjection>())
+				.with_alloc(
+					graphics::alloc::Info::default()
+						.with_usage(flags::MemoryUsage::CpuToGpu)
+						.requires(flags::MemoryProperty::HOST_VISIBLE)
+						.requires(flags::MemoryProperty::HOST_COHERENT),
+				)
+				.with_sharing(flags::SharingMode::EXCLUSIVE)
+				.build(&render_chain.allocator())?;
+
+			Self::write_camera_view_proj(&buffer, &camera_view_projection)?;
+			camera_buffers.push(Rc::new(buffer));
+		}
 
 		let image_descriptor_layout = Rc::new(
 			graphics::descriptor::SetLayout::builder()
 				.with_binding(
-					image_descriptor_binding,
+					0,
 					flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
 					1,
 					flags::ShaderKind::Fragment,
@@ -87,9 +134,11 @@ impl RenderBoids {
 			pipeline: None,
 			vert_shader,
 			frag_shader,
+			camera_descriptor_layout,
+			camera_descriptor_sets,
+			camera_buffers,
 			image_view,
 			image_sampler,
-			image_descriptor_binding,
 			image_descriptor_layout,
 			image_descriptor_set,
 			vertex_buffer,
@@ -271,13 +320,14 @@ impl RenderBoids {
 
 impl graphics::RenderChainElement for RenderBoids {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+		use graphics::alloc::Object;
 		use graphics::descriptor::*;
 
 		SetUpdate::default()
 			.with(UpdateOperation::Write(WriteOp {
 				destination: UpdateOperationSet {
 					set: self.image_descriptor_set.clone(),
-					binding_index: self.image_descriptor_binding,
+					binding_index: 0,
 					array_element: 0,
 				},
 				kind: graphics::flags::DescriptorKind::COMBINED_IMAGE_SAMPLER,
@@ -288,6 +338,28 @@ impl graphics::RenderChainElement for RenderBoids {
 				}]),
 			}))
 			.apply(&render_chain.logical());
+
+		let mut camera_set_updates = SetUpdate::default();
+		for (set_weak, buffer_rc) in self
+			.camera_descriptor_sets
+			.iter()
+			.zip(self.camera_buffers.iter())
+		{
+			camera_set_updates = camera_set_updates.with(UpdateOperation::Write(WriteOp {
+				destination: UpdateOperationSet {
+					set: set_weak.clone(),
+					binding_index: 0,
+					array_element: 0,
+				},
+				kind: graphics::flags::DescriptorKind::UNIFORM_BUFFER,
+				object: ObjectKind::Buffer(vec![BufferKind {
+					buffer: buffer_rc.clone(),
+					offset: 0,
+					range: buffer_rc.size(),
+				}]),
+			}));
+		}
+		camera_set_updates.apply(&render_chain.logical());
 
 		Ok(())
 	}
@@ -305,6 +377,7 @@ impl graphics::RenderChainElement for RenderBoids {
 	) -> utility::Result<()> {
 		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
+				.with_descriptors(&self.camera_descriptor_layout)
 				.with_descriptors(&self.image_descriptor_layout)
 				.build(render_chain.logical().clone())?,
 		);
@@ -358,7 +431,7 @@ impl graphics::RenderChainElement for RenderBoids {
 }
 
 impl graphics::CommandRecorder for RenderBoids {
-	fn record_to_buffer(&self, buffer: &mut command::Buffer) -> utility::Result<()> {
+	fn record_to_buffer(&self, buffer: &mut command::Buffer, frame: usize) -> utility::Result<()> {
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
 			flags::PipelineBindPoint::GRAPHICS,
@@ -367,12 +440,64 @@ impl graphics::CommandRecorder for RenderBoids {
 			flags::PipelineBindPoint::GRAPHICS,
 			self.pipeline_layout.as_ref().unwrap(),
 			0,
-			vec![&self.image_descriptor_set.upgrade().unwrap()],
+			vec![
+				&self.camera_descriptor_sets[frame].upgrade().unwrap(),
+				&self.image_descriptor_set.upgrade().unwrap(),
+			],
 		);
 		buffer.bind_vertex_buffers(0, vec![&self.vertex_buffer], vec![0]);
 		buffer.bind_vertex_buffers(1, vec![&self.instance_buffer], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
 		buffer.draw(self.index_count, 0, 1, 0, 0);
+		Ok(())
+	}
+
+	fn update_pre_submit(
+		&mut self,
+		frame: usize,
+		resolution: &Vector<u32, 2>,
+	) -> utility::Result<()> {
+		let camera_position = Vector::new([0.0, 0.0, 0.0]);
+		let camera_orientation = Quaternion::identity();
+		let camera_forward = camera_orientation.rotate(&engine::world::global_forward());
+		let camera_up = camera_orientation.rotate(&engine::world::global_up());
+
+		let xy_aspect_ratio = (resolution.x() as f32) / (resolution.y() as f32);
+		let vertical_fov = 45.0;
+		// According to this calculator http://themetalmuncher.github.io/fov-calc/
+		// whose source code is https://github.com/themetalmuncher/fov-calc/blob/gh-pages/index.html#L24
+		// the equation to get verticalFOV from horizontalFOV is: verticalFOV = 2 * atan(tan(horizontalFOV / 2) * height / width)
+		// And by shifting the math to get horizontal from vertical, the equation is actually the same except the aspectRatio is flipped.
+		let horizontal_fov = 2.0 * f32::atan(f32::tan(vertical_fov / 2.0) * xy_aspect_ratio);
+		let near_plane = 0.1;
+		let far_plane = 100.0;
+
+		let camera_view_projection = CameraViewProjection {
+			view: Matrix::look_at(camera_position, camera_position + camera_forward, camera_up),
+			projection: Matrix::perspective_right_hand_depth_zero_to_one(
+				horizontal_fov,
+				xy_aspect_ratio,
+				near_plane,
+				far_plane,
+			),
+		};
+
+		Self::write_camera_view_proj(&self.camera_buffers[frame], &camera_view_projection)?;
+
+		Ok(())
+	}
+}
+
+impl RenderBoids {
+	fn write_camera_view_proj(
+		buffer: &buffer::Buffer,
+		camera: &CameraViewProjection,
+	) -> utility::Result<()> {
+		let mut mem = buffer.memory()?;
+		let wrote_all = mem
+			.write_slice(&[camera])
+			.map_err(|e| utility::Error::GraphicsBufferWrite(e))?;
+		assert!(wrote_all);
 		Ok(())
 	}
 }

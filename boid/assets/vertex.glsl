@@ -10,7 +10,7 @@ layout(location = 2) in mat4 in_model;
 layout(location = 6) in vec4 in_color;
 
 // Uniform binding
-layout(binding = 0) uniform CameraViewProjection {
+layout(set = 0, binding = 0) uniform CameraViewProjection {
 	mat4 view;
 	mat4 proj;
 } camera;

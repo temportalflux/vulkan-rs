@@ -45,8 +45,8 @@ pub struct ImageKind {
 
 pub struct BufferKind {
 	pub buffer: Rc<buffer::Buffer>,
-	pub offset: u64,
-	pub range: u64,
+	pub offset: usize,
+	pub range: usize,
 }
 
 pub struct CopyOp {
@@ -101,8 +101,8 @@ impl SetUpdate {
 									write_buffers_per_operation[idx_ops].push(
 										backend::vk::DescriptorBufferInfo::builder()
 											.buffer(*info.buffer.unwrap())
-											.offset(info.offset)
-											.range(info.range)
+											.offset(info.offset as u64)
+											.range(info.range as u64)
 											.build(),
 									);
 								}
@@ -135,6 +135,11 @@ impl SetUpdate {
 				}
 			}
 		}
+		log::debug!(
+			"Applying {} writes and {} copies",
+			writes.len(),
+			copies.len()
+		);
 		unsafe {
 			device
 				.unwrap()
