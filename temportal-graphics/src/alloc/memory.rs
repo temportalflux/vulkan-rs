@@ -50,6 +50,27 @@ impl Memory {
 		self.amount_written += buf_size;
 		Ok(true)
 	}
+
+	pub fn write_item<T: Sized>(&mut self, item: &T) -> std::io::Result<bool> {
+		let item_size = std::mem::size_of::<T>();
+		if item_size > self.size - self.amount_written {
+			return Ok(false);
+		}
+		/*
+		log::debug!(
+			"writing {} bytes to {:#x} at pos {} and max size {}",
+			buf_size,
+			self.ptr as u64,
+			self.amount_written,
+			self.size
+		);
+		*/
+		let src = (item as *const T) as *const u8;
+		let dst: *mut u8 = ((self.ptr as usize) + self.amount_written) as *mut u8;
+		unsafe { std::ptr::copy(src, dst, item_size) }
+		self.amount_written += item_size;
+		Ok(true)
+	}
 }
 
 impl Drop for Memory {

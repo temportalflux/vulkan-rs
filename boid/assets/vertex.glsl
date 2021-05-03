@@ -20,9 +20,7 @@ layout(location = 1) out vec4 frag_color;
 
 void main()
 {
-	//gl_Position = camera.proj * camera.view * in_model * vec4(in_vertex_pos, 0, 1.0);
-	gl_Position = camera.proj * camera.view * vec4(in_vertex_pos, 0, 1.0);
+	gl_Position = camera.proj * camera.view * in_model * vec4(in_vertex_pos, 0, 1.0);
 	frag_tex_coord = in_tex_coord;
-	//frag_color = in_color;
-	frag_color = vec4(1, 1, 1, 1);
+	frag_color = in_color;
 }

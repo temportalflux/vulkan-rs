@@ -282,6 +282,24 @@ impl Matrix<f32, 4, 4> {
 		perspective[3][2] = -(far_plane * near_plane) / (far_plane - near_plane);
 		return perspective;
 	}
+
+	pub fn orthographic(
+		left: f32,
+		right: f32,
+		bottom: f32,
+		top: f32,
+		z_near: f32,
+		z_far: f32,
+	) -> Self {
+		let mut matrix = Self::identity();
+		matrix[0][0] = 2.0 / (right - left);
+		matrix[1][1] = 2.0 / (top - bottom);
+		matrix[2][2] = 1.0 / (z_far - z_near);
+		matrix[3][0] = -(right + left) / (right - left);
+		matrix[3][1] = -(top + bottom) / (top - bottom);
+		matrix[3][2] = -z_near / (z_far - z_near);
+		matrix
+	}
 }
 
 #[cfg(test)]

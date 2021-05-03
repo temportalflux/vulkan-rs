@@ -15,12 +15,14 @@ use std::{
 	rc::{Rc, Weak},
 };
 
+#[derive(Debug)]
 struct CameraViewProjection {
 	view: Matrix<f32, 4, 4>,
 	projection: Matrix<f32, 4, 4>,
 }
 
 pub struct RenderBoids {
+	instance_count: usize,
 	instance_buffer: buffer::Buffer,
 	index_count: usize,
 	index_buffer: buffer::Buffer,
@@ -127,7 +129,7 @@ impl RenderBoids {
 			.unwrap();
 
 		let (vertex_buffer, index_buffer, index_count) = Self::create_boid_model(&render_chain)?;
-		let instance_buffer = Self::create_instance_buffer(&render_chain)?;
+		let (instance_buffer, instance_count) = Self::create_instance_buffer(&render_chain)?;
 
 		let strong = Rc::new(RefCell::new(RenderBoids {
 			pipeline_layout: None,
@@ -145,6 +147,7 @@ impl RenderBoids {
 			index_buffer,
 			index_count,
 			instance_buffer,
+			instance_count,
 		}));
 
 		render_chain.add_render_chain_element(strong.clone())?;
@@ -233,18 +236,19 @@ impl RenderBoids {
 	fn create_boid_model(
 		render_chain: &RenderChain,
 	) -> Result<(buffer::Buffer, buffer::Buffer, usize), AnyError> {
+		let half_unit = 0.5;
 		let vertices = vec![
 			Vertex::default()
-				.with_pos(vector![-0.5, -0.5])
+				.with_pos(vector![-half_unit, -half_unit])
 				.with_tex_coord(vector![0.0, 0.0]),
 			Vertex::default()
-				.with_pos(vector![0.5, -0.5])
+				.with_pos(vector![half_unit, -half_unit])
 				.with_tex_coord(vector![1.0, 0.0]),
 			Vertex::default()
-				.with_pos(vector![0.5, 0.5])
+				.with_pos(vector![half_unit, half_unit])
 				.with_tex_coord(vector![1.0, 1.0]),
 			Vertex::default()
-				.with_pos(vector![-0.5, 0.5])
+				.with_pos(vector![-half_unit, half_unit])
 				.with_tex_coord(vector![0.0, 1.0]),
 		];
 		let indices = vec![0, 1, 2, 2, 3, 0];
@@ -290,10 +294,17 @@ impl RenderBoids {
 		Ok((vertex_buffer, index_buffer, indices.len()))
 	}
 
-	fn create_instance_buffer(render_chain: &RenderChain) -> Result<buffer::Buffer, AnyError> {
-		let instances = vec![Instance::default()
-			.with_pos(vector![0.0, 0.0, 0.0])
-			.with_color(vector![1.0, 0.0, 1.0, 1.0])];
+	fn create_instance_buffer(
+		render_chain: &RenderChain,
+	) -> Result<(buffer::Buffer, usize), AnyError> {
+		let instances = vec![
+			Instance::default()
+				.with_pos(vector![0.0, 0.0, 0.0])
+				.with_color(vector![0.5, 0.0, 1.0, 1.0]),
+			Instance::default()
+				.with_pos(vector![0.0, 10.0, 0.0])
+				.with_color(vector![0.5, 1.0, 0.0, 1.0]),
+		];
 
 		let buffer = graphics::buffer::Buffer::builder()
 			.with_usage(flags::BufferUsage::VERTEX_BUFFER)
@@ -314,7 +325,7 @@ impl RenderBoids {
 			.end()?
 			.wait_until_idle()?;
 
-		Ok(buffer)
+		Ok((buffer, instances.len()))
 	}
 }
 
@@ -448,38 +459,31 @@ impl graphics::CommandRecorder for RenderBoids {
 		buffer.bind_vertex_buffers(0, vec![&self.vertex_buffer], vec![0]);
 		buffer.bind_vertex_buffers(1, vec![&self.instance_buffer], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
-		buffer.draw(self.index_count, 0, 1, 0, 0);
+		buffer.draw(self.index_count, 0, self.instance_count, 0, 0);
 		Ok(())
 	}
 
-	fn update_pre_submit(
-		&mut self,
-		frame: usize,
-		resolution: &Vector<u32, 2>,
-	) -> utility::Result<()> {
-		let camera_position = Vector::new([0.0, 0.0, 0.0]);
+	fn update_pre_submit(&mut self, frame: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
+		let camera_position = Vector::new([0.0, 0.0, -10.0]);
 		let camera_orientation = Quaternion::identity();
 		let camera_forward = camera_orientation.rotate(&engine::world::global_forward());
 		let camera_up = camera_orientation.rotate(&engine::world::global_up());
 
-		let xy_aspect_ratio = (resolution.x() as f32) / (resolution.y() as f32);
-		let vertical_fov = 45.0;
+		//let xy_aspect_ratio = (resolution.x() as f32) / (resolution.y() as f32);
+		//let vertical_fov = 45.0;
 		// According to this calculator http://themetalmuncher.github.io/fov-calc/
 		// whose source code is https://github.com/themetalmuncher/fov-calc/blob/gh-pages/index.html#L24
 		// the equation to get verticalFOV from horizontalFOV is: verticalFOV = 2 * atan(tan(horizontalFOV / 2) * height / width)
 		// And by shifting the math to get horizontal from vertical, the equation is actually the same except the aspectRatio is flipped.
-		let horizontal_fov = 2.0 * f32::atan(f32::tan(vertical_fov / 2.0) * xy_aspect_ratio);
-		let near_plane = 0.1;
-		let far_plane = 100.0;
+		//let horizontal_fov = 2.0 * f32::atan(f32::tan(vertical_fov / 2.0) * xy_aspect_ratio);
+		//let near_plane = 0.1;
+		//let far_plane = 100.0;
+
+		let half_size = 15.0;
 
 		let camera_view_projection = CameraViewProjection {
 			view: Matrix::look_at(camera_position, camera_position + camera_forward, camera_up),
-			projection: Matrix::perspective_right_hand_depth_zero_to_one(
-				horizontal_fov,
-				xy_aspect_ratio,
-				near_plane,
-				far_plane,
-			),
+			projection: Matrix::orthographic(-half_size, half_size, -half_size, half_size, 0.01, 100.0),
 		};
 
 		Self::write_camera_view_proj(&self.camera_buffers[frame], &camera_view_projection)?;
@@ -495,7 +499,7 @@ impl RenderBoids {
 	) -> utility::Result<()> {
 		let mut mem = buffer.memory()?;
 		let wrote_all = mem
-			.write_slice(&[camera])
+			.write_item(camera)
 			.map_err(|e| utility::Error::GraphicsBufferWrite(e))?;
 		assert!(wrote_all);
 		Ok(())

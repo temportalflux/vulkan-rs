@@ -47,6 +47,7 @@ pub fn run(log_name: &str) -> VoidResult {
 		.title("Triangle Demo")
 		.size(800, 600)
 		.constraints(vulkan_device_constraints())
+		.resizable(true)
 		.build(&mut display.borrow_mut())?;
 	let render_chain = window
 		.borrow()

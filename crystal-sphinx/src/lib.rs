@@ -45,6 +45,7 @@ pub fn run() -> VoidResult {
 		.title("Crystal Sphinx")
 		.size(1280, 720)
 		.constraints(vulkan_device_constraints())
+		.resizable(true)
 		.build(&mut display.borrow_mut())?;
 	let render_chain = window
 		.borrow()

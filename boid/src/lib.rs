@@ -43,7 +43,7 @@ pub fn run() -> VoidResult {
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
 		.title(engine.borrow().app_info().app_name())
-		.size(1280, 720)
+		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
 	let render_chain = window
