@@ -1,6 +1,6 @@
 use crate::engine::{
 	graphics::{self, flags, pipeline},
-	math::{self, Matrix, Vector},
+	math::*,
 };
 
 pub struct Instance {
@@ -10,7 +10,6 @@ pub struct Instance {
 
 impl Default for Instance {
 	fn default() -> Instance {
-		use math::Identity;
 		Instance {
 			model: Matrix::identity(),
 			color: Vector::default(),
@@ -23,6 +22,12 @@ impl Instance {
 		self.model = Matrix::translate(pos);
 		self
 	}
+
+	pub fn with_orientation(mut self, orientation: Quaternion) -> Self {
+		self.model *= orientation.into();
+		self
+	}
+
 	pub fn with_color(mut self, color: Vector<f32, 4>) -> Self {
 		self.color = color;
 		self

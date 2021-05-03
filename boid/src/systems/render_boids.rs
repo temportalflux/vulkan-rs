@@ -300,6 +300,7 @@ impl RenderBoids {
 		let instances = vec![
 			Instance::default()
 				.with_pos(vector![0.0, 0.0, 0.0])
+				.with_orientation(Quaternion::from_axis_angle(-engine::world::global_forward(), 90.0_f32.to_radians()))
 				.with_color(vector![0.5, 0.0, 1.0, 1.0]),
 			Instance::default()
 				.with_pos(vector![0.0, 10.0, 0.0])
