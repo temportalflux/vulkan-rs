@@ -300,7 +300,10 @@ impl RenderBoids {
 		let instances = vec![
 			Instance::default()
 				.with_pos(vector![0.0, 0.0, 0.0])
-				.with_orientation(Quaternion::from_axis_angle(-engine::world::global_forward(), 90.0_f32.to_radians()))
+				.with_orientation(Quaternion::from_axis_angle(
+					-engine::world::global_forward(),
+					90.0_f32.to_radians(),
+				))
 				.with_color(vector![0.5, 0.0, 1.0, 1.0]),
 			Instance::default()
 				.with_pos(vector![0.0, 10.0, 0.0])
@@ -484,7 +487,9 @@ impl graphics::CommandRecorder for RenderBoids {
 
 		let camera_view_projection = CameraViewProjection {
 			view: Matrix::look_at(camera_position, camera_position + camera_forward, camera_up),
-			projection: Matrix::orthographic(-half_size, half_size, -half_size, half_size, 0.01, 100.0),
+			projection: Matrix::orthographic(
+				-half_size, half_size, -half_size, half_size, 0.01, 100.0,
+			),
 		};
 
 		Self::write_camera_view_proj(&self.camera_buffers[frame], &camera_view_projection)?;

@@ -1,6 +1,7 @@
 use engine::{
 	display,
-	math::Vector,
+	ecs::{Builder, WorldExt},
+	math::{vector, Vector},
 	utility::{AnyError, VoidResult},
 	Engine,
 };
@@ -10,8 +11,8 @@ pub use temportal_engine as engine;
 #[path = "graphics/_.rs"]
 pub mod graphics;
 
-#[path = "systems/_.rs"]
-pub mod systems;
+#[path = "ecs/_.rs"]
+pub mod ecs;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
@@ -40,6 +41,11 @@ pub fn run() -> VoidResult {
 	engine::logging::init(name())?;
 	let engine = create_engine()?;
 
+	let mut world = ecs::World::new();
+	world.register::<ecs::components::Position2D>();
+	world.register::<ecs::components::Orientation>();
+	world.register::<ecs::components::BoidRender>();
+
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
 		.title(engine.borrow().app_info().app_name())
@@ -55,10 +61,22 @@ pub fn run() -> VoidResult {
 			0.0, 0.25, 0.5, 1.0,
 		])));
 
-	let _renderer = systems::RenderBoids::new(&engine.borrow(), &mut render_chain.borrow_mut());
+	let _render_boids =
+		graphics::RenderBoids::new(&engine.borrow(), &mut render_chain.borrow_mut())?;
+
+	let mut dispatcher = ecs::DispatcherBuilder::new()
+		.with(ecs::systems::InstanceCollector::new(), "render-instance-collector", &[])
+		.build();
+
+	world
+		.create_entity()
+		.with(ecs::components::Position2D(vector![0.0, 0.0]))
+		.with(ecs::components::BoidRender::new(vector![0.5, 0.0, 1.0, 1.0]))
+		.build();
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
+		dispatcher.dispatch(&mut world);
 		render_chain.borrow_mut().render_frame()?;
 	}
 	render_chain.borrow().logical().wait_until_idle()?;
