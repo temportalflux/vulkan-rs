@@ -4,17 +4,17 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 
-use std::rc::Rc;
+use std::sync;
 
 pub struct Queue {
 	queue_family_index: usize,
 	internal: backend::vk::Queue,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Queue {
 	pub fn from(
-		device: Rc<logical::Device>,
+		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Queue,
 		queue_family_index: usize,
 	) -> Queue {

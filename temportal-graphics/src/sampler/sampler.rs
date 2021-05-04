@@ -1,9 +1,9 @@
 use crate::{backend, device::logical, sampler::Builder, utility::VulkanObject};
-use std::rc::Rc;
+use std::sync;
 
 pub struct Sampler {
 	internal: backend::vk::Sampler,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Sampler {
@@ -11,7 +11,7 @@ impl Sampler {
 		Builder::default()
 	}
 
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Sampler) -> Sampler {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Sampler) -> Sampler {
 		Sampler { device, internal }
 	}
 }

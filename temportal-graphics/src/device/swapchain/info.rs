@@ -10,7 +10,7 @@ use crate::{
 	utility::{self, VulkanObject},
 };
 
-use std::rc::Rc;
+use std::sync;
 use temportal_math::Vector;
 
 /// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
@@ -123,7 +123,7 @@ impl Info {
 	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
 	pub fn create_object(
 		&self,
-		device: &Rc<logical::Device>,
+		device: &sync::Arc<logical::Device>,
 		surface: &Surface,
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {

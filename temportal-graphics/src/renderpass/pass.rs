@@ -1,17 +1,17 @@
 use crate::{backend, device::logical, utility::VulkanObject};
 
-use std::rc::Rc;
+use std::sync;
 
 /// The [`Render Pass`](backend::vk::RenderPass) used by Vulkan
 /// to define when pipeline instructions can be issued
 /// and what attachments are used.
 pub struct Pass {
 	internal: backend::vk::RenderPass,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Pass {
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::RenderPass) -> Pass {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::RenderPass) -> Pass {
 		Pass { device, internal }
 	}
 }

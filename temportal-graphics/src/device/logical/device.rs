@@ -4,7 +4,7 @@ use crate::{
 	image, instance,
 	utility::{self, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 /// A wrapper for a [`Vulkan LogicalDevice`](backend::Device),
 /// which can send logical commands to the hardware.
@@ -22,7 +22,7 @@ impl Device {
 		}
 	}
 
-	pub fn get_queue(device: &Rc<Self>, queue_family_index: usize) -> logical::Queue {
+	pub fn get_queue(device: &sync::Arc<Self>, queue_family_index: usize) -> logical::Queue {
 		use backend::version::DeviceV1_0;
 		let vk = unsafe {
 			device

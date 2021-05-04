@@ -2,10 +2,10 @@ use crate::{
 	backend, flags, image,
 	utility::{self, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 use temportal_math::Vector;
 
-pub trait Owner {
+pub trait Owner: Send + Sync {
 	fn destroy(&self, obj: &Image, allocation: Option<&vk_mem::Allocation>) -> utility::Result<()>;
 }
 
@@ -16,7 +16,7 @@ pub struct Image {
 	allocation_info: Option<vk_mem::AllocationInfo>,
 	allocation_handle: Option<vk_mem::Allocation>,
 	internal: backend::vk::Image,
-	owner: Option<Rc<dyn Owner>>, // empty for images created from the swapchain
+	owner: Option<sync::Arc<dyn Owner>>, // empty for images created from the swapchain
 }
 
 impl Image {
@@ -35,7 +35,7 @@ impl Image {
 	}
 
 	pub fn new(
-		owner: Rc<dyn Owner>,
+		owner: sync::Arc<dyn Owner>,
 		internal: backend::vk::Image,
 		allocation_handle: Option<vk_mem::Allocation>,
 		allocation_info: Option<vk_mem::AllocationInfo>,

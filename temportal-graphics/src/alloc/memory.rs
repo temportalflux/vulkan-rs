@@ -2,21 +2,21 @@ use crate::{
 	alloc,
 	utility::{self, VulkanObject},
 };
-use std::{io::Write, rc::Rc};
+use std::{io::Write, sync};
 
 pub trait Object {
 	fn size(&self) -> usize;
 	fn info(&self) -> &vk_mem::AllocationInfo;
-	fn handle(&self) -> &Rc<vk_mem::Allocation>;
-	fn allocator(&self) -> &Rc<alloc::Allocator>;
+	fn handle(&self) -> &sync::Arc<vk_mem::Allocation>;
+	fn allocator(&self) -> &sync::Arc<alloc::Allocator>;
 }
 
 pub struct Memory {
 	ptr: *mut u8,
 	size: usize,
 	amount_written: usize,
-	handle: Rc<vk_mem::Allocation>,
-	allocator: Rc<alloc::Allocator>,
+	handle: sync::Arc<vk_mem::Allocation>,
+	allocator: sync::Arc<alloc::Allocator>,
 }
 
 impl Memory {

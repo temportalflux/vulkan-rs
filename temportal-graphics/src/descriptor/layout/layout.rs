@@ -1,9 +1,9 @@
 use crate::{backend, descriptor::layout::Builder, device::logical, utility::VulkanObject};
-use std::rc::Rc;
+use std::sync;
 
 pub struct SetLayout {
 	internal: backend::vk::DescriptorSetLayout,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl SetLayout {
@@ -12,7 +12,7 @@ impl SetLayout {
 	}
 
 	pub fn from(
-		device: Rc<logical::Device>,
+		device: sync::Arc<logical::Device>,
 		internal: backend::vk::DescriptorSetLayout,
 	) -> SetLayout {
 		SetLayout { device, internal }

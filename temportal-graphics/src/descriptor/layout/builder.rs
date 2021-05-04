@@ -5,7 +5,7 @@ use crate::{
 	flags::{DescriptorKind, ShaderKind},
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Builder {
 	bindings: Vec<backend::vk::DescriptorSetLayoutBinding>,
@@ -51,7 +51,7 @@ impl VulkanInfo<backend::vk::DescriptorSetLayoutCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`crate::descriptor::layout::SetLayout`] object, thereby consuming the info.
-	pub fn build(self, device: &Rc<logical::Device>) -> utility::Result<layout::SetLayout> {
+	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<layout::SetLayout> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
 		let internal = utility::as_vulkan_error(unsafe {

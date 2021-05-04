@@ -7,10 +7,10 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 
-use std::rc::{Rc, Weak};
+use std::sync;
 
 pub struct Builder {
-	image: Weak<image::Image>,
+	image: sync::Weak<image::Image>,
 	view_type: ImageViewType,
 	format: Format,
 	components: ComponentMapping,
@@ -20,7 +20,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			image: Weak::new(),
+			image: sync::Weak::new(),
 			view_type: ImageViewType::TYPE_2D,
 			format: Format::UNDEFINED,
 			components: ComponentMapping {
@@ -35,8 +35,8 @@ impl Default for Builder {
 }
 
 impl Builder {
-	pub fn for_image(mut self, image: Rc<image::Image>) -> Self {
-		self.image = Rc::downgrade(&image);
+	pub fn for_image(mut self, image: sync::Arc<image::Image>) -> Self {
+		self.image = sync::Arc::downgrade(&image);
 		self
 	}
 
@@ -78,7 +78,10 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`image::View`] object, thereby consuming the info.
-	pub fn build(&mut self, device: &Rc<logical::Device>) -> utility::Result<image_view::View> {
+	pub fn build(
+		&mut self,
+		device: &sync::Arc<logical::Device>,
+	) -> utility::Result<image_view::View> {
 		use backend::version::DeviceV1_0;
 		let image = self.image.upgrade().unwrap();
 		let info = self.to_vk();

@@ -5,7 +5,7 @@ use crate::{
 	shader,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Info {
 	pub kind: ShaderKind,
@@ -17,11 +17,14 @@ pub struct Module {
 	entry_point: std::ffi::CString,
 	kind: ShaderKind,
 	internal: backend::vk::ShaderModule,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Module {
-	pub fn create(device: Rc<logical::Device>, info: shader::Info) -> utility::Result<Module> {
+	pub fn create(
+		device: sync::Arc<logical::Device>,
+		info: shader::Info,
+	) -> utility::Result<Module> {
 		Ok(Module::create_from_bytes(device, &info.bytes[..])?
 			.set_entry_point(info.entry_point)
 			.set_kind(info.kind))
@@ -29,7 +32,10 @@ impl Module {
 
 	/// Creates a shader module from bytes loaded from a `.spirv` file.
 	/// These bytes are created from the engine building a shader asset.
-	pub fn create_from_bytes(device: Rc<logical::Device>, bytes: &[u8]) -> utility::Result<Module> {
+	pub fn create_from_bytes(
+		device: sync::Arc<logical::Device>,
+		bytes: &[u8],
+	) -> utility::Result<Module> {
 		use backend::version::DeviceV1_0;
 
 		let decoded_bytes = match backend::util::read_spv(&mut std::io::Cursor::new(bytes)) {

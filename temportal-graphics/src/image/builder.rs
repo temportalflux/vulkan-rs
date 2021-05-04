@@ -5,7 +5,7 @@ use crate::{
 	structs::Extent3D,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 use temportal_math::Vector;
 
 pub struct Builder {
@@ -100,7 +100,7 @@ impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`image::Image`] object, thereby consuming the info.
-	pub fn build(self, allocator: &Rc<alloc::Allocator>) -> utility::Result<image::Image> {
+	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<image::Image> {
 		let image_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
 		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(

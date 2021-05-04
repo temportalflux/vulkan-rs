@@ -10,10 +10,7 @@ use crate::{
 		Instance, RenderChain, Vertex,
 	},
 };
-use std::{
-	cell::RefCell,
-	rc::{Rc, Weak},
-};
+use std::sync::{Arc, RwLock, Weak};
 
 #[derive(Debug)]
 struct CameraViewProjection {
@@ -29,16 +26,16 @@ pub struct RenderBoids {
 	vertex_buffer: buffer::Buffer,
 
 	image_descriptor_set: Weak<graphics::descriptor::Set>,
-	image_descriptor_layout: Rc<graphics::descriptor::SetLayout>,
-	image_sampler: Rc<sampler::Sampler>,
-	image_view: Rc<image_view::View>,
+	image_descriptor_layout: Arc<graphics::descriptor::SetLayout>,
+	image_sampler: Arc<sampler::Sampler>,
+	image_view: Arc<image_view::View>,
 
-	camera_buffers: Vec<Rc<buffer::Buffer>>,
+	camera_buffers: Vec<Arc<buffer::Buffer>>,
 	camera_descriptor_sets: Vec<Weak<graphics::descriptor::Set>>,
-	camera_descriptor_layout: Rc<graphics::descriptor::SetLayout>,
+	camera_descriptor_layout: Arc<graphics::descriptor::SetLayout>,
 
-	vert_shader: Rc<shader::Module>,
-	frag_shader: Rc<shader::Module>,
+	vert_shader: Arc<shader::Module>,
+	frag_shader: Arc<shader::Module>,
 
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
@@ -48,28 +45,28 @@ impl RenderBoids {
 	pub fn new(
 		engine: &Engine,
 		render_chain: &mut RenderChain,
-	) -> Result<Rc<RefCell<RenderBoids>>, AnyError> {
-		let vert_shader = Rc::new(Self::load_shader(
+	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
+		let vert_shader = Arc::new(Self::load_shader(
 			&engine,
 			&render_chain,
 			engine::asset::Id::new(crate::name(), "vertex"),
 		)?);
-		let frag_shader = Rc::new(Self::load_shader(
+		let frag_shader = Arc::new(Self::load_shader(
 			&engine,
 			&render_chain,
 			engine::asset::Id::new(crate::name(), "fragment"),
 		)?);
 
 		let image = Self::create_boid_image(&render_chain, Self::load_boid_texture(&engine)?)?;
-		let image_view = Rc::new(Self::create_image_view(&render_chain, image)?);
-		let image_sampler = Rc::new(
+		let image_view = Arc::new(Self::create_image_view(&render_chain, image)?);
+		let image_sampler = Arc::new(
 			sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
 				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
 				.build(&render_chain.logical())?,
 		);
 
-		let camera_descriptor_layout = Rc::new(
+		let camera_descriptor_layout = Arc::new(
 			graphics::descriptor::SetLayout::builder()
 				.with_binding(
 					0,
@@ -107,10 +104,10 @@ impl RenderBoids {
 				.build(&render_chain.allocator())?;
 
 			Self::write_camera_view_proj(&buffer, &camera_view_projection)?;
-			camera_buffers.push(Rc::new(buffer));
+			camera_buffers.push(Arc::new(buffer));
 		}
 
-		let image_descriptor_layout = Rc::new(
+		let image_descriptor_layout = Arc::new(
 			graphics::descriptor::SetLayout::builder()
 				.with_binding(
 					0,
@@ -131,7 +128,7 @@ impl RenderBoids {
 		let (vertex_buffer, index_buffer, index_count) = Self::create_boid_model(&render_chain)?;
 		let (instance_buffer, instance_count) = Self::create_instance_buffer(&render_chain)?;
 
-		let strong = Rc::new(RefCell::new(RenderBoids {
+		let strong = Arc::new(RwLock::new(RenderBoids {
 			pipeline_layout: None,
 			pipeline: None,
 			vert_shader,
@@ -150,8 +147,8 @@ impl RenderBoids {
 			instance_count,
 		}));
 
-		render_chain.add_render_chain_element(strong.clone())?;
-		render_chain.add_command_recorder(strong.clone())?;
+		render_chain.add_render_chain_element(&strong)?;
+		render_chain.add_command_recorder(&strong)?;
 
 		Ok(strong)
 	}
@@ -194,8 +191,8 @@ impl RenderBoids {
 	fn create_boid_image(
 		render_chain: &RenderChain,
 		texture: Box<graphics::Texture>,
-	) -> Result<Rc<image::Image>, AnyError> {
-		let image = Rc::new(
+	) -> Result<Arc<image::Image>, AnyError> {
+		let image = Arc::new(
 			graphics::image::Image::builder()
 				.with_alloc(
 					graphics::alloc::Info::default()
@@ -221,7 +218,7 @@ impl RenderBoids {
 
 	fn create_image_view(
 		render_chain: &RenderChain,
-		image: Rc<image::Image>,
+		image: Arc<image::Image>,
 	) -> Result<image_view::View, AnyError> {
 		Ok(image_view::View::builder()
 			.with_format(image.format())
@@ -398,8 +395,8 @@ impl graphics::RenderChainElement for RenderBoids {
 		);
 		self.pipeline = Some(
 			pipeline::Info::default()
-				.add_shader(Rc::downgrade(&self.vert_shader))
-				.add_shader(Rc::downgrade(&self.frag_shader))
+				.add_shader(Arc::downgrade(&self.vert_shader))
+				.add_shader(Arc::downgrade(&self.frag_shader))
 				.with_vertex_layout(
 					pipeline::vertex::Layout::default()
 						.with_object::<Vertex>(0, flags::VertexInputRate::VERTEX)

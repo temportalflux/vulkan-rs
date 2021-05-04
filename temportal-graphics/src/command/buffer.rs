@@ -4,15 +4,18 @@ use crate::{
 	flags, image, pipeline, renderpass, structs,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Buffer {
-	device: Rc<logical::Device>,
 	internal: backend::vk::CommandBuffer,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Buffer {
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::CommandBuffer) -> Buffer {
+	pub fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::CommandBuffer,
+	) -> Buffer {
 		Buffer { device, internal }
 	}
 

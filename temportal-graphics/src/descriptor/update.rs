@@ -1,7 +1,7 @@
 use crate::{
 	backend, buffer, descriptor, device::logical, flags, image_view, sampler, utility::VulkanObject,
 };
-use std::rc::{Rc, Weak};
+use std::sync;
 
 pub struct SetUpdate {
 	operations: Vec<UpdateOperation>,
@@ -21,7 +21,7 @@ pub enum UpdateOperation {
 }
 
 pub struct UpdateOperationSet {
-	pub set: Weak<descriptor::Set>,
+	pub set: sync::Weak<descriptor::Set>,
 	pub binding_index: u32,
 	pub array_element: u32,
 }
@@ -38,13 +38,13 @@ pub enum ObjectKind {
 }
 
 pub struct ImageKind {
-	pub sampler: Rc<sampler::Sampler>,
-	pub view: Rc<image_view::View>,
+	pub sampler: sync::Arc<sampler::Sampler>,
+	pub view: sync::Arc<image_view::View>,
 	pub layout: flags::ImageLayout,
 }
 
 pub struct BufferKind {
-	pub buffer: Rc<buffer::Buffer>,
+	pub buffer: sync::Arc<buffer::Buffer>,
 	pub offset: usize,
 	pub range: usize,
 }

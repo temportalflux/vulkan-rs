@@ -5,11 +5,11 @@ use crate::{
 	utility::{self, VulkanInfo, VulkanObject},
 };
 
-use std::rc::{Rc, Weak};
+use std::sync;
 
 /// Information used to construct a [`Pipeline`](pipeline::Pipeline).
 pub struct Info {
-	shaders: Vec<Weak<shader::Module>>,
+	shaders: Vec<sync::Weak<shader::Module>>,
 	vertex_input: pipeline::vertex::Layout,
 	input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo,
 	viewport_state: pipeline::ViewportState,
@@ -39,7 +39,7 @@ impl Default for Info {
 }
 
 impl Info {
-	pub fn add_shader(mut self, shader: Weak<shader::Module>) -> Self {
+	pub fn add_shader(mut self, shader: sync::Weak<shader::Module>) -> Self {
 		self.shaders.push(shader);
 		self
 	}
@@ -70,7 +70,7 @@ impl Info {
 	/// with respect to a specific [`Render Pass`](crate::renderpass::Pass).
 	pub fn create_object(
 		self,
-		device: Rc<logical::Device>,
+		device: sync::Arc<logical::Device>,
 		layout: &pipeline::Layout,
 		render_pass: &renderpass::Pass,
 	) -> Result<pipeline::Pipeline, utility::Error> {

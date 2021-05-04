@@ -8,7 +8,7 @@ use crate::{
 	Surface,
 };
 use std::collections::hash_map::HashMap;
-use std::rc::{Rc, Weak};
+use std::sync;
 
 pub use backend::vk::PhysicalDeviceType as Kind;
 
@@ -49,20 +49,20 @@ pub struct Device {
 	extension_properties: HashMap<String, backend::vk::ExtensionProperties>,
 
 	_internal: backend::vk::PhysicalDevice,
-	surface: Weak<Surface>,
-	instance: Weak<Instance>,
+	surface: sync::Weak<Surface>,
+	instance: sync::Weak<Instance>,
 }
 
 impl Device {
 	/// The internal constructor. Users should use [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device) to create a vulkan instance.
 	pub fn from(
-		instance: &Rc<Instance>,
+		instance: &sync::Arc<Instance>,
 		vk: backend::vk::PhysicalDevice,
-		surface: &Rc<Surface>,
+		surface: &sync::Arc<Surface>,
 	) -> Device {
 		Device {
-			instance: Rc::downgrade(&instance),
-			surface: Rc::downgrade(&surface),
+			instance: sync::Arc::downgrade(&instance),
+			surface: sync::Arc::downgrade(&surface),
 			_internal: vk,
 			properties: instance.get_physical_device_properties(&vk),
 			queue_families: instance

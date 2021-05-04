@@ -3,12 +3,12 @@ use crate::{
 	device::logical,
 	utility::{self, VulkanObject},
 };
-use std::rc::{Rc, Weak};
+use std::sync;
 
 pub struct Pool {
-	owned_sets: Vec<Rc<descriptor::Set>>,
+	owned_sets: Vec<sync::Arc<descriptor::Set>>,
 	internal: backend::vk::DescriptorPool,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Pool {
@@ -16,7 +16,7 @@ impl Pool {
 		descriptor::pool::Builder::default()
 	}
 
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::DescriptorPool) -> Pool {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::DescriptorPool) -> Pool {
 		Pool {
 			device,
 			internal,
@@ -26,8 +26,8 @@ impl Pool {
 
 	pub fn allocate_descriptor_sets(
 		&mut self,
-		layouts: &Vec<Rc<descriptor::SetLayout>>,
-	) -> utility::Result<Vec<Weak<descriptor::Set>>> {
+		layouts: &Vec<sync::Arc<descriptor::SetLayout>>,
+	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
 		use ash::version::DeviceV1_0;
 		let set_layouts = layouts
 			.iter()
@@ -44,9 +44,9 @@ impl Pool {
 			.into_iter()
 			.enumerate()
 			.map(|(idx, vk_desc_set)| {
-				let set = Rc::new(descriptor::Set::from(layouts[idx].clone(), vk_desc_set));
+				let set = sync::Arc::new(descriptor::Set::from(layouts[idx].clone(), vk_desc_set));
 				self.owned_sets.push(set.clone());
-				Rc::downgrade(&set)
+				sync::Arc::downgrade(&set)
 			})
 			.collect())
 	}

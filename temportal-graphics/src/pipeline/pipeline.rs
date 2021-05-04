@@ -1,16 +1,16 @@
 use crate::{backend, device::logical, utility::VulkanObject};
 
-use std::rc::Rc;
+use std::sync;
 
 /// A vulkan Pipeline. A given pipeline is only valid for a specific [`Render Pass`](crate::renderpass::Pass),
 /// and is used to issue commands to the [`GPU`](crate::device::physical::Device).
 pub struct Pipeline {
 	internal: backend::vk::Pipeline,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Pipeline {
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Pipeline) -> Pipeline {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Pipeline) -> Pipeline {
 		Pipeline { device, internal }
 	}
 }

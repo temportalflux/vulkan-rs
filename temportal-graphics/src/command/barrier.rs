@@ -5,7 +5,7 @@ use crate::{
 	structs::subresource,
 	utility::{VulkanInfo, VulkanObject},
 };
-use std::rc::Weak;
+use std::sync;
 
 pub struct PipelineBarrier {
 	pub src_stage: PipelineStage,
@@ -49,7 +49,7 @@ pub struct BufferBarrier {
 	dst_access: Access,
 	dst_queue_family: u32,
 
-	buffer: Weak<buffer::Buffer>,
+	buffer: sync::Weak<buffer::Buffer>,
 	offset: usize,
 	size: usize,
 }
@@ -61,7 +61,7 @@ impl Default for BufferBarrier {
 			src_queue_family: u32::MAX, // queue is ignored
 			dst_access: Access::empty(),
 			dst_queue_family: u32::MAX, // queue is ignored
-			buffer: Weak::new(),
+			buffer: sync::Weak::new(),
 			offset: 0,
 			size: 0,
 		}
@@ -89,7 +89,7 @@ pub struct ImageBarrier {
 	dst_access: Access,
 	dst_queue_family: u32,
 
-	image: Weak<image::Image>,
+	image: sync::Weak<image::Image>,
 	old_layout: ImageLayout,
 	new_layout: ImageLayout,
 	range: subresource::Range,
@@ -104,7 +104,7 @@ impl Default for ImageBarrier {
 			dst_access: Access::empty(),
 			dst_queue_family: u32::MAX, // queue is ignored
 
-			image: Weak::new(),
+			image: sync::Weak::new(),
 			old_layout: ImageLayout::UNDEFINED,
 			new_layout: ImageLayout::UNDEFINED,
 			range: subresource::Range::default(),
@@ -123,7 +123,7 @@ impl ImageBarrier {
 		self
 	}
 
-	pub fn with_image(mut self, image: Weak<image::Image>) -> Self {
+	pub fn with_image(mut self, image: sync::Weak<image::Image>) -> Self {
 		self.image = image;
 		self
 	}

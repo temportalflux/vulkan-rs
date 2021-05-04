@@ -7,16 +7,12 @@ use crate::engine::{
 	utility::{self, AnyError},
 	Engine,
 };
-use std::{
-	cell::RefCell,
-	collections::HashMap,
-	rc::{Rc, Weak},
-};
+use std::{collections::HashMap, sync};
 
 struct ShaderItem {
 	kind: flags::ShaderKind,
 	bytes: Vec<u8>,
-	module: Option<Rc<shader::Module>>,
+	module: Option<sync::Arc<shader::Module>>,
 }
 
 impl ShaderItem {
@@ -36,7 +32,7 @@ impl ShaderItem {
 	}
 
 	pub fn create_module(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.module = Some(Rc::new(shader::Module::create(
+		self.module = Some(sync::Arc::new(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
 				kind: self.kind,
@@ -74,16 +70,16 @@ impl pipeline::vertex::Object for Vertex {
 }
 
 pub struct TextRender {
-	index_buffer: Option<Rc<buffer::Buffer>>,
-	vertex_buffer: Option<Rc<buffer::Buffer>>,
+	index_buffer: Option<sync::Arc<buffer::Buffer>>,
+	vertex_buffer: Option<sync::Arc<buffer::Buffer>>,
 	indices: Vec<u32>,
 	vertices: Vec<Vertex>,
 
-	font_atlas_descriptor_set: Weak<graphics::descriptor::Set>,
-	font_atlas_descriptor_layout: Option<Rc<graphics::descriptor::SetLayout>>,
+	font_atlas_descriptor_set: sync::Weak<graphics::descriptor::Set>,
+	font_atlas_descriptor_layout: Option<sync::Arc<graphics::descriptor::SetLayout>>,
 
-	font_atlas_sampler: Rc<sampler::Sampler>,
-	font_atlas_view: Rc<image_view::View>,
+	font_atlas_sampler: sync::Arc<sampler::Sampler>,
+	font_atlas_view: sync::Arc<image_view::View>,
 	shaders: HashMap<flags::ShaderKind, ShaderItem>,
 
 	pipeline: Option<pipeline::Pipeline>,
@@ -102,7 +98,7 @@ impl TextRender {
 	pub fn new(
 		engine: &Engine,
 		render_chain: &mut RenderChain,
-	) -> Result<Rc<RefCell<TextRender>>, AnyError> {
+	) -> Result<sync::Arc<sync::RwLock<TextRender>>, AnyError> {
 		optick::event!();
 
 		let font_atlas_format = flags::Format::R8_SRGB;
@@ -123,7 +119,7 @@ impl TextRender {
 				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 
 			let image_size = font.size().subvec::<3>(None).with_z(1);
-			let image = Rc::new(
+			let image = sync::Arc::new(
 				graphics::image::Image::builder()
 					.with_alloc(
 						graphics::alloc::Info::default()
@@ -149,7 +145,7 @@ impl TextRender {
 			image
 		};
 
-		let font_atlas_view = Rc::new(
+		let font_atlas_view = sync::Arc::new(
 			graphics::image_view::View::builder()
 				.for_image(font_atlas.clone())
 				.with_view_type(flags::ImageViewType::TYPE_2D)
@@ -160,7 +156,7 @@ impl TextRender {
 				.build(&render_chain.logical())?,
 		);
 
-		let font_atlas_sampler = Rc::new(
+		let font_atlas_sampler = sync::Arc::new(
 			graphics::sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
 				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
@@ -174,7 +170,7 @@ impl TextRender {
 			font_atlas_view,
 			font_atlas_sampler,
 			font_atlas_descriptor_layout: None,
-			font_atlas_descriptor_set: Weak::new(),
+			font_atlas_descriptor_set: sync::Weak::new(),
 
 			vertices: vec![
 				Vertex {
@@ -227,9 +223,9 @@ impl TextRender {
 			.shader_item_mut(flags::ShaderKind::Fragment)
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
-		let strong = Rc::new(RefCell::new(instance));
-		render_chain.add_render_chain_element(strong.clone())?;
-		render_chain.add_command_recorder(strong.clone())?;
+		let strong = sync::Arc::new(sync::RwLock::new(instance));
+		render_chain.add_render_chain_element(&strong)?;
+		render_chain.add_command_recorder(&strong)?;
 
 		Ok(strong)
 	}
@@ -239,7 +235,7 @@ impl TextRender {
 	fn shader_item_mut(&mut self, kind: flags::ShaderKind) -> &mut ShaderItem {
 		self.shaders.get_mut(&kind).unwrap()
 	}
-	fn shader_module(&self, kind: flags::ShaderKind) -> &Rc<shader::Module> {
+	fn shader_module(&self, kind: flags::ShaderKind) -> &sync::Arc<shader::Module> {
 		&self.shaders.get(&kind).unwrap().module.as_ref().unwrap()
 	}
 }
@@ -250,7 +246,7 @@ impl graphics::RenderChainElement for TextRender {
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
 
-		self.font_atlas_descriptor_layout = Some(Rc::new(
+		self.font_atlas_descriptor_layout = Some(sync::Arc::new(
 			SetLayout::builder()
 				.with_binding(
 					font_sampler_binding_number,
@@ -293,7 +289,7 @@ impl graphics::RenderChainElement for TextRender {
 		self.shader_item_mut(flags::ShaderKind::Fragment)
 			.create_module(render_chain)?;
 
-		self.vertex_buffer = Some(Rc::new(
+		self.vertex_buffer = Some(sync::Arc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -314,7 +310,7 @@ impl graphics::RenderChainElement for TextRender {
 			.end()?
 			.wait_until_idle()?;
 
-		self.index_buffer = Some(Rc::new(
+		self.index_buffer = Some(sync::Arc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::INDEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -357,8 +353,10 @@ impl graphics::RenderChainElement for TextRender {
 		);
 		self.pipeline = Some(
 			pipeline::Info::default()
-				.add_shader(Rc::downgrade(self.shader_module(flags::ShaderKind::Vertex)))
-				.add_shader(Rc::downgrade(
+				.add_shader(sync::Arc::downgrade(
+					self.shader_module(flags::ShaderKind::Vertex),
+				))
+				.add_shader(sync::Arc::downgrade(
 					self.shader_module(flags::ShaderKind::Fragment),
 				))
 				.with_vertex_layout(

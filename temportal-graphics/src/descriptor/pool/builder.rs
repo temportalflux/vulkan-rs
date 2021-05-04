@@ -5,7 +5,7 @@ use crate::{
 	flags::DescriptorKind,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Builder {
 	/// The maximum number of sets ever allowed to be allocated from the pool.
@@ -53,7 +53,7 @@ impl VulkanInfo<backend::vk::DescriptorPoolCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`crate::descriptor::pool::Pool`] object, thereby consuming the info.
-	pub fn build(self, device: &Rc<logical::Device>) -> utility::Result<pool::Pool> {
+	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<pool::Pool> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
 		let internal = utility::as_vulkan_error(unsafe {

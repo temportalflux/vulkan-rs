@@ -5,15 +5,15 @@ use crate::{
 	utility::{self, VulkanObject},
 };
 
-use std::rc::Rc;
+use std::sync;
 
 pub struct Semaphore {
 	internal: backend::vk::Semaphore,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Semaphore {
-	pub fn new(device: &Rc<logical::Device>) -> utility::Result<Semaphore> {
+	pub fn new(device: &sync::Arc<logical::Device>) -> utility::Result<Semaphore> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::SemaphoreCreateInfo::builder().build();
 		let vk =
@@ -21,7 +21,7 @@ impl Semaphore {
 		Ok(Semaphore::from(device.clone(), vk))
 	}
 
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Semaphore) -> Semaphore {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Semaphore) -> Semaphore {
 		Semaphore { device, internal }
 	}
 }
@@ -46,18 +46,21 @@ impl Drop for Semaphore {
 
 pub struct Fence {
 	internal: backend::vk::Fence,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Fence {
-	pub fn new(device: &Rc<logical::Device>, state: flags::FenceState) -> utility::Result<Fence> {
+	pub fn new(
+		device: &sync::Arc<logical::Device>,
+		state: flags::FenceState,
+	) -> utility::Result<Fence> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::FenceCreateInfo::builder().flags(state).build();
 		let vk = utility::as_vulkan_error(unsafe { device.unwrap().create_fence(&info, None) })?;
 		Ok(Fence::from(device.clone(), vk))
 	}
 
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Fence) -> Fence {
+	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Fence) -> Fence {
 		Fence { device, internal }
 	}
 }

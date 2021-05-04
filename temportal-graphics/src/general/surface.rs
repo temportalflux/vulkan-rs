@@ -1,17 +1,20 @@
 use crate::{backend, instance, utility::VulkanObject};
-use std::rc::Rc;
+use std::sync;
 
 /// The wrapper for the [`Vulkan Surface`](backend::vk::SurfaceKHR).
 /// This represents the canvas/display within the provided [`window`](raw_window_handle::HasRawWindowHandle)
 /// that Vulkan should draw to. (see [`create_surface`](crate::instance::Instance::create_surface))
 pub struct Surface {
-	_instance: Rc<instance::Instance>,
 	_internal: backend::vk::SurfaceKHR,
+	_instance: sync::Arc<instance::Instance>,
 }
 
 impl Surface {
 	/// The internal constructor. Users should use [`create_surface`](crate::instance::Instance::create_surface) to create a surface.
-	pub fn from(_instance: Rc<instance::Instance>, _internal: backend::vk::SurfaceKHR) -> Surface {
+	pub fn from(
+		_instance: sync::Arc<instance::Instance>,
+		_internal: backend::vk::SurfaceKHR,
+	) -> Surface {
 		Surface {
 			_instance,
 			_internal,

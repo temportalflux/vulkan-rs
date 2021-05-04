@@ -3,13 +3,13 @@ use crate::{
 	flags::{BufferUsage, MemoryProperty, MemoryUsage, SharingMode},
 	utility::{self, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Buffer {
 	internal: backend::vk::Buffer,
-	allocation_handle: Rc<vk_mem::Allocation>,
+	allocation_handle: sync::Arc<vk_mem::Allocation>,
 	allocation_info: vk_mem::AllocationInfo,
-	allocator: Rc<alloc::Allocator>,
+	allocator: sync::Arc<alloc::Allocator>,
 	size: usize,
 }
 
@@ -19,7 +19,7 @@ impl Buffer {
 	}
 
 	pub fn from(
-		allocator: Rc<alloc::Allocator>,
+		allocator: sync::Arc<alloc::Allocator>,
 		internal: backend::vk::Buffer,
 		allocation_handle: vk_mem::Allocation,
 		allocation_info: vk_mem::AllocationInfo,
@@ -28,7 +28,7 @@ impl Buffer {
 		Buffer {
 			allocator,
 			internal,
-			allocation_handle: Rc::new(allocation_handle),
+			allocation_handle: sync::Arc::new(allocation_handle),
 			allocation_info,
 			size: builder.size,
 		}
@@ -41,7 +41,7 @@ impl Buffer {
 
 	pub fn create_staging(
 		size: usize,
-		allocator: &Rc<alloc::Allocator>,
+		allocator: &sync::Arc<alloc::Allocator>,
 	) -> utility::Result<Buffer> {
 		Buffer::builder()
 			.with_size(size)
@@ -88,11 +88,11 @@ impl alloc::Object for Buffer {
 		&self.allocation_info
 	}
 
-	fn handle(&self) -> &Rc<vk_mem::Allocation> {
+	fn handle(&self) -> &sync::Arc<vk_mem::Allocation> {
 		&self.allocation_handle
 	}
 
-	fn allocator(&self) -> &Rc<alloc::Allocator> {
+	fn allocator(&self) -> &sync::Arc<alloc::Allocator> {
 		&self.allocator
 	}
 }

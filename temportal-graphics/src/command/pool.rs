@@ -4,16 +4,16 @@ use crate::{
 	flags,
 	utility::{self, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Pool {
-	device: Rc<logical::Device>,
 	internal: backend::vk::CommandPool,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Pool {
 	pub fn create(
-		device: &Rc<logical::Device>,
+		device: &sync::Arc<logical::Device>,
 		queue_family_index: usize,
 	) -> utility::Result<Pool> {
 		use backend::version::DeviceV1_0;

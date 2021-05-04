@@ -3,10 +3,10 @@ use crate::{
 	device::logical,
 	utility::{self, VulkanObject},
 };
-use std::rc::{Rc, Weak};
+use std::sync;
 
 pub struct Builder {
-	descriptor_layouts: Vec<Weak<descriptor::SetLayout>>,
+	descriptor_layouts: Vec<sync::Weak<descriptor::SetLayout>>,
 }
 
 impl Default for Builder {
@@ -18,14 +18,14 @@ impl Default for Builder {
 }
 
 impl Builder {
-	pub fn with_descriptors(mut self, layout: &Rc<descriptor::SetLayout>) -> Self {
-		self.descriptor_layouts.push(Rc::downgrade(layout));
+	pub fn with_descriptors(mut self, layout: &sync::Arc<descriptor::SetLayout>) -> Self {
+		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
 		self
 	}
 }
 
 impl Builder {
-	pub fn build(self, device: Rc<logical::Device>) -> utility::Result<Layout> {
+	pub fn build(self, device: sync::Arc<logical::Device>) -> utility::Result<Layout> {
 		use backend::version::DeviceV1_0;
 
 		let vk_descriptor_layouts = self
@@ -46,7 +46,7 @@ impl Builder {
 
 pub struct Layout {
 	internal: backend::vk::PipelineLayout,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Layout {

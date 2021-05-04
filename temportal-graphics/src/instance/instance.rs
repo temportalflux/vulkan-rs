@@ -7,7 +7,7 @@ use crate::{
 };
 
 use raw_window_handle;
-use std::rc::Rc;
+use std::sync;
 
 /// A user-owned singleton for the [`Vulkan Instance`](backend::Instance)
 pub struct Instance {
@@ -57,7 +57,7 @@ impl Instance {
 	/// Creates a vulkan [`Surface`] using a window handle the user provides.
 	pub fn create_surface(
 		context: &Context,
-		instance: &Rc<Self>,
+		instance: &sync::Arc<Self>,
 		handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> utility::Result<Surface> {
 		utility::as_vulkan_error(unsafe {
@@ -75,9 +75,9 @@ impl Instance {
 
 	/// Searches for an applicable [`Device`](crate::device::physical::Device) that fits the provided constraints and surface.
 	pub fn find_physical_device(
-		instance: &Rc<Instance>,
+		instance: &sync::Arc<Instance>,
 		constraints: &Vec<physical::Constraint>,
-		surface: &Rc<Surface>,
+		surface: &sync::Arc<Surface>,
 	) -> Result<physical::Device, Option<physical::Constraint>> {
 		use ash::version::InstanceV1_0;
 		match unsafe { instance.internal.enumerate_physical_devices() }

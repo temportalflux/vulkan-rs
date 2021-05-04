@@ -2,7 +2,7 @@ use crate::{
 	backend, device::logical, image_view, renderpass, structs::Extent2D, utility,
 	utility::VulkanObject,
 };
-use std::rc::Rc;
+use std::sync;
 
 /// Information used to construct a [`Framebuffer`].
 pub struct Info {
@@ -29,7 +29,7 @@ impl Info {
 		&self,
 		swapchain_image_view: &image_view::View,
 		render_pass: &renderpass::Pass,
-		device: &Rc<logical::Device>,
+		device: &sync::Arc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		use backend::version::DeviceV1_0;
 		let attachments = vec![*swapchain_image_view.unwrap()];
@@ -48,11 +48,14 @@ impl Info {
 
 pub struct Framebuffer {
 	internal: backend::vk::Framebuffer,
-	device: Rc<logical::Device>,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Framebuffer {
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::Framebuffer) -> Framebuffer {
+	pub fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::Framebuffer,
+	) -> Framebuffer {
 		Framebuffer { device, internal }
 	}
 }

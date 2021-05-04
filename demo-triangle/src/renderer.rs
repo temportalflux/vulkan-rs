@@ -8,17 +8,17 @@ use crate::{
 	},
 	Vertex,
 };
-use std::{cell::RefCell, rc::Rc};
+use std::sync;
 
 pub struct Triangle {
-	index_buffer: Option<Rc<buffer::Buffer>>,
-	vertex_buffer: Option<Rc<buffer::Buffer>>,
+	index_buffer: Option<sync::Arc<buffer::Buffer>>,
+	vertex_buffer: Option<sync::Arc<buffer::Buffer>>,
 	indices: Vec<u32>,
 	vertices: Vec<Vertex>,
 	vert_bytes: Vec<u8>,
 	frag_bytes: Vec<u8>,
-	vert_shader: Option<Rc<shader::Module>>,
-	frag_shader: Option<Rc<shader::Module>>,
+	vert_shader: Option<sync::Arc<shader::Module>>,
+	frag_shader: Option<sync::Arc<shader::Module>>,
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
 }
@@ -27,7 +27,7 @@ impl Triangle {
 	pub fn new(
 		engine: &Engine,
 		render_chain: &mut RenderChain,
-	) -> Result<Rc<RefCell<Triangle>>, AnyError> {
+	) -> Result<sync::Arc<sync::RwLock<Triangle>>, AnyError> {
 		let vert_bytes: Vec<u8>;
 		let frag_bytes: Vec<u8>;
 		{
@@ -59,7 +59,7 @@ impl Triangle {
 			}
 		}
 
-		let strong = Rc::new(RefCell::new(Triangle {
+		let strong = sync::Arc::new(sync::RwLock::new(Triangle {
 			pipeline_layout: None,
 			pipeline: None,
 			vert_bytes,
@@ -82,8 +82,8 @@ impl Triangle {
 			index_buffer: None,
 		}));
 
-		render_chain.add_render_chain_element(strong.clone())?;
-		render_chain.add_command_recorder(strong.clone())?;
+		render_chain.add_render_chain_element(&strong)?;
+		render_chain.add_command_recorder(&strong)?;
 
 		Ok(strong)
 	}
@@ -102,7 +102,7 @@ mod vertex_data {
 
 impl graphics::RenderChainElement for Triangle {
 	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
-		self.vert_shader = Some(Rc::new(shader::Module::create(
+		self.vert_shader = Some(sync::Arc::new(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Vertex,
@@ -111,7 +111,7 @@ impl graphics::RenderChainElement for Triangle {
 			},
 		)?));
 
-		self.frag_shader = Some(Rc::new(shader::Module::create(
+		self.frag_shader = Some(sync::Arc::new(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
 				kind: flags::ShaderKind::Fragment,
@@ -120,7 +120,7 @@ impl graphics::RenderChainElement for Triangle {
 			},
 		)?));
 
-		self.vertex_buffer = Some(Rc::new(
+		self.vertex_buffer = Some(sync::Arc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::VERTEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -141,7 +141,7 @@ impl graphics::RenderChainElement for Triangle {
 			.end()?
 			.wait_until_idle()?;
 
-		self.index_buffer = Some(Rc::new(
+		self.index_buffer = Some(sync::Arc::new(
 			graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::INDEX_BUFFER)
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
@@ -180,8 +180,8 @@ impl graphics::RenderChainElement for Triangle {
 			Some(pipeline::Layout::builder().build(render_chain.logical().clone())?);
 		self.pipeline = Some(
 			pipeline::Info::default()
-				.add_shader(Rc::downgrade(self.vert_shader.as_ref().unwrap()))
-				.add_shader(Rc::downgrade(self.frag_shader.as_ref().unwrap()))
+				.add_shader(sync::Arc::downgrade(self.vert_shader.as_ref().unwrap()))
+				.add_shader(sync::Arc::downgrade(self.frag_shader.as_ref().unwrap()))
 				.with_vertex_layout(
 					pipeline::vertex::Layout::default()
 						.with_object::<Vertex>(0, flags::VertexInputRate::VERTEX),

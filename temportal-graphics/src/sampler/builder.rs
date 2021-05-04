@@ -5,7 +5,7 @@ use crate::{
 	sampler,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Builder {
 	magnification: Filter,
@@ -111,7 +111,7 @@ impl utility::VulkanInfo<backend::vk::SamplerCreateInfo> for Builder {
 }
 
 impl Builder {
-	pub fn build(self, device: &Rc<logical::Device>) -> utility::Result<sampler::Sampler> {
+	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<sampler::Sampler> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
 		let vk = utility::as_vulkan_error(unsafe {

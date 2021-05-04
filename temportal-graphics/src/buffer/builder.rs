@@ -4,7 +4,7 @@ use crate::{
 	flags::{BufferUsage, SharingMode},
 	utility::{self, VulkanInfo, VulkanObject},
 };
-use std::rc::Rc;
+use std::sync;
 
 pub struct Builder {
 	pub mem_info: alloc::Info,
@@ -73,7 +73,7 @@ impl utility::VulkanInfo<backend::vk::BufferCreateInfo> for Builder {
 
 impl Builder {
 	/// Creates an [`object::Buffer`] object, thereby consuming the info.
-	pub fn build(self, allocator: &Rc<alloc::Allocator>) -> utility::Result<Buffer> {
+	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let buffer_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
 		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(

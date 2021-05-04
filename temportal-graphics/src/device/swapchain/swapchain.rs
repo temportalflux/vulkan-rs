@@ -5,18 +5,21 @@ use crate::{
 	utility::{self, VulkanObject},
 };
 
-use std::rc::Rc;
+use std::sync;
 
 /// A wrapper struct for [`backend::vk::SwapchainKHR`] to handle swapping out
 /// displayed images on the [`Surface`](crate::Surface).
 pub struct Swapchain {
-	device: Rc<logical::Device>,
 	internal: backend::vk::SwapchainKHR,
+	device: sync::Arc<logical::Device>,
 }
 
 impl Swapchain {
 	/// The internal constructor. Users should use [`create_object`](crate::device::swapchain::Info::create_object) to create a surface.
-	pub fn from(device: Rc<logical::Device>, internal: backend::vk::SwapchainKHR) -> Swapchain {
+	pub fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::SwapchainKHR,
+	) -> Swapchain {
 		Swapchain { device, internal }
 	}
 

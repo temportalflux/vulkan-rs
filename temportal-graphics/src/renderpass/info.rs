@@ -4,8 +4,7 @@ use crate::{
 	flags, renderpass,
 	utility::{self, VulkanInfo, VulkanObject},
 };
-
-use std::rc::Rc;
+use std::sync;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
 pub struct Info {
@@ -80,7 +79,10 @@ impl Info {
 }
 
 impl Info {
-	pub fn create_object(&self, device: &Rc<logical::Device>) -> utility::Result<renderpass::Pass> {
+	pub fn create_object(
+		&self,
+		device: &sync::Arc<logical::Device>,
+	) -> utility::Result<renderpass::Pass> {
 		use backend::version::DeviceV1_0;
 		let attachments = self
 			.attachments
