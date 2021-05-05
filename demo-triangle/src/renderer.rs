@@ -137,12 +137,16 @@ impl graphics::RenderChainElement for Triangle {
 				.build(&render_chain.allocator())?,
 		));
 
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
-			.begin()?
-			.stage(&self.vertices[..])?
-			.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
-			.end()?
-			.wait_until_idle()?;
+		let vertex_buffer_copy_signal = {
+			let copy_task = graphics::TaskCopyImageToGpu::new(&render_chain)?
+				.begin()?
+				.stage(&self.vertices[..])?
+				.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
+				.end()?;
+			let gpu_signal = copy_task.gpu_signal_on_complete();
+			copy_task.send_to(render_chain.task_spawner());
+			gpu_signal
+		};
 
 		self.index_buffer = Some(sync::Arc::new(
 			graphics::buffer::Buffer::builder()
@@ -158,14 +162,18 @@ impl graphics::RenderChainElement for Triangle {
 				.build(&render_chain.allocator())?,
 		));
 
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
-			.begin()?
-			.stage(&self.indices[..])?
-			.copy_stage_to_buffer(&self.index_buffer.as_ref().unwrap())
-			.end()?
-			.wait_until_idle()?;
+		let index_buffer_copy_signal = {
+			let copy_task = graphics::TaskCopyImageToGpu::new(&render_chain)?
+				.begin()?
+				.stage(&self.indices[..])?
+				.copy_stage_to_buffer(&self.index_buffer.as_ref().unwrap())
+				.end()?;
+			let gpu_signal = copy_task.gpu_signal_on_complete();
+			copy_task.send_to(render_chain.task_spawner());
+			gpu_signal
+		};
 
-		Ok(vec![])
+		Ok(vec![vertex_buffer_copy_signal, index_buffer_copy_signal])
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {

@@ -40,6 +40,7 @@ fn scan_assets(engine: &mut Engine) -> VoidResult {
 pub fn run() -> VoidResult {
 	engine::logging::init(name())?;
 	let engine = create_engine()?;
+	let (task_spawner, mut task_watcher) = engine::task::create_system();
 
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
@@ -52,9 +53,11 @@ pub fn run() -> VoidResult {
 		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
-	let render_chain = window
-		.borrow()
-		.create_render_chain(&mut display.borrow_mut(), create_render_pass_info())?;
+	let render_chain = window.borrow().create_render_chain(
+		&mut display.borrow_mut(),
+		create_render_pass_info(),
+		task_spawner.clone(),
+	)?;
 	render_chain
 		.borrow_mut()
 		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
@@ -82,6 +85,7 @@ pub fn run() -> VoidResult {
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
+		std::sync::Arc::get_mut(&mut task_watcher).unwrap().poll();
 		dispatcher.dispatch(&mut world);
 		render_chain.borrow_mut().render_frame()?;
 	}
