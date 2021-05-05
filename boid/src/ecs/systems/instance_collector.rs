@@ -1,4 +1,8 @@
-use crate::{ecs, graphics};
+use crate::{
+	ecs,
+	engine::{math::Quaternion, world},
+	graphics,
+};
 use std::sync::{Arc, RwLock};
 
 pub struct InstanceCollector {
@@ -19,10 +23,21 @@ impl<'a> ecs::System<'a> for InstanceCollector {
 
 	fn run(&mut self, (pos, renderable): Self::SystemData) {
 		use ecs::Join;
-		let _render_boids = self.renderer.write().unwrap();
-		let _count = renderable.count();
-		for (pos, _renderable) in (&pos, &renderable).join() {
-			log::debug!("Found pos {:?}", pos);
+
+		let mut instances = Vec::new();
+		for (pos, renderable) in (&pos, &renderable).join() {
+			instances.push(
+				graphics::Instance::default()
+					.with_pos(pos.0.subvec::<3>(None))
+					.with_orientation(Quaternion::from_axis_angle(
+						-world::global_forward(),
+						90.0_f32.to_radians(),
+					))
+					.with_color(renderable.color),
+			);
 		}
+
+		let mut render_boids = self.renderer.write().unwrap();
+		render_boids.set_instances(instances).unwrap();
 	}
 }

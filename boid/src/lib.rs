@@ -53,13 +53,11 @@ pub fn run() -> VoidResult {
 		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
-	let render_chain = window.borrow().create_render_chain(
-		&mut display.borrow_mut(),
-		create_render_pass_info(),
-		task_spawner.clone(),
-	)?;
-	render_chain
-		.borrow_mut()
+	let mut render_chain = window
+		.borrow()
+		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
+	std::sync::Arc::get_mut(&mut render_chain)
+		.unwrap()
 		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
 			0.0, 0.25, 0.5, 1.0,
 		])));
@@ -68,7 +66,7 @@ pub fn run() -> VoidResult {
 		.with(
 			ecs::systems::InstanceCollector::new(graphics::RenderBoids::new(
 				&engine.borrow(),
-				&mut render_chain.borrow_mut(),
+				&mut render_chain,
 			)?),
 			"render-instance-collector",
 			&[],
@@ -87,9 +85,11 @@ pub fn run() -> VoidResult {
 		display.borrow_mut().poll_all_events()?;
 		std::sync::Arc::get_mut(&mut task_watcher).unwrap().poll();
 		dispatcher.dispatch(&mut world);
-		render_chain.borrow_mut().render_frame()?;
+		std::sync::Arc::get_mut(&mut render_chain)
+			.unwrap()
+			.render_frame()?;
 	}
-	render_chain.borrow().logical().wait_until_idle()?;
+	render_chain.logical().wait_until_idle()?;
 
 	Ok(())
 }

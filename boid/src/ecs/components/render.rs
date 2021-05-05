@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BoidRender {
-	color: Vector<f32, 4>,
+	pub color: Vector<f32, 4>,
 }
 
 impl Component for BoidRender {

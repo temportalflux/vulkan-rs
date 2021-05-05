@@ -20,7 +20,9 @@ struct CameraViewProjection {
 
 pub struct RenderBoids {
 	instance_count: usize,
-	instance_buffer: buffer::Buffer,
+	active_instance_buffer: Arc<buffer::Buffer>,
+	frame_instance_buffers: Vec<Arc<buffer::Buffer>>,
+
 	index_count: usize,
 	index_buffer: buffer::Buffer,
 	vertex_buffer: buffer::Buffer,
@@ -39,12 +41,14 @@ pub struct RenderBoids {
 
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
+
+	render_chain: Arc<RenderChain>,
 }
 
 impl RenderBoids {
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut RenderChain,
+		render_chain: &mut Arc<RenderChain>,
 	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
 		let vert_shader = Arc::new(Self::load_shader(
 			&engine,
@@ -77,20 +81,18 @@ impl RenderBoids {
 				.build(&render_chain.logical())?,
 		);
 
-		let camera_descriptor_sets = render_chain
+		let frame_count = render_chain.frame_count();
+		let camera_descriptor_sets = Arc::get_mut(render_chain)
+			.unwrap()
 			.persistent_descriptor_pool()
-			.borrow_mut()
-			.allocate_descriptor_sets(&vec![
-				camera_descriptor_layout.clone();
-				render_chain.frame_count()
-			])?;
+			.allocate_descriptor_sets(&vec![camera_descriptor_layout.clone(); frame_count])?;
 
 		let camera_view_projection = CameraViewProjection {
 			view: Matrix::identity(),
 			projection: Matrix::identity(),
 		};
 		let mut camera_buffers = Vec::new();
-		for _ in 0..render_chain.frame_count() {
+		for _ in 0..frame_count {
 			let buffer = graphics::buffer::Buffer::builder()
 				.with_usage(flags::BufferUsage::UNIFORM_BUFFER)
 				.with_size(std::mem::size_of::<CameraViewProjection>())
@@ -118,17 +120,18 @@ impl RenderBoids {
 				.build(&render_chain.logical())?,
 		);
 
-		let image_descriptor_set = render_chain
+		let image_descriptor_set = Arc::get_mut(render_chain)
+			.unwrap()
 			.persistent_descriptor_pool()
-			.borrow_mut()
 			.allocate_descriptor_sets(&vec![image_descriptor_layout.clone()])?
 			.pop()
 			.unwrap();
 
 		let (vertex_buffer, index_buffer, index_count) = Self::create_boid_model(&render_chain)?;
-		let (instance_buffer, instance_count) = Self::create_instance_buffer(&render_chain)?;
+		let active_instance_buffer = Arc::new(Self::create_instance_buffer(&render_chain, 0)?);
 
 		let strong = Arc::new(RwLock::new(RenderBoids {
+			render_chain: render_chain.clone(),
 			pipeline_layout: None,
 			pipeline: None,
 			vert_shader,
@@ -143,12 +146,15 @@ impl RenderBoids {
 			vertex_buffer,
 			index_buffer,
 			index_count,
-			instance_buffer,
-			instance_count,
+			active_instance_buffer,
+			frame_instance_buffers: Vec::new(),
+			instance_count: 0,
 		}));
 
-		render_chain.add_render_chain_element(&strong)?;
-		render_chain.add_command_recorder(&strong)?;
+		if let Some(chain) = Arc::get_mut(render_chain) {
+			chain.add_render_chain_element(&strong)?;
+			chain.add_command_recorder(&strong)?;
+		}
 
 		Ok(strong)
 	}
@@ -293,47 +299,26 @@ impl RenderBoids {
 
 	fn create_instance_buffer(
 		render_chain: &RenderChain,
-	) -> Result<(buffer::Buffer, usize), AnyError> {
-		let instances = vec![
-			Instance::default()
-				.with_pos(vector![0.0, 0.0, 0.0])
-				.with_orientation(Quaternion::from_axis_angle(
-					-engine::world::global_forward(),
-					90.0_f32.to_radians(),
-				))
-				.with_color(vector![0.5, 0.0, 1.0, 1.0]),
-			Instance::default()
-				.with_pos(vector![0.0, 10.0, 0.0])
-				.with_color(vector![0.5, 1.0, 0.0, 1.0]),
-		];
-
-		let buffer = graphics::buffer::Buffer::builder()
+		instance_count: usize,
+	) -> Result<buffer::Buffer, AnyError> {
+		Ok(graphics::buffer::Buffer::builder()
 			.with_usage(flags::BufferUsage::VERTEX_BUFFER)
 			.with_usage(flags::BufferUsage::TRANSFER_DST)
-			.with_size_of(&instances[..])
+			.with_size(std::mem::size_of::<Instance>() * instance_count)
 			.with_alloc(
 				graphics::alloc::Info::default()
 					.with_usage(flags::MemoryUsage::GpuOnly)
 					.requires(flags::MemoryProperty::DEVICE_LOCAL),
 			)
 			.with_sharing(flags::SharingMode::EXCLUSIVE)
-			.build(&render_chain.allocator())?;
-
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
-			.begin()?
-			.stage(&instances[..])?
-			.copy_stage_to_buffer(&buffer)
-			.end()?
-			.wait_until_idle()?;
-
-		Ok((buffer, instances.len()))
+			.build(&render_chain.allocator())?)
 	}
 }
 
 impl graphics::RenderChainElement for RenderBoids {
 	fn initialize_with(
 		&mut self,
-		render_chain: &graphics::RenderChain,
+		render_chain: &mut graphics::RenderChain,
 	) -> utility::Result<Vec<Arc<command::Semaphore>>> {
 		use graphics::alloc::Object;
 		use graphics::descriptor::*;
@@ -461,7 +446,7 @@ impl graphics::CommandRecorder for RenderBoids {
 			],
 		);
 		buffer.bind_vertex_buffers(0, vec![&self.vertex_buffer], vec![0]);
-		buffer.bind_vertex_buffers(1, vec![&self.instance_buffer], vec![0]);
+		buffer.bind_vertex_buffers(1, vec![&self.frame_instance_buffers[frame]], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
 		buffer.draw(self.index_count, 0, self.instance_count, 0, 0);
 		Ok(())
@@ -494,6 +479,8 @@ impl graphics::CommandRecorder for RenderBoids {
 
 		Self::write_camera_view_proj(&self.camera_buffers[frame], &camera_view_projection)?;
 
+		self.frame_instance_buffers[frame] = self.active_instance_buffer.clone();
+
 		Ok(())
 	}
 }
@@ -508,6 +495,16 @@ impl RenderBoids {
 			.write_item(camera)
 			.map_err(|e| utility::Error::GraphicsBufferWrite(e))?;
 		assert!(wrote_all);
+		Ok(())
+	}
+
+	pub fn set_instances(&mut self, _instances: Vec<Instance>) -> utility::Result<()> {
+		//graphics::TaskCopyImageToGpu::new(Arc::get_mut(&mut self.render_chain).unwrap())?
+		//	.begin()?
+		//	.stage(&instances[..])?
+		//	.copy_stage_to_buffer(&self.active_instance_buffer)
+		//	.end()?
+		//	.wait_until_idle()?;
 		Ok(())
 	}
 }

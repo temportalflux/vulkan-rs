@@ -97,7 +97,7 @@ impl TextRender {
 
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut RenderChain,
+		render_chain: &mut sync::Arc<RenderChain>,
 	) -> Result<sync::Arc<sync::RwLock<TextRender>>, AnyError> {
 		optick::event!();
 
@@ -224,9 +224,10 @@ impl TextRender {
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
 		let strong = sync::Arc::new(sync::RwLock::new(instance));
-		render_chain.add_render_chain_element(&strong)?;
-		render_chain.add_command_recorder(&strong)?;
-
+		if let Some(chain) = std::sync::Arc::get_mut(render_chain) {
+			chain.add_render_chain_element(&strong)?;
+			chain.add_command_recorder(&strong)?;
+		}
 		Ok(strong)
 	}
 }
@@ -243,7 +244,7 @@ impl TextRender {
 impl graphics::RenderChainElement for TextRender {
 	fn initialize_with(
 		&mut self,
-		render_chain: &graphics::RenderChain,
+		render_chain: &mut graphics::RenderChain,
 	) -> utility::Result<Vec<sync::Arc<command::Semaphore>>> {
 		optick::event!();
 		use graphics::descriptor::*;
@@ -262,7 +263,6 @@ impl graphics::RenderChainElement for TextRender {
 
 		self.font_atlas_descriptor_set = render_chain
 			.persistent_descriptor_pool()
-			.borrow_mut()
 			.allocate_descriptor_sets(&vec![self
 				.font_atlas_descriptor_layout
 				.as_ref()

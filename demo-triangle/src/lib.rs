@@ -50,25 +50,27 @@ pub fn run(log_name: &str) -> VoidResult {
 		.constraints(vulkan_device_constraints())
 		.resizable(true)
 		.build(&mut display.borrow_mut())?;
-	let render_chain = window.borrow().create_render_chain(
-		&mut display.borrow_mut(),
-		create_render_pass_info(),
-		task_spawner.clone(),
-	)?;
-	render_chain
-		.borrow_mut()
+	let mut render_chain = window
+		.borrow()
+		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
+	std::sync::Arc::get_mut(&mut render_chain)
+		.unwrap()
 		.add_clear_value(renderpass::ClearValue::Color(Vector::new([
 			0.0, 0.0, 0.0, 1.0,
 		])));
 
-	let _renderer = renderer::Triangle::new(&engine.borrow(), &mut render_chain.borrow_mut());
+	let _renderer = renderer::Triangle::new(&engine.borrow(), &mut render_chain);
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
-		std::sync::Arc::get_mut(&mut task_watcher).unwrap().poll();
-		render_chain.borrow_mut().render_frame()?;
+		if let Some(watcher) = std::sync::Arc::get_mut(&mut task_watcher) {
+			watcher.poll();
+		}
+		if let Some(chain) = std::sync::Arc::get_mut(&mut render_chain) {
+			chain.render_frame()?;
+		}
 	}
-	render_chain.borrow().logical().wait_until_idle()?;
+	render_chain.logical().wait_until_idle()?;
 
 	Ok(())
 }

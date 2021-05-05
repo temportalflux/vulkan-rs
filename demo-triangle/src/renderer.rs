@@ -26,7 +26,7 @@ pub struct Triangle {
 impl Triangle {
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut RenderChain,
+		render_chain: &mut sync::Arc<RenderChain>,
 	) -> Result<sync::Arc<sync::RwLock<Triangle>>, AnyError> {
 		let vert_bytes: Vec<u8>;
 		let frag_bytes: Vec<u8>;
@@ -82,8 +82,10 @@ impl Triangle {
 			index_buffer: None,
 		}));
 
-		render_chain.add_render_chain_element(&strong)?;
-		render_chain.add_command_recorder(&strong)?;
+		if let Some(chain) = std::sync::Arc::get_mut(render_chain) {
+			chain.add_render_chain_element(&strong)?;
+			chain.add_command_recorder(&strong)?;
+		}
 
 		Ok(strong)
 	}
@@ -103,7 +105,7 @@ mod vertex_data {
 impl graphics::RenderChainElement for Triangle {
 	fn initialize_with(
 		&mut self,
-		render_chain: &graphics::RenderChain,
+		render_chain: &mut graphics::RenderChain,
 	) -> utility::Result<Vec<sync::Arc<command::Semaphore>>> {
 		self.vert_shader = Some(sync::Arc::new(shader::Module::create(
 			render_chain.logical().clone(),
