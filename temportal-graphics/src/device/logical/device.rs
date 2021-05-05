@@ -32,18 +32,10 @@ impl Device {
 		logical::Queue::from(device.clone(), vk, queue_family_index)
 	}
 
-	pub fn wait_for(
-		&self,
-		fence: &command::Fence,
-		wait_for_all: bool,
-		timeout: u64,
-	) -> utility::Result<()> {
+	pub fn wait_for(&self, fence: &command::Fence, timeout: u64) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		let fences = [*fence.unwrap()];
-		utility::as_vulkan_error(unsafe {
-			self.internal
-				.wait_for_fences(&fences, wait_for_all, timeout)
-		})
+		utility::as_vulkan_error(unsafe { self.internal.wait_for_fences(&fences, true, timeout) })
 	}
 
 	pub fn reset_fences(&self, fences: &[&command::Fence]) -> utility::Result<()> {

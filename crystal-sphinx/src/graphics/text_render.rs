@@ -241,7 +241,10 @@ impl TextRender {
 }
 
 impl graphics::RenderChainElement for TextRender {
-	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+	fn initialize_with(
+		&mut self,
+		render_chain: &graphics::RenderChain,
+	) -> utility::Result<Vec<sync::Arc<command::Semaphore>>> {
 		optick::event!();
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
@@ -331,7 +334,7 @@ impl graphics::RenderChainElement for TextRender {
 			.end()?
 			.wait_until_idle()?;
 
-		Ok(())
+		Ok(Vec::new())
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {

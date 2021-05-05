@@ -101,7 +101,10 @@ mod vertex_data {
 }
 
 impl graphics::RenderChainElement for Triangle {
-	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+	fn initialize_with(
+		&mut self,
+		render_chain: &graphics::RenderChain,
+	) -> utility::Result<Vec<sync::Arc<command::Semaphore>>> {
 		self.vert_shader = Some(sync::Arc::new(shader::Module::create(
 			render_chain.logical().clone(),
 			shader::Info {
@@ -162,7 +165,7 @@ impl graphics::RenderChainElement for Triangle {
 			.end()?
 			.wait_until_idle()?;
 
-		Ok(())
+		Ok(vec![])
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {

@@ -2,6 +2,7 @@ use crate::{
 	backend, command, flags,
 	utility::{VulkanInfo, VulkanObject},
 };
+use std::sync;
 
 /// Data used to submit commands to a [`Queue`](crate::device::logical::Queue).
 /// It is NOT safe to keep this struct around for more than 1 stack,
@@ -25,6 +26,13 @@ impl Default for SubmitInfo {
 }
 
 impl SubmitInfo {
+	pub fn wait_for_semaphores(mut self, semaphores: &Vec<sync::Arc<command::Semaphore>>) -> Self {
+		for rc in semaphores {
+			self.semaphores_to_wait_for.push(*rc.unwrap());
+		}
+		self
+	}
+
 	pub fn wait_for(mut self, semaphore: &command::Semaphore, stage: flags::PipelineStage) -> Self {
 		self.semaphores_to_wait_for.push(*semaphore.unwrap());
 		self.stages_waited_for.push(stage);

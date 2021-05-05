@@ -331,7 +331,10 @@ impl RenderBoids {
 }
 
 impl graphics::RenderChainElement for RenderBoids {
-	fn initialize_with(&mut self, render_chain: &graphics::RenderChain) -> utility::Result<()> {
+	fn initialize_with(
+		&mut self,
+		render_chain: &graphics::RenderChain,
+	) -> utility::Result<Vec<Arc<command::Semaphore>>> {
 		use graphics::alloc::Object;
 		use graphics::descriptor::*;
 
@@ -373,7 +376,7 @@ impl graphics::RenderChainElement for RenderBoids {
 		}
 		camera_set_updates.apply(&render_chain.logical());
 
-		Ok(())
+		Ok(Vec::new())
 	}
 
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
