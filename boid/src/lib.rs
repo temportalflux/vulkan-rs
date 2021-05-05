@@ -46,7 +46,6 @@ pub fn run() -> VoidResult {
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
 	world.register::<ecs::components::Orientation>();
-	world.register::<ecs::components::BoidRender>();
 	world.insert(ecs::resources::DeltaTime(std::time::Duration::default()));
 
 	let display = Engine::create_display_manager(&engine)?;
@@ -76,6 +75,8 @@ pub fn run() -> VoidResult {
 			&["rotator"],
 		)
 		.build();
+	
+	dispatcher.setup(&mut world);
 
 	for y in -5..5 {
 		for x in -5..5 {
