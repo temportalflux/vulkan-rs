@@ -40,7 +40,7 @@ fn scan_assets(engine: &mut Engine) -> VoidResult {
 pub fn run() -> VoidResult {
 	engine::logging::init(name())?;
 	let engine = create_engine()?;
-	let (task_spawner, mut task_watcher) = engine::task::create_system();
+	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
@@ -53,10 +53,11 @@ pub fn run() -> VoidResult {
 		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display.borrow_mut())?;
-	let mut render_chain = window
+	let render_chain = window
 		.borrow()
 		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
-	std::sync::Arc::get_mut(&mut render_chain)
+	render_chain
+		.write()
 		.unwrap()
 		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
 			0.0, 0.25, 0.5, 1.0,
@@ -64,10 +65,10 @@ pub fn run() -> VoidResult {
 
 	let mut dispatcher = ecs::DispatcherBuilder::new()
 		.with(
-			ecs::systems::InstanceCollector::new(graphics::RenderBoids::new(
-				&engine.borrow(),
-				&mut render_chain,
-			)?),
+			ecs::systems::InstanceCollector::new(
+				graphics::RenderBoids::new(&engine.borrow(), &render_chain)?,
+				100,
+			),
 			"render-instance-collector",
 			&[],
 		)
@@ -75,7 +76,7 @@ pub fn run() -> VoidResult {
 
 	world
 		.create_entity()
-		.with(ecs::components::Position2D(vector![0.0, 0.0]))
+		.with(ecs::components::Position2D(vector![0.0, -5.0]))
 		.with(ecs::components::BoidRender::new(vector![
 			0.5, 0.0, 1.0, 1.0
 		]))
@@ -83,13 +84,12 @@ pub fn run() -> VoidResult {
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
-		std::sync::Arc::get_mut(&mut task_watcher).unwrap().poll();
+		task_watcher.poll();
 		dispatcher.dispatch(&mut world);
-		std::sync::Arc::get_mut(&mut render_chain)
-			.unwrap()
-			.render_frame()?;
+		render_chain.write().unwrap().render_frame()?;
 	}
-	render_chain.logical().wait_until_idle()?;
+	task_watcher.poll_until_empty();
+	render_chain.read().unwrap().logical().wait_until_idle()?;
 
 	Ok(())
 }

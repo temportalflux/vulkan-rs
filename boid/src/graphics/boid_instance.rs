@@ -3,6 +3,7 @@ use crate::engine::{
 	math::*,
 };
 
+#[derive(Debug, Clone)]
 pub struct Instance {
 	pub model: Matrix<f32, 4, 4>,
 	pub color: Vector<f32, 4>,
@@ -19,7 +20,7 @@ impl Default for Instance {
 
 impl Instance {
 	pub fn with_pos(mut self, pos: Vector<f32, 3>) -> Self {
-		self.model = Matrix::translate(pos);
+		self.model *= Matrix::translate(pos);
 		self
 	}
 

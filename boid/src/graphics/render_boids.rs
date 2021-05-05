@@ -18,10 +18,17 @@ struct CameraViewProjection {
 	projection: Matrix<f32, 4, 4>,
 }
 
-pub struct RenderBoids {
+#[derive(Clone)]
+struct Frame {
 	instance_count: usize,
+	instance_buffer: Arc<buffer::Buffer>,
+}
+
+pub struct RenderBoids {
+	frames: Vec<Frame>,
 	active_instance_buffer: Arc<buffer::Buffer>,
-	frame_instance_buffers: Vec<Arc<buffer::Buffer>>,
+	active_instance_count: usize,
+	pending_gpu_signals: Vec<Arc<command::Semaphore>>,
 
 	index_count: usize,
 	index_buffer: buffer::Buffer,
@@ -42,32 +49,44 @@ pub struct RenderBoids {
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
 
-	render_chain: Arc<RenderChain>,
+	render_chain: Arc<RwLock<RenderChain>>,
 }
 
 impl RenderBoids {
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut Arc<RenderChain>,
+		render_chain: &Arc<RwLock<RenderChain>>,
 	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
 		let vert_shader = Arc::new(Self::load_shader(
 			&engine,
-			&render_chain,
+			&render_chain.read().unwrap(),
 			engine::asset::Id::new(crate::name(), "vertex"),
 		)?);
 		let frag_shader = Arc::new(Self::load_shader(
 			&engine,
-			&render_chain,
+			&render_chain.read().unwrap(),
 			engine::asset::Id::new(crate::name(), "fragment"),
 		)?);
 
-		let image = Self::create_boid_image(&render_chain, Self::load_boid_texture(&engine)?)?;
-		let image_view = Arc::new(Self::create_image_view(&render_chain, image)?);
+		let image = Self::create_boid_image(
+			&render_chain.read().unwrap(),
+			Self::load_boid_texture(&engine)?,
+		)?;
+		let image_view = Arc::new(Self::create_image_view(
+			&render_chain.read().unwrap(),
+			image,
+		)?);
 		let image_sampler = Arc::new(
 			sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
-				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
-				.build(&render_chain.logical())?,
+				.with_max_anisotropy(Some(
+					render_chain
+						.read()
+						.unwrap()
+						.physical()
+						.max_sampler_anisotropy(),
+				))
+				.build(&render_chain.read().unwrap().logical())?,
 		);
 
 		let camera_descriptor_layout = Arc::new(
@@ -78,13 +97,16 @@ impl RenderBoids {
 					1,
 					flags::ShaderKind::Vertex,
 				)
-				.build(&render_chain.logical())?,
+				.build(&render_chain.read().unwrap().logical())?,
 		);
 
-		let frame_count = render_chain.frame_count();
-		let camera_descriptor_sets = Arc::get_mut(render_chain)
+		let frame_count = render_chain.read().unwrap().frame_count();
+		let camera_descriptor_sets = render_chain
+			.write()
 			.unwrap()
 			.persistent_descriptor_pool()
+			.write()
+			.unwrap()
 			.allocate_descriptor_sets(&vec![camera_descriptor_layout.clone(); frame_count])?;
 
 		let camera_view_projection = CameraViewProjection {
@@ -103,7 +125,7 @@ impl RenderBoids {
 						.requires(flags::MemoryProperty::HOST_COHERENT),
 				)
 				.with_sharing(flags::SharingMode::EXCLUSIVE)
-				.build(&render_chain.allocator())?;
+				.build(&render_chain.read().unwrap().allocator())?;
 
 			Self::write_camera_view_proj(&buffer, &camera_view_projection)?;
 			camera_buffers.push(Arc::new(buffer));
@@ -117,18 +139,33 @@ impl RenderBoids {
 					1,
 					flags::ShaderKind::Fragment,
 				)
-				.build(&render_chain.logical())?,
+				.build(&render_chain.read().unwrap().logical())?,
 		);
 
-		let image_descriptor_set = Arc::get_mut(render_chain)
+		let image_descriptor_set = render_chain
+			.write()
 			.unwrap()
 			.persistent_descriptor_pool()
+			.write()
+			.unwrap()
 			.allocate_descriptor_sets(&vec![image_descriptor_layout.clone()])?
 			.pop()
 			.unwrap();
 
-		let (vertex_buffer, index_buffer, index_count) = Self::create_boid_model(&render_chain)?;
-		let active_instance_buffer = Arc::new(Self::create_instance_buffer(&render_chain, 0)?);
+		let (vertex_buffer, index_buffer, index_count) =
+			Self::create_boid_model(&render_chain.read().unwrap())?;
+		let active_instance_buffer = Arc::new(Self::create_instance_buffer(
+			&render_chain.read().unwrap(),
+			10,
+		)?);
+
+		let frames = vec![
+			Frame {
+				instance_buffer: active_instance_buffer.clone(),
+				instance_count: 0,
+			};
+			frame_count
+		];
 
 		let strong = Arc::new(RwLock::new(RenderBoids {
 			render_chain: render_chain.clone(),
@@ -147,11 +184,13 @@ impl RenderBoids {
 			index_buffer,
 			index_count,
 			active_instance_buffer,
-			frame_instance_buffers: Vec::new(),
-			instance_count: 0,
+			active_instance_count: 0,
+			frames,
+			pending_gpu_signals: Vec::new(),
 		}));
 
-		if let Some(chain) = Arc::get_mut(render_chain) {
+		{
+			let mut chain = render_chain.write().unwrap();
 			chain.add_render_chain_element(&strong)?;
 			chain.add_command_recorder(&strong)?;
 		}
@@ -428,6 +467,10 @@ impl graphics::RenderChainElement for RenderBoids {
 
 		Ok(())
 	}
+
+	fn take_gpu_signals(&mut self) -> Vec<Arc<command::Semaphore>> {
+		self.pending_gpu_signals.drain(..).collect()
+	}
 }
 
 impl graphics::CommandRecorder for RenderBoids {
@@ -446,13 +489,16 @@ impl graphics::CommandRecorder for RenderBoids {
 			],
 		);
 		buffer.bind_vertex_buffers(0, vec![&self.vertex_buffer], vec![0]);
-		buffer.bind_vertex_buffers(1, vec![&self.frame_instance_buffers[frame]], vec![0]);
+		buffer.bind_vertex_buffers(1, vec![&self.frames[frame].instance_buffer], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
-		buffer.draw(self.index_count, 0, self.instance_count, 0, 0);
+		buffer.draw(self.index_count, 0, self.frames[frame].instance_count, 0, 0);
+
+		log::debug!("record {} instances", self.frames[frame].instance_count);
+
 		Ok(())
 	}
 
-	fn update_pre_submit(&mut self, frame: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
+	fn update_pre_submit(&mut self, frame: usize, _: &Vector<u32, 2>) -> utility::Result<bool> {
 		let camera_position = Vector::new([0.0, 0.0, -10.0]);
 		let camera_orientation = Quaternion::identity();
 		let camera_forward = camera_orientation.rotate(&engine::world::global_forward());
@@ -479,9 +525,20 @@ impl graphics::CommandRecorder for RenderBoids {
 
 		Self::write_camera_view_proj(&self.camera_buffers[frame], &camera_view_projection)?;
 
-		self.frame_instance_buffers[frame] = self.active_instance_buffer.clone();
+		let mut requires_rerecording = false;
+		if !Arc::ptr_eq(
+			&self.frames[frame].instance_buffer,
+			&self.active_instance_buffer,
+		) {
+			self.frames[frame].instance_buffer = self.active_instance_buffer.clone();
+			requires_rerecording = true;
+		}
+		if self.frames[frame].instance_count != self.active_instance_count {
+			self.frames[frame].instance_count = self.active_instance_count;
+			requires_rerecording = true;
+		}
 
-		Ok(())
+		Ok(requires_rerecording)
 	}
 }
 
@@ -498,13 +555,47 @@ impl RenderBoids {
 		Ok(())
 	}
 
-	pub fn set_instances(&mut self, _instances: Vec<Instance>) -> utility::Result<()> {
-		//graphics::TaskCopyImageToGpu::new(Arc::get_mut(&mut self.render_chain).unwrap())?
-		//	.begin()?
-		//	.stage(&instances[..])?
-		//	.copy_stage_to_buffer(&self.active_instance_buffer)
-		//	.end()?
-		//	.wait_until_idle()?;
+	pub fn set_instances(
+		&mut self,
+		instances: Vec<Instance>,
+		expansion_step: usize,
+	) -> Result<(), AnyError> {
+		use graphics::alloc::Object;
+
+		let supported_instance_count =
+			self.active_instance_buffer.size() / std::mem::size_of::<Instance>();
+
+		let mut chain = self.render_chain.write().unwrap();
+
+		if supported_instance_count < instances.len() {
+			log::info!(
+				"Recreating instance buffer to support {} instances",
+				supported_instance_count + expansion_step
+			);
+			self.active_instance_buffer = Arc::new(Self::create_instance_buffer(
+				&chain,
+				supported_instance_count + expansion_step,
+			)?);
+		}
+
+		// Update buffer with data
+		{
+			let copy_task = graphics::TaskCopyImageToGpu::new(&mut chain)?
+				.begin()?
+				.stage(&instances[..])?
+				.copy_stage_to_buffer(&self.active_instance_buffer)
+				.end()?;
+			self.pending_gpu_signals
+				.push(copy_task.gpu_signal_on_complete());
+			copy_task.send_to(chain.task_spawner());
+		}
+
+		if instances.len() != self.active_instance_count {
+			log::debug!("writing {} instances", instances.len());
+			self.active_instance_count = instances.len();
+			chain.mark_commands_dirty();
+		}
+
 		Ok(())
 	}
 }

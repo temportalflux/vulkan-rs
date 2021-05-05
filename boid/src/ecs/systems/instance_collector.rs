@@ -6,12 +6,19 @@ use crate::{
 use std::sync::{Arc, RwLock};
 
 pub struct InstanceCollector {
+	expansion_step: usize,
 	renderer: Arc<RwLock<graphics::RenderBoids>>,
 }
 
 impl InstanceCollector {
-	pub fn new(renderer: Arc<RwLock<graphics::RenderBoids>>) -> InstanceCollector {
-		InstanceCollector { renderer }
+	pub fn new(
+		renderer: Arc<RwLock<graphics::RenderBoids>>,
+		expansion_step: usize,
+	) -> InstanceCollector {
+		InstanceCollector {
+			renderer,
+			expansion_step,
+		}
 	}
 }
 
@@ -28,16 +35,18 @@ impl<'a> ecs::System<'a> for InstanceCollector {
 		for (pos, renderable) in (&pos, &renderable).join() {
 			instances.push(
 				graphics::Instance::default()
-					.with_pos(pos.0.subvec::<3>(None))
 					.with_orientation(Quaternion::from_axis_angle(
 						-world::global_forward(),
 						90.0_f32.to_radians(),
 					))
+					.with_pos(pos.0.subvec::<3>(None))
 					.with_color(renderable.color),
 			);
 		}
 
 		let mut render_boids = self.renderer.write().unwrap();
-		render_boids.set_instances(instances).unwrap();
+		render_boids
+			.set_instances(instances, self.expansion_step)
+			.unwrap();
 	}
 }

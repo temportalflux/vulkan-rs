@@ -97,7 +97,7 @@ impl TextRender {
 
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut sync::Arc<RenderChain>,
+		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<TextRender>>, AnyError> {
 		optick::event!();
 
@@ -130,10 +130,10 @@ impl TextRender {
 					.with_size(image_size)
 					.with_usage(flags::ImageUsage::TRANSFER_DST)
 					.with_usage(flags::ImageUsage::SAMPLED)
-					.build(&render_chain.allocator())?,
+					.build(&render_chain.read().unwrap().allocator())?,
 			);
 
-			graphics::TaskCopyImageToGpu::new(&render_chain)?
+			graphics::TaskCopyImageToGpu::new(&render_chain.read().unwrap())?
 				.begin()?
 				.format_image_for_write(&image)
 				.stage(&font_sdf_image_data[..])?
@@ -153,14 +153,20 @@ impl TextRender {
 				.with_range(
 					structs::subresource::Range::default().with_aspect(flags::ImageAspect::COLOR),
 				)
-				.build(&render_chain.logical())?,
+				.build(&render_chain.read().unwrap().logical())?,
 		);
 
 		let font_atlas_sampler = sync::Arc::new(
 			graphics::sampler::Sampler::builder()
 				.with_address_modes([flags::SamplerAddressMode::REPEAT; 3])
-				.with_max_anisotropy(Some(render_chain.physical().max_sampler_anisotropy()))
-				.build(&render_chain.logical())?,
+				.with_max_anisotropy(Some(
+					render_chain
+						.read()
+						.unwrap()
+						.physical()
+						.max_sampler_anisotropy(),
+				))
+				.build(&render_chain.read().unwrap().logical())?,
 		);
 
 		let mut instance = TextRender {
@@ -224,7 +230,8 @@ impl TextRender {
 			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
 
 		let strong = sync::Arc::new(sync::RwLock::new(instance));
-		if let Some(chain) = std::sync::Arc::get_mut(render_chain) {
+		{
+			let mut chain = render_chain.write().unwrap();
 			chain.add_render_chain_element(&strong)?;
 			chain.add_command_recorder(&strong)?;
 		}
@@ -263,6 +270,8 @@ impl graphics::RenderChainElement for TextRender {
 
 		self.font_atlas_descriptor_set = render_chain
 			.persistent_descriptor_pool()
+			.write()
+			.unwrap()
 			.allocate_descriptor_sets(&vec![self
 				.font_atlas_descriptor_layout
 				.as_ref()
@@ -422,10 +431,6 @@ impl graphics::CommandRecorder for TextRender {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
-		Ok(())
-	}
-
-	fn update_pre_submit(&mut self, _: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
 		Ok(())
 	}
 }

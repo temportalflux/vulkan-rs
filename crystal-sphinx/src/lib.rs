@@ -39,7 +39,7 @@ fn scan_assets(engine: &mut Engine) -> VoidResult {
 pub fn run() -> VoidResult {
 	engine::logging::init(name())?;
 	let engine = create_engine()?;
-	let (task_spawner, mut task_watcher) = engine::task::create_system();
+	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
@@ -48,25 +48,25 @@ pub fn run() -> VoidResult {
 		.constraints(vulkan_device_constraints())
 		.resizable(true)
 		.build(&mut display.borrow_mut())?;
-	let mut render_chain = window
+	let render_chain = window
 		.borrow()
 		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
-	std::sync::Arc::get_mut(&mut render_chain)
+	render_chain
+		.write()
 		.unwrap()
 		.add_clear_value(engine::graphics::renderpass::ClearValue::Color(
 			Vector::new([0.0, 0.0, 0.0, 1.0]),
 		));
 
-	let _text_render = TextRender::new(&engine.borrow(), &mut render_chain);
+	let _text_render = TextRender::new(&engine.borrow(), &render_chain);
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;
-		std::sync::Arc::get_mut(&mut task_watcher).unwrap().poll();
-		std::sync::Arc::get_mut(&mut render_chain)
-			.unwrap()
-			.render_frame()?;
+		task_watcher.poll();
+		render_chain.write().unwrap().render_frame()?;
 	}
-	render_chain.logical().wait_until_idle()?;
+	task_watcher.poll_until_empty();
+	render_chain.read().unwrap().logical().wait_until_idle()?;
 
 	Ok(())
 }

@@ -26,7 +26,7 @@ pub struct Triangle {
 impl Triangle {
 	pub fn new(
 		engine: &Engine,
-		render_chain: &mut sync::Arc<RenderChain>,
+		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<Triangle>>, AnyError> {
 		let vert_bytes: Vec<u8>;
 		let frag_bytes: Vec<u8>;
@@ -82,7 +82,8 @@ impl Triangle {
 			index_buffer: None,
 		}));
 
-		if let Some(chain) = std::sync::Arc::get_mut(render_chain) {
+		{
+			let mut chain = render_chain.write().unwrap();
 			chain.add_render_chain_element(&strong)?;
 			chain.add_command_recorder(&strong)?;
 		}
@@ -233,10 +234,6 @@ impl graphics::CommandRecorder for Triangle {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
-		Ok(())
-	}
-
-	fn update_pre_submit(&mut self, _: usize, _: &Vector<u32, 2>) -> utility::Result<()> {
 		Ok(())
 	}
 }
