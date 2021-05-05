@@ -135,11 +135,6 @@ impl SetUpdate {
 				}
 			}
 		}
-		log::debug!(
-			"Applying {} writes and {} copies",
-			writes.len(),
-			copies.len()
-		);
 		unsafe {
 			device
 				.unwrap()
