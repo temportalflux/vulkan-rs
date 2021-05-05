@@ -46,6 +46,7 @@ pub fn run() -> VoidResult {
 	world.register::<ecs::components::Position2D>();
 	world.register::<ecs::components::Orientation>();
 	world.register::<ecs::components::BoidRender>();
+	world.insert(ecs::resources::DeltaTime(std::time::Duration::default()));
 
 	let display = Engine::create_display_manager(&engine)?;
 	let window = display::WindowBuilder::default()
@@ -64,29 +65,38 @@ pub fn run() -> VoidResult {
 		])));
 
 	let mut dispatcher = ecs::DispatcherBuilder::new()
+		.with(ecs::systems::Rotator::default(), "rotator", &[])
 		.with(
 			ecs::systems::InstanceCollector::new(
 				graphics::RenderBoids::new(&engine.borrow(), &render_chain)?,
 				100,
 			),
 			"render-instance-collector",
-			&[],
+			&["rotator"],
 		)
 		.build();
 
 	world
 		.create_entity()
 		.with(ecs::components::Position2D(vector![0.0, -5.0]))
+		.with(ecs::components::Orientation::default())
 		.with(ecs::components::BoidRender::new(vector![
 			0.5, 0.0, 1.0, 1.0
 		]))
 		.build();
 
+	let mut prev_frame_time = std::time::Instant::now();
 	while !display.borrow().should_quit() {
+		let frame_time = std::time::Instant::now();
+		{
+			let mut delta_time = world.write_resource::<ecs::resources::DeltaTime>();
+			*delta_time = ecs::resources::DeltaTime(frame_time - prev_frame_time);
+		}
 		display.borrow_mut().poll_all_events()?;
 		task_watcher.poll();
 		dispatcher.dispatch(&mut world);
 		render_chain.write().unwrap().render_frame()?;
+		prev_frame_time = frame_time;
 	}
 	task_watcher.poll_until_empty();
 	render_chain.read().unwrap().logical().wait_until_idle()?;

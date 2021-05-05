@@ -1,6 +1,8 @@
 use crate::{
-	ecs,
-	engine::{math::Quaternion, world},
+	ecs::{
+		self,
+		components::{BoidRender, Orientation, Position2D},
+	},
 	graphics,
 };
 use std::sync::{Arc, RwLock};
@@ -24,21 +26,19 @@ impl InstanceCollector {
 
 impl<'a> ecs::System<'a> for InstanceCollector {
 	type SystemData = (
-		ecs::ReadStorage<'a, ecs::components::Position2D>,
-		ecs::ReadStorage<'a, ecs::components::BoidRender>,
+		ecs::ReadStorage<'a, Position2D>,
+		ecs::ReadStorage<'a, Orientation>,
+		ecs::ReadStorage<'a, BoidRender>,
 	);
 
-	fn run(&mut self, (pos, renderable): Self::SystemData) {
+	fn run(&mut self, (pos, orientation, renderable): Self::SystemData) {
 		use ecs::Join;
 
 		let mut instances = Vec::new();
-		for (pos, renderable) in (&pos, &renderable).join() {
+		for (pos, orientation, renderable) in (&pos, &orientation, &renderable).join() {
 			instances.push(
 				graphics::Instance::default()
-					.with_orientation(Quaternion::from_axis_angle(
-						-world::global_forward(),
-						90.0_f32.to_radians(),
-					))
+					.with_orientation(*orientation.get())
 					.with_pos(pos.0.subvec::<3>(None))
 					.with_color(renderable.color),
 			);

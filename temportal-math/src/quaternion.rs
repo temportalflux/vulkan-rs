@@ -45,7 +45,7 @@ impl Quaternion {
 	}
 
 	/// Returns a quaternion representation a rotation first by `a` then by `b`.
-	pub fn concat<'a, 'b>(a: &'a Quaternion, b: &'b Quaternion) -> Quaternion {
+	pub fn concat(a: &Quaternion, b: &Quaternion) -> Quaternion {
 		// https://en.wikipedia.org/wiki/Quaternion#Hamilton_product
 		// a1a2 - b1b2 - c1c2 - d1d2
 		// + (a1b2 + b1a2 + c1d2 - d1c2)i
@@ -62,7 +62,7 @@ impl Quaternion {
 
 		let a_real = a.subvec::<3>(None);
 		let b_real = b.subvec::<3>(None);
-		// <ay*bz - az*by, az*bx - ax*bz, ax*by - ay*bx>
+		// aw*bw - (axbw + ayby + azbz)
 		let w = a.w() * b.w() - Vector::dot(&a_real, &b_real);
 		// <ay*bz - az*by, az*bx - ax*bz, ax*by - ay*bx>
 		let cross_real = Vector::cross(&a_real, &b_real);

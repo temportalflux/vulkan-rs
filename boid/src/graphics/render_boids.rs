@@ -492,9 +492,6 @@ impl graphics::CommandRecorder for RenderBoids {
 		buffer.bind_vertex_buffers(1, vec![&self.frames[frame].instance_buffer], vec![0]);
 		buffer.bind_index_buffer(&self.index_buffer, 0);
 		buffer.draw(self.index_count, 0, self.frames[frame].instance_count, 0, 0);
-
-		log::debug!("record {} instances", self.frames[frame].instance_count);
-
 		Ok(())
 	}
 
@@ -579,7 +576,7 @@ impl RenderBoids {
 		}
 
 		// Update buffer with data
-		{
+		if instances.len() > 0 {
 			let copy_task = graphics::TaskCopyImageToGpu::new(&mut chain)?
 				.begin()?
 				.stage(&instances[..])?
@@ -591,7 +588,6 @@ impl RenderBoids {
 		}
 
 		if instances.len() != self.active_instance_count {
-			log::debug!("writing {} instances", instances.len());
 			self.active_instance_count = instances.len();
 			chain.mark_commands_dirty();
 		}

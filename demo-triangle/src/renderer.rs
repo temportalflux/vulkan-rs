@@ -2,7 +2,7 @@ use crate::{
 	engine::{
 		self,
 		graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
-		math::{vector, Vector},
+		math::vector,
 		utility::{self, AnyError},
 		Engine,
 	},
