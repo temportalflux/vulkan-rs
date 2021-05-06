@@ -44,6 +44,7 @@ pub fn run() -> VoidResult {
 
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
+	world.register::<ecs::components::Velocity2D>();
 	world.register::<ecs::components::Orientation>();
 	world.insert(ecs::resources::DeltaTime(std::time::Duration::default()));
 
@@ -89,6 +90,7 @@ pub fn run() -> VoidResult {
 					-world::global_forward(),
 					360.0_f32.to_radians() * frag,
 				)))
+				.with(ecs::components::Velocity2D(vector![0.5, 0.0]))
 				.with(ecs::components::BoidRender::new(vector![
 					((x + 5) as f32) / 11.0,
 					0.0,
