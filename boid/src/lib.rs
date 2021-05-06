@@ -1,10 +1,9 @@
 use engine::{
 	display,
 	ecs::{Builder, WorldExt},
-	math::{vector, Vector, Quaternion},
+	math::{vector, Quaternion, Vector},
 	utility::{AnyError, VoidResult},
-	Engine,
-	world
+	world, Engine,
 };
 use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
@@ -65,17 +64,17 @@ pub fn run() -> VoidResult {
 		])));
 
 	let mut dispatcher = ecs::DispatcherBuilder::new()
-		.with(ecs::systems::Rotator::default(), "rotator", &[])
+		.with(ecs::systems::MoveEntities::default(), "move_entities", &[])
 		.with(
 			ecs::systems::InstanceCollector::new(
 				graphics::RenderBoids::new(&engine.borrow(), &render_chain)?,
 				100,
 			),
 			"render-instance-collector",
-			&["rotator"],
+			&["move_entities"],
 		)
 		.build();
-	
+
 	dispatcher.setup(&mut world);
 
 	for y in -5..5 {
@@ -83,13 +82,18 @@ pub fn run() -> VoidResult {
 			let frag = ((((y + 5) * 11) + (x + 5)) as f32) / (11.0 * 11.0);
 			world
 				.create_entity()
-				.with(ecs::components::Position2D(vector![x as f32, y as f32] * 4.0))
+				.with(ecs::components::Position2D(
+					vector![x as f32, y as f32] * 4.0,
+				))
 				.with(ecs::components::Orientation(Quaternion::from_axis_angle(
 					-world::global_forward(),
-					360.0_f32.to_radians() * frag
+					360.0_f32.to_radians() * frag,
 				)))
 				.with(ecs::components::BoidRender::new(vector![
-					((x + 5) as f32) / 11.0, 0.0, ((y + 5) as f32) / 11.0, 1.0
+					((x + 5) as f32) / 11.0,
+					0.0,
+					((y + 5) as f32) / 11.0,
+					1.0
 				]))
 				.build();
 		}

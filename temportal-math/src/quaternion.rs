@@ -83,6 +83,39 @@ impl Quaternion {
 		let c = Vector::cross(&real, &vec) * 2.0 * self.w();
 		a + b + c
 	}
+
+	pub fn look_at_2d(
+		prev_forward: &Vector<f32, 2>,
+		next_forward: &Vector<f32, 2>,
+		world_out: &Vector<f32, 3>,
+	) -> Quaternion {
+		let dot = Vector::dot(prev_forward, next_forward);
+		if f32::abs(dot + 1.0) <= f32::EPSILON {
+			return Quaternion::from_axis_angle(*world_out, 180_f32.to_radians());
+		} else if f32::abs(dot - 1.0) <= f32::EPSILON {
+			return Quaternion::identity();
+		} else {
+			let angle = f32::acos(dot);
+			Quaternion::from_axis_angle(*world_out, angle)
+		}
+	}
+
+	pub fn look_at_3d(
+		prev_forward: &Vector<f32, 3>,
+		next_forward: &Vector<f32, 3>,
+		up: &Vector<f32, 3>,
+	) -> Quaternion {
+		let dot = Vector::dot(prev_forward, next_forward);
+		if f32::abs(dot + 1.0) <= f32::EPSILON {
+			return Quaternion::from_axis_angle(*up, 180_f32.to_radians());
+		} else if f32::abs(dot - 1.0) <= f32::EPSILON {
+			return Quaternion::identity();
+		} else {
+			let angle = f32::acos(dot);
+			let axis = Vector::cross(&prev_forward, &next_forward);
+			Quaternion::from_axis_angle(axis, angle)
+		}
+	}
 }
 
 #[cfg(test)]

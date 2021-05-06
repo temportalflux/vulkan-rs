@@ -3,15 +3,15 @@ use crate::{
 	engine::{math::Quaternion, world},
 };
 
-pub struct Rotator {}
+pub struct MoveEntities {}
 
-impl Default for Rotator {
-	fn default() -> Rotator {
-		Rotator {}
+impl Default for MoveEntities {
+	fn default() -> MoveEntities {
+		MoveEntities {}
 	}
 }
 
-impl<'a> ecs::System<'a> for Rotator {
+impl<'a> ecs::System<'a> for MoveEntities {
 	type SystemData = (ecs::Read<'a, DeltaTime>, ecs::WriteStorage<'a, Orientation>);
 
 	fn run(&mut self, (delta_time, mut orientation_store): Self::SystemData) {
