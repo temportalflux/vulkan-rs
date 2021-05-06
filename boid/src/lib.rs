@@ -64,15 +64,25 @@ pub fn run() -> VoidResult {
 			0.0, 0.25, 0.5, 1.0,
 		])));
 
+	let camera_view_space = vector![-15.0, 15.0, -15.0, 15.0];
+	let wrapping_world_bounds_min = vector![-15.0, -15.0];
+	let wrapping_world_bounds_max = vector![15.0, 15.0];
+
 	let mut dispatcher = ecs::DispatcherBuilder::new()
 		.with(ecs::systems::MoveEntities::default(), "move_entities", &[])
 		.with(
+			ecs::systems::WorldBounds::default()
+				.with_bounds(wrapping_world_bounds_min, wrapping_world_bounds_max),
+			"world_bounds",
+			&["move_entities"],
+		)
+		.with(
 			ecs::systems::InstanceCollector::new(
-				graphics::RenderBoids::new(&engine.borrow(), &render_chain)?,
+				graphics::RenderBoids::new(&engine.borrow(), &render_chain, camera_view_space)?,
 				100,
 			),
 			"render-instance-collector",
-			&["move_entities"],
+			&["world_bounds"],
 		)
 		.build();
 
@@ -84,13 +94,13 @@ pub fn run() -> VoidResult {
 			world
 				.create_entity()
 				.with(ecs::components::Position2D(
-					vector![x as f32, y as f32] * 4.0,
+					vector![x as f32 * 3.0, y as f32 * 3.0 + 1.0],
 				))
 				.with(ecs::components::Orientation(Quaternion::from_axis_angle(
 					-world::global_forward(),
 					360.0_f32.to_radians() * frag,
 				)))
-				.with(ecs::components::Velocity2D(vector![0.5, 0.0]))
+				.with(ecs::components::Velocity2D(vector![2.0, 2.0]))
 				.with(ecs::components::BoidRender::new(vector![
 					((x + 5) as f32) / 11.0,
 					0.0,

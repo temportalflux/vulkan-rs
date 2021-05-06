@@ -50,12 +50,14 @@ pub struct RenderBoids {
 	pipeline_layout: Option<pipeline::Layout>,
 
 	render_chain: Arc<RwLock<RenderChain>>,
+	viewed_world_space: Vector<f32, 4>,
 }
 
 impl RenderBoids {
 	pub fn new(
 		engine: &Engine,
 		render_chain: &Arc<RwLock<RenderChain>>,
+		viewed_world_space: Vector<f32, 4>,
 	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
 		let vert_shader = Arc::new(Self::load_shader(
 			&engine,
@@ -168,6 +170,7 @@ impl RenderBoids {
 		];
 
 		let strong = Arc::new(RwLock::new(RenderBoids {
+			viewed_world_space,
 			render_chain: render_chain.clone(),
 			pipeline_layout: None,
 			pipeline: None,
@@ -511,12 +514,15 @@ impl graphics::CommandRecorder for RenderBoids {
 		//let near_plane = 0.1;
 		//let far_plane = 100.0;
 
-		let half_size = 15.0;
-
 		let camera_view_projection = CameraViewProjection {
 			view: Matrix::look_at(camera_position, camera_position + camera_forward, camera_up),
 			projection: Matrix::orthographic(
-				-half_size, half_size, -half_size, half_size, 0.01, 100.0,
+				self.viewed_world_space.x(),
+				self.viewed_world_space.y(),
+				self.viewed_world_space.z(),
+				self.viewed_world_space.w(),
+				0.01,
+				100.0,
 			),
 		};
 
