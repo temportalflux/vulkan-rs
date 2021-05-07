@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 pub struct SDFBuilder {
 	font_path: PathBuf,
-	char_range: std::ops::RangeInclusive<usize>,
+	unicode_ranges: Vec<std::ops::RangeInclusive<u32>>,
 	glyph_height: u32,
 	field_spread: usize,
 	padding_per_char: Vector<usize, 4>,
@@ -15,7 +15,7 @@ pub struct SDFBuilder {
 }
 
 struct SDFGlyph {
-	ascii_code: usize,
+	unicode: u32,
 	texture_size: Vector<usize, 2>,
 	texels: Vec<Vec<u8>>,
 	metric_size: Vector<usize, 2>,
@@ -27,9 +27,11 @@ impl Default for SDFBuilder {
 	fn default() -> Self {
 		SDFBuilder {
 			font_path: PathBuf::default(),
-			// only ASCII is supported atm, and 33-126 is the inclusive range of all printable ASCII characters
-			// http://facweb.cs.depaul.edu/sjost/it212/documents/ascii-pr.htm
-			char_range: 33..=126,
+			// https://en.wikipedia.org/wiki/List_of_Unicode_characters#Basic_Latin
+			unicode_ranges: vec![
+				33..=126,  // basic latin
+				161..=172, // latin supplement 1
+			],
 			glyph_height: 10,
 			field_spread: 10,
 			padding_per_char: Vector::new([0; 4]),
@@ -99,14 +101,11 @@ impl SDFBuilder {
 
 		{
 			optick::event!("calc-sdf-all");
-			optick::tag!(
-				"char-count",
-				(self.char_range.end() - self.char_range.start()) as u32
-			);
-			for char_code in self.char_range.clone() {
+			for unicode in self.unicode_ranges.iter().flat_map(|codes| codes.clone()) {
 				optick::event!("calc-sdf");
-				optick::tag!("code", char_code as u32);
-				face.load_char(char_code, LoadFlag::empty())?;
+				optick::tag!("code", unicode);
+
+				face.load_char(unicode as usize, LoadFlag::empty())?;
 				// https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
 				let metrics = face.glyph().metrics();
 				let outline = face.glyph().outline().unwrap();
@@ -196,7 +195,7 @@ impl SDFBuilder {
 				}
 
 				glyphs.push(SDFGlyph {
-					ascii_code: char_code,
+					unicode,
 					texture_size,
 					texels,
 					metric_size,
@@ -262,7 +261,7 @@ impl SDFBuilder {
 						}
 
 						glyphs.push(font::Glyph {
-							ascii_code: field.ascii_code,
+							unicode: field.unicode,
 							atlas_pos: atlas_pos + padding_offset,
 							atlas_size: field.texture_size,
 							metric_size: field.metric_size,
@@ -270,7 +269,7 @@ impl SDFBuilder {
 							metric_advance: field.metric_advance,
 						});
 					}
-					glyphs.sort_unstable_by(|a, b| a.ascii_code.cmp(&b.ascii_code));
+					glyphs.sort_unstable_by(|a, b| a.unicode.cmp(&b.unicode));
 					return font::SDF {
 						size: atlas_size,
 						binary,

@@ -93,9 +93,10 @@ pub fn run() -> VoidResult {
 			let frag = ((((y + 5) * 11) + (x + 5)) as f32) / (11.0 * 11.0);
 			world
 				.create_entity()
-				.with(ecs::components::Position2D(
-					vector![x as f32 * 3.0, y as f32 * 3.0 + 1.0],
-				))
+				.with(ecs::components::Position2D(vector![
+					x as f32 * 3.0,
+					y as f32 * 3.0 + 1.0
+				]))
 				.with(ecs::components::Orientation(Quaternion::from_axis_angle(
 					-world::global_forward(),
 					360.0_f32.to_radians() * frag,
