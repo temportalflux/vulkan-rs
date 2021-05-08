@@ -5,7 +5,6 @@ use crate::engine::{
 	},
 	math::Vector,
 	utility::{self, AnyError},
-	Engine,
 };
 use std::{collections::HashMap, sync};
 
@@ -16,12 +15,8 @@ struct ShaderItem {
 }
 
 impl ShaderItem {
-	pub fn load_bytes(
-		&mut self,
-		engine: &Engine,
-		asset_id: &engine::asset::Id,
-	) -> Result<(), AnyError> {
-		let shader = asset::Loader::load_sync(&engine.assets.library, &asset_id)?
+	pub fn load_bytes(&mut self, asset_id: &engine::asset::Id) -> Result<(), AnyError> {
+		let shader = asset::Loader::load_sync(&asset_id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 		self.bytes = shader.contents().clone();
@@ -93,7 +88,6 @@ impl TextRender {
 	}
 
 	pub fn new(
-		engine: &Engine,
 		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<TextRender>>, AnyError> {
 		optick::event!();
@@ -102,12 +96,10 @@ impl TextRender {
 		let font_atlas = {
 			optick::event!("load-font-image");
 
-			let font = asset::Loader::load_sync(
-				&engine.assets.library,
-				&engine::asset::Id::new(crate::name(), "font/unispace"),
-			)?
-			.downcast::<engine::graphics::font::Font>()
-			.unwrap();
+			let font =
+				asset::Loader::load_sync(&engine::asset::Id::new(crate::name(), "font/unispace"))?
+					.downcast::<engine::graphics::font::Font>()
+					.unwrap();
 			let font_sdf_image_data: Vec<u8> =
 				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 
@@ -217,10 +209,10 @@ impl TextRender {
 
 		instance
 			.shader_item_mut(flags::ShaderKind::Vertex)
-			.load_bytes(&engine, &TextRender::vertex_shader_path())?;
+			.load_bytes(&TextRender::vertex_shader_path())?;
 		instance
 			.shader_item_mut(flags::ShaderKind::Fragment)
-			.load_bytes(&engine, &TextRender::fragment_shader_path())?;
+			.load_bytes(&TextRender::fragment_shader_path())?;
 
 		let strong = sync::Arc::new(sync::RwLock::new(instance));
 		{

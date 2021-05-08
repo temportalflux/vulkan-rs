@@ -1,7 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use engine::{
-	display,
+	asset, display,
 	graphics::{device::physical, flags, renderpass},
 	math::Vector,
 	utility::{AnyError, VoidResult},
@@ -24,18 +24,20 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	engine
 		.borrow_mut()
 		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
-	scan_assets(&mut engine.borrow_mut())?;
+	scan_assets()?;
 	Ok(engine)
 }
 
-fn scan_assets(engine: &mut Engine) -> VoidResult {
-	let pak_path = [
-		std::env!("CARGO_MANIFEST_DIR"),
-		format!("{}.pak", name()).as_str(),
-	]
-	.iter()
-	.collect::<std::path::PathBuf>();
-	engine.assets.library.scan_pak(&pak_path)
+fn scan_assets() -> VoidResult {
+	let mut library = asset::Library::get().write().unwrap();
+	library.scan_pak(
+		&[
+			std::env!("CARGO_MANIFEST_DIR"),
+			format!("{}.pak", name()).as_str(),
+		]
+		.iter()
+		.collect::<std::path::PathBuf>(),
+	)
 }
 
 pub fn run(log_name: &str) -> VoidResult {
@@ -60,7 +62,7 @@ pub fn run(log_name: &str) -> VoidResult {
 			0.0, 0.0, 0.0, 1.0,
 		])));
 
-	let _renderer = renderer::Triangle::new(&engine.borrow(), &render_chain);
+	let _renderer = renderer::Triangle::new(&render_chain);
 
 	while !display.borrow().should_quit() {
 		display.borrow_mut().poll_all_events()?;

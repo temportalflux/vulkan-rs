@@ -4,7 +4,6 @@ use crate::{
 		graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
 		math::vector,
 		utility::{self, AnyError},
-		Engine,
 	},
 	Vertex,
 };
@@ -25,26 +24,25 @@ pub struct Triangle {
 
 impl Triangle {
 	pub fn new(
-		engine: &Engine,
 		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<Triangle>>, AnyError> {
 		let vert_bytes: Vec<u8>;
 		let frag_bytes: Vec<u8>;
 		{
 			{
-				let shader = asset::Loader::load_sync(
-					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_vert"),
-				)?
+				let shader = asset::Loader::load_sync(&engine::asset::Id::new(
+					"demo-triangle",
+					"triangle_vert",
+				))?
 				.downcast::<engine::graphics::Shader>()
 				.unwrap();
 				vert_bytes = shader.contents().clone();
 			}
 			{
-				let shader = asset::Loader::load_sync(
-					&engine.assets.library,
-					&engine::asset::Id::new("demo-triangle", "triangle_frag"),
-				)?
+				let shader = asset::Loader::load_sync(&engine::asset::Id::new(
+					"demo-triangle",
+					"triangle_frag",
+				))?
 				.downcast::<engine::graphics::Shader>()
 				.unwrap();
 				frag_bytes = shader.contents().clone();

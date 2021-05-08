@@ -3,7 +3,6 @@ use crate::{
 		self, asset,
 		math::*,
 		utility::{self, AnyError},
-		Engine,
 	},
 	graphics::{
 		self, buffer, command, flags, image, image_view, pipeline, sampler, shader, structs,
@@ -55,25 +54,20 @@ pub struct RenderBoids {
 
 impl RenderBoids {
 	pub fn new(
-		engine: &Engine,
 		render_chain: &Arc<RwLock<RenderChain>>,
 		viewed_world_space: Vector<f32, 4>,
 	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
 		let vert_shader = Arc::new(Self::load_shader(
-			&engine,
 			&render_chain.read().unwrap(),
 			engine::asset::Id::new(crate::name(), "vertex"),
 		)?);
 		let frag_shader = Arc::new(Self::load_shader(
-			&engine,
 			&render_chain.read().unwrap(),
 			engine::asset::Id::new(crate::name(), "fragment"),
 		)?);
 
-		let image = Self::create_boid_image(
-			&render_chain.read().unwrap(),
-			Self::load_boid_texture(&engine)?,
-		)?;
+		let image =
+			Self::create_boid_image(&render_chain.read().unwrap(), Self::load_boid_texture()?)?;
 		let image_view = Arc::new(Self::create_image_view(
 			&render_chain.read().unwrap(),
 			image,
@@ -201,12 +195,8 @@ impl RenderBoids {
 		Ok(strong)
 	}
 
-	fn load_shader(
-		engine: &Engine,
-		render_chain: &RenderChain,
-		id: asset::Id,
-	) -> Result<shader::Module, AnyError> {
-		let shader = asset::Loader::load_sync(&engine.assets.library, &id)?
+	fn load_shader(render_chain: &RenderChain, id: asset::Id) -> Result<shader::Module, AnyError> {
+		let shader = asset::Loader::load_sync(&id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 
@@ -220,13 +210,12 @@ impl RenderBoids {
 		)?)
 	}
 
-	fn load_boid_texture(engine: &Engine) -> Result<Box<graphics::Texture>, AnyError> {
-		Ok(asset::Loader::load_sync(
-			&engine.assets.library,
-			&engine::asset::Id::new(crate::name(), "boid"),
-		)?
-		.downcast::<graphics::Texture>()
-		.unwrap())
+	fn load_boid_texture() -> Result<Box<graphics::Texture>, AnyError> {
+		Ok(
+			asset::Loader::load_sync(&engine::asset::Id::new(crate::name(), "boid"))?
+				.downcast::<graphics::Texture>()
+				.unwrap(),
+		)
 	}
 
 	fn create_boid_image(

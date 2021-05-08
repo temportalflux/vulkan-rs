@@ -1,5 +1,5 @@
 use engine::{
-	display,
+	asset, display,
 	ecs::{Builder, WorldExt},
 	math::{vector, Quaternion, Vector},
 	utility::{AnyError, VoidResult},
@@ -23,18 +23,20 @@ pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
 	engine
 		.borrow_mut()
 		.set_application("Boids", temportal_engine::utility::make_version(0, 1, 0));
-	scan_assets(&mut engine.borrow_mut())?;
+	scan_assets()?;
 	Ok(engine)
 }
 
-fn scan_assets(engine: &mut Engine) -> VoidResult {
-	let pak_path = [
-		std::env!("CARGO_MANIFEST_DIR"),
-		format!("{}.pak", name()).as_str(),
-	]
-	.iter()
-	.collect::<std::path::PathBuf>();
-	engine.assets.library.scan_pak(&pak_path)
+fn scan_assets() -> VoidResult {
+	let mut library = asset::Library::get().write().unwrap();
+	library.scan_pak(
+		&[
+			std::env!("CARGO_MANIFEST_DIR"),
+			format!("{}.pak", name()).as_str(),
+		]
+		.iter()
+		.collect::<std::path::PathBuf>(),
+	)
 }
 
 pub fn run() -> VoidResult {
@@ -78,7 +80,7 @@ pub fn run() -> VoidResult {
 		)
 		.with(
 			ecs::systems::InstanceCollector::new(
-				graphics::RenderBoids::new(&engine.borrow(), &render_chain, camera_view_space)?,
+				graphics::RenderBoids::new(&render_chain, camera_view_space)?,
 				100,
 			),
 			"render-instance-collector",
