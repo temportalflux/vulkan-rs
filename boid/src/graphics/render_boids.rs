@@ -206,10 +206,7 @@ impl RenderBoids {
 		render_chain: &RenderChain,
 		id: asset::Id,
 	) -> Result<shader::Module, AnyError> {
-		let shader = engine
-			.assets
-			.loader
-			.load_sync(&engine.assets.library, &id)?
+		let shader = asset::Loader::load_sync(&engine.assets.library, &id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 
@@ -224,15 +221,12 @@ impl RenderBoids {
 	}
 
 	fn load_boid_texture(engine: &Engine) -> Result<Box<graphics::Texture>, AnyError> {
-		Ok(engine
-			.assets
-			.loader
-			.load_sync(
-				&engine.assets.library,
-				&engine::asset::Id::new(crate::name(), "boid"),
-			)?
-			.downcast::<graphics::Texture>()
-			.unwrap())
+		Ok(asset::Loader::load_sync(
+			&engine.assets.library,
+			&engine::asset::Id::new(crate::name(), "boid"),
+		)?
+		.downcast::<graphics::Texture>()
+		.unwrap())
 	}
 
 	fn create_boid_image(

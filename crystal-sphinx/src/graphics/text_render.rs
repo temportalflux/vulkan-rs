@@ -1,5 +1,5 @@
 use crate::engine::{
-	self,
+	self, asset,
 	graphics::{
 		self, buffer, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain,
 	},
@@ -21,10 +21,7 @@ impl ShaderItem {
 		engine: &Engine,
 		asset_id: &engine::asset::Id,
 	) -> Result<(), AnyError> {
-		let shader = engine
-			.assets
-			.loader
-			.load_sync(&engine.assets.library, &asset_id)?
+		let shader = asset::Loader::load_sync(&engine.assets.library, &asset_id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 		self.bytes = shader.contents().clone();
@@ -105,15 +102,12 @@ impl TextRender {
 		let font_atlas = {
 			optick::event!("load-font-image");
 
-			let font = engine
-				.assets
-				.loader
-				.load_sync(
-					&engine.assets.library,
-					&engine::asset::Id::new(crate::name(), "font/unispace"),
-				)?
-				.downcast::<engine::graphics::font::Font>()
-				.unwrap();
+			let font = asset::Loader::load_sync(
+				&engine.assets.library,
+				&engine::asset::Id::new(crate::name(), "font/unispace"),
+			)?
+			.downcast::<engine::graphics::font::Font>()
+			.unwrap();
 			let font_sdf_image_data: Vec<u8> =
 				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 

@@ -1,6 +1,6 @@
 use crate::{
 	engine::{
-		self,
+		self, asset,
 		graphics::{self, buffer, command, flags, pipeline, shader, structs, RenderChain},
 		math::vector,
 		utility::{self, AnyError},
@@ -32,27 +32,21 @@ impl Triangle {
 		let frag_bytes: Vec<u8>;
 		{
 			{
-				let shader = engine
-					.assets
-					.loader
-					.load_sync(
-						&engine.assets.library,
-						&engine::asset::Id::new("demo-triangle", "triangle_vert"),
-					)?
-					.downcast::<engine::graphics::Shader>()
-					.unwrap();
+				let shader = asset::Loader::load_sync(
+					&engine.assets.library,
+					&engine::asset::Id::new("demo-triangle", "triangle_vert"),
+				)?
+				.downcast::<engine::graphics::Shader>()
+				.unwrap();
 				vert_bytes = shader.contents().clone();
 			}
 			{
-				let shader = engine
-					.assets
-					.loader
-					.load_sync(
-						&engine.assets.library,
-						&engine::asset::Id::new("demo-triangle", "triangle_frag"),
-					)?
-					.downcast::<engine::graphics::Shader>()
-					.unwrap();
+				let shader = asset::Loader::load_sync(
+					&engine.assets.library,
+					&engine::asset::Id::new("demo-triangle", "triangle_frag"),
+				)?
+				.downcast::<engine::graphics::Shader>()
+				.unwrap();
 				frag_bytes = shader.contents().clone();
 			}
 		}
