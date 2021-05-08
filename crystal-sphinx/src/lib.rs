@@ -1,4 +1,4 @@
-use engine::{asset, display, math::Vector, utility::VoidResult, Application};
+use engine::{utility::VoidResult, Application};
 pub use temportal_engine as engine;
 
 #[path = "graphics/_.rs"]
@@ -22,36 +22,19 @@ impl Application for CrystalSphinx {
 }
 
 pub fn run() -> VoidResult {
-	engine::logging::init::<CrystalSphinx>()?;
-	let task_watcher = engine::task::initialize_system();
-	engine::register_asset_types();
-	asset::Library::scan_application::<CrystalSphinx>()?;
+	let engine = engine::Engine::new::<CrystalSphinx>()?;
 
-	let mut display = engine::display::Manager::new()?;
-	let window = display::WindowBuilder::default()
+	let mut window = engine::window::Window::builder()
+		.with_title(CrystalSphinx::display_name())
+		.with_size(1280.0, 720.0)
+		.with_resizable(true)
 		.with_application::<CrystalSphinx>()
-		.title(CrystalSphinx::display_name())
-		.size(1280, 720)
-		.constraints(engine::graphics::device::physical::default_constraints())
-		.resizable(true)
-		.build(&mut display)?;
-	let render_chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
-	render_chain
-		.write()
-		.unwrap()
-		.add_clear_value(engine::graphics::renderpass::ClearValue::Color(
-			Vector::new([0.0, 0.0, 0.0, 1.0]),
-		));
+		.build(&engine)?;
 
-	let _text_render = TextRender::new(&render_chain);
+	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
+	let _text_render = TextRender::new(&chain);
 
-	while !display.should_quit() {
-		display.poll_all_events()?;
-		task_watcher.poll();
-		render_chain.write().unwrap().render_frame()?;
-	}
-	task_watcher.poll_until_empty();
-	render_chain.read().unwrap().logical().wait_until_idle()?;
-
+	engine.run(chain);
+	window.wait_until_idle().unwrap();
 	Ok(())
 }

@@ -1,11 +1,11 @@
 use engine::{
-	asset, display,
 	ecs::{Builder, WorldExt},
 	math::{vector, Quaternion, Vector},
 	utility::VoidResult,
 	world, Application,
 };
 pub use temportal_engine as engine;
+use std::sync::{Arc, RwLock};
 
 #[path = "graphics/_.rs"]
 pub mod graphics;
@@ -30,10 +30,7 @@ impl Application for BoidDemo {
 }
 
 pub fn run() -> VoidResult {
-	engine::logging::init::<BoidDemo>()?;
-	let task_watcher = engine::task::initialize_system();
-	engine::register_asset_types();
-	asset::Library::scan_application::<BoidDemo>()?;
+	let mut engine = engine::Engine::new::<BoidDemo>()?;
 
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
@@ -41,20 +38,16 @@ pub fn run() -> VoidResult {
 	world.register::<ecs::components::Orientation>();
 	world.insert(ecs::resources::DeltaTime(std::time::Duration::default()));
 
-	let mut display = engine::display::Manager::new()?;
-	let window = display::WindowBuilder::default()
+	let mut window = engine::window::Window::builder()
+		.with_title(BoidDemo::display_name())
+		.with_size(1000.0, 1000.0)
+		.with_resizable(true)
 		.with_application::<BoidDemo>()
-		.title(BoidDemo::display_name())
-		.size(1000, 1000)
-		.constraints(engine::graphics::device::physical::default_constraints())
-		.build(&mut display)?;
-	let render_chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
-	render_chain
-		.write()
-		.unwrap()
-		.add_clear_value(graphics::renderpass::ClearValue::Color(Vector::new([
+		.with_clear_color(Vector::new([
 			0.0, 0.25, 0.5, 1.0,
-		])));
+		]))
+		.build(&engine)?;
+	window.create_render_chain(engine::graphics::renderpass::Info::default())?;
 
 	let camera_view_space = vector![-15.0, 15.0, -15.0, 15.0];
 	let wrapping_world_bounds_min = vector![-15.0, -15.0];
@@ -70,7 +63,7 @@ pub fn run() -> VoidResult {
 		)
 		.with(
 			ecs::systems::InstanceCollector::new(
-				graphics::RenderBoids::new(&render_chain, camera_view_space)?,
+				graphics::RenderBoids::new(&window.render_chain(), camera_view_space)?,
 				100,
 			),
 			"render-instance-collector",
@@ -104,21 +97,12 @@ pub fn run() -> VoidResult {
 		}
 	}
 
-	let mut prev_frame_time = std::time::Instant::now();
-	while !display.should_quit() {
-		let frame_time = std::time::Instant::now();
-		{
-			let mut delta_time = world.write_resource::<ecs::resources::DeltaTime>();
-			*delta_time = ecs::resources::DeltaTime(frame_time - prev_frame_time);
-		}
-		display.poll_all_events()?;
-		task_watcher.poll();
-		dispatcher.dispatch(&mut world);
-		render_chain.write().unwrap().render_frame()?;
-		prev_frame_time = frame_time;
-	}
-	task_watcher.poll_until_empty();
-	render_chain.read().unwrap().logical().wait_until_idle()?;
-
+	let ecs_context = Arc::new(RwLock::new(ecs::Context {
+		world, dispatcher
+	}));
+	engine.add_system(&ecs_context);
+	
+	engine.run(window.render_chain().clone());
+	window.wait_until_idle().unwrap();
 	Ok(())
 }
