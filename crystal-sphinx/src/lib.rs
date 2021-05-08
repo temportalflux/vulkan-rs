@@ -35,9 +35,7 @@ pub fn run() -> VoidResult {
 		.constraints(vulkan_device_constraints())
 		.resizable(true)
 		.build(&mut display)?;
-	let render_chain = window
-		.borrow()
-		.create_render_chain(create_render_pass_info())?;
+	let render_chain = window.create_render_chain(create_render_pass_info())?;
 	render_chain
 		.write()
 		.unwrap()
