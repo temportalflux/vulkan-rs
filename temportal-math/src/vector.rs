@@ -1086,7 +1086,7 @@ where
 	/// ```
 	/// use temportal_math::Vector;
 	/// let vec = Vector::new([1.0, 2.0, 3.0]);
-	/// assert_eq!(vec.magnitude(), 14.0_f64.sqrt());
+	/// assert_eq!(vec.magnitude(), 14.0_f32.sqrt());
 	/// ```
 	pub fn magnitude(&self) -> f32
 	where
@@ -1105,7 +1105,7 @@ impl<const N: usize> Vector<f32, N> {
 	/// let mut vec = Vector::new([1.0, 2.0, 3.0]);
 	/// assert_ne!(vec.magnitude(), 1.0);
 	/// vec.normalize();
-	/// assert_eq!(vec.magnitude(), 1.0);
+	/// assert!(vec.magnitude() - 1.0 < 1.0e-6);
 	/// ```
 	pub fn normalize(&mut self) {
 		*self /= self.magnitude()
@@ -1117,7 +1117,7 @@ impl<const N: usize> Vector<f32, N> {
 	/// ```
 	/// use temportal_math::Vector;
 	/// let vec = Vector::new([1.0, 2.0, 3.0]);
-	/// assert_eq!(vec.normal().magnitude(), 1.0);
+	/// assert!(vec.normal().magnitude() - 1.0 < 1.0e-6);
 	/// ```
 	pub fn normal(&self) -> Self {
 		let mut vret = self.clone();
@@ -1132,10 +1132,10 @@ mod property_tests {
 
 	#[test]
 	fn magnitude_sq() {
-		assert_eq!(Vector::new([0, 0, 0]).magnitude_sq(), 0.0);
-		assert_eq!(Vector::new([0, 0, 1]).magnitude_sq(), 1.0);
-		assert_eq!(Vector::new([1, 2, 0]).magnitude_sq(), 5.0);
-		assert_eq!(Vector::new([1, 1, 1]).magnitude_sq(), 3.0);
+		assert_eq!(Vector::new([0.0, 0.0, 0.0]).magnitude_sq(), 0.0);
+		assert_eq!(Vector::new([0.0, 0.0, 1.0]).magnitude_sq(), 1.0);
+		assert_eq!(Vector::new([1.0, 2.0, 0.0]).magnitude_sq(), 5.0);
+		assert_eq!(Vector::new([1.0, 1.0, 1.0]).magnitude_sq(), 3.0);
 	}
 
 	#[test]

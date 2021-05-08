@@ -3,8 +3,6 @@ use crate::backend;
 pub use backend::vk::AccessFlags as Access;
 pub use backend::vk::AttachmentLoadOp;
 pub use backend::vk::AttachmentStoreOp;
-pub use backend::vk::BlendFactor;
-pub use backend::vk::BlendOp;
 pub use backend::vk::BorderColor;
 pub use backend::vk::BufferUsageFlags as BufferUsage;
 pub use backend::vk::ColorComponentFlags as ColorComponent;
@@ -41,6 +39,8 @@ pub use backend::vk::SurfaceTransformFlagsKHR as SurfaceTransform;
 pub use backend::vk::VertexInputRate;
 pub use vk_mem::AllocationCreateFlags as CreateAllocation;
 pub use vk_mem::MemoryUsage;
+
+pub mod blend;
 
 mod shaderkind;
 pub use shaderkind::*;

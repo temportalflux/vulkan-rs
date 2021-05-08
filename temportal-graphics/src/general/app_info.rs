@@ -19,15 +19,6 @@ pub struct AppInfo {
 
 impl AppInfo {
 	/// Creates an application info struct based on the current context.
-	///
-	/// # Examples
-	/// ```
-	/// use temportal_graphics::{Context, AppInfo};
-	/// let ctx = Context::new()?;
-	/// let app_info = AppInfo::new(&ctx)
-	/// 	.engine("Engine", utility::make_version(0, 1, 0))
-	/// 	.application("Game", utility::make_version(0, 1, 0));
-	/// ```
 	pub fn new() -> AppInfo {
 		AppInfo {
 			api_version: backend::vk::make_version(1, 2, 0),

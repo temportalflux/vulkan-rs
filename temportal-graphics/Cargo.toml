@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 temportal-math = { path = "../temportal-math" }
 log = "0.4.14"
-sdl2 = "0.34"
 ash = "0.32.0"
 ash-window = "0.6.0"
 raw-window-handle = "0.3.3"

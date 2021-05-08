@@ -189,7 +189,7 @@ mod tests {
 		assert_vec_approx!(
 			Quaternion::new([0.0, 0.0, half_sin, half_cos]).to_euler(),
 			Vector::new([0.0, 0.0, angle]),
-			1.0e-6,
+			1.0e-3,
 			std::f32::consts::PI
 		);
 	}

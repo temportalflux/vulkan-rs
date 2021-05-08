@@ -357,6 +357,7 @@ impl graphics::RenderChainElement for TextRender {
 		render_chain: &graphics::RenderChain,
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
+		use flags::blend::{Constant::*, Factor::*, Source::*};
 		optick::event!();
 		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
@@ -386,21 +387,9 @@ impl graphics::RenderChainElement for TextRender {
 						color_flags: flags::ColorComponent::R
 							| flags::ColorComponent::G | flags::ColorComponent::B
 							| flags::ColorComponent::A,
-						// finalColor.rgb = (`color.src` * newColor.rgb) `color.op` (`color.dst` * oldColor.rgb);
-						// finalColor.a = (`alpha.src` * newColor.a) `alpha.op` (`alpha.dst` * oldColor.a);
 						blend: Some(pipeline::Blend {
-							// rgb = ((newColor.a) * newColor.rgb) + ((1 - newColor.a) * oldColor.rgb)
-							color: pipeline::BlendExpr {
-								src: flags::BlendFactor::SRC_ALPHA,
-								op: flags::BlendOp::ADD,
-								dst: flags::BlendFactor::ONE_MINUS_SRC_ALPHA,
-							},
-							// a = (1 * newColor.rgb) + (0 * oldColor.rgb)
-							alpha: pipeline::BlendExpr {
-								src: flags::BlendFactor::ONE,
-								op: flags::BlendOp::ADD,
-								dst: flags::BlendFactor::ZERO,
-							},
+							color: SrcAlpha * New + (One - SrcAlpha) * Old,
+							alpha: One * New + Zero * Old,
 						}),
 					},
 				))

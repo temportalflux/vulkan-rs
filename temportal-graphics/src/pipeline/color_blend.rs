@@ -1,6 +1,6 @@
 use crate::{
 	backend,
-	flags::{BlendFactor, BlendOp, ColorComponent},
+	flags::{blend, ColorComponent},
 };
 
 /// Struct containing information about how a [`Pipeline`](crate::pipeline::Pipeline)
@@ -26,15 +26,8 @@ pub struct ColorBlendAttachment {
 
 #[derive(Clone, Copy)]
 pub struct Blend {
-	pub color: BlendExpr,
-	pub alpha: BlendExpr,
-}
-
-#[derive(Clone, Copy)]
-pub struct BlendExpr {
-	pub src: BlendFactor,
-	pub op: BlendOp,
-	pub dst: BlendFactor,
+	pub color: blend::Expression,
+	pub alpha: blend::Expression,
 }
 
 impl ColorBlendState {
@@ -46,32 +39,32 @@ impl ColorBlendState {
 				.src_color_blend_factor(
 					attachment
 						.blend
-						.map_or(BlendFactor::ONE, |blend| blend.color.src),
+						.map_or(backend::vk::BlendFactor::ONE, |blend| blend.color.src),
 				)
 				.color_blend_op(
 					attachment
 						.blend
-						.map_or(BlendOp::ADD, |blend| blend.color.op),
+						.map_or(backend::vk::BlendOp::ADD, |blend| blend.color.op),
 				)
 				.dst_color_blend_factor(
 					attachment
 						.blend
-						.map_or(BlendFactor::ZERO, |blend| blend.color.dst),
+						.map_or(backend::vk::BlendFactor::ZERO, |blend| blend.color.dst),
 				)
 				.src_alpha_blend_factor(
 					attachment
 						.blend
-						.map_or(BlendFactor::ONE, |blend| blend.alpha.src),
+						.map_or(backend::vk::BlendFactor::ONE, |blend| blend.alpha.src),
 				)
 				.color_blend_op(
 					attachment
 						.blend
-						.map_or(BlendOp::ADD, |blend| blend.alpha.op),
+						.map_or(backend::vk::BlendOp::ADD, |blend| blend.alpha.op),
 				)
 				.dst_alpha_blend_factor(
 					attachment
 						.blend
-						.map_or(BlendFactor::ZERO, |blend| blend.alpha.dst),
+						.map_or(backend::vk::BlendFactor::ZERO, |blend| blend.alpha.dst),
 				)
 				.build(),
 		);
