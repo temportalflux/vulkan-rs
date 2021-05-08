@@ -2,10 +2,9 @@ use engine::{
 	asset, display,
 	ecs::{Builder, WorldExt},
 	math::{vector, Quaternion, Vector},
-	utility::{AnyError, VoidResult},
-	world, Engine,
+	utility::VoidResult,
+	world,
 };
-use std::{cell::RefCell, rc::Rc};
 pub use temportal_engine as engine;
 
 #[path = "graphics/_.rs"]
@@ -16,15 +15,6 @@ pub mod ecs;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
-}
-
-pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
-	let engine = Engine::new()?;
-	engine
-		.borrow_mut()
-		.set_application("Boids", temportal_engine::utility::make_version(0, 1, 0));
-	scan_assets()?;
-	Ok(engine)
 }
 
 fn scan_assets() -> VoidResult {
@@ -41,7 +31,8 @@ fn scan_assets() -> VoidResult {
 
 pub fn run() -> VoidResult {
 	engine::logging::init(name())?;
-	let engine = create_engine()?;
+	engine::register_asset_types();
+	scan_assets()?;
 	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut world = ecs::World::new();
@@ -50,12 +41,16 @@ pub fn run() -> VoidResult {
 	world.register::<ecs::components::Orientation>();
 	world.insert(ecs::resources::DeltaTime(std::time::Duration::default()));
 
-	let display = Engine::create_display_manager(&engine)?;
+	let mut display = engine::display::Manager::new()?;
 	let window = display::WindowBuilder::default()
-		.title(engine.borrow().app_info().app_name())
+		.with_info(
+			engine::make_app_info()
+				.with_application("Boids", temportal_engine::utility::make_version(0, 1, 0)),
+		)
+		.title("Boids")
 		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
-		.build(&mut display.borrow_mut())?;
+		.build(&mut display)?;
 	let render_chain = window
 		.borrow()
 		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
@@ -115,13 +110,13 @@ pub fn run() -> VoidResult {
 	}
 
 	let mut prev_frame_time = std::time::Instant::now();
-	while !display.borrow().should_quit() {
+	while !display.should_quit() {
 		let frame_time = std::time::Instant::now();
 		{
 			let mut delta_time = world.write_resource::<ecs::resources::DeltaTime>();
 			*delta_time = ecs::resources::DeltaTime(frame_time - prev_frame_time);
 		}
-		display.borrow_mut().poll_all_events()?;
+		display.poll_all_events()?;
 		task_watcher.poll();
 		dispatcher.dispatch(&mut world);
 		render_chain.write().unwrap().render_frame()?;

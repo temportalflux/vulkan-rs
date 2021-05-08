@@ -54,7 +54,7 @@ impl AppInfo {
 	}
 
 	/// Sets the application name and version. Use [`utility::make_version`] to create a packed version integer.
-	pub fn application(mut self, name: &str, version: u32) -> AppInfo {
+	pub fn with_application(mut self, name: &str, version: u32) -> Self {
 		self.set_application_info(name, version);
 		self
 	}

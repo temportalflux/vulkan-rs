@@ -1,11 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
-
 use engine::{
 	asset, display,
 	graphics::{device::physical, flags, renderpass},
 	math::Vector,
-	utility::{AnyError, VoidResult},
-	Engine,
+	utility::VoidResult,
 };
 pub use temportal_engine as engine;
 
@@ -17,15 +14,6 @@ pub use vertex::*;
 
 pub fn name() -> &'static str {
 	std::env!("CARGO_PKG_NAME")
-}
-
-pub fn create_engine() -> Result<Rc<RefCell<Engine>>, AnyError> {
-	let engine = Engine::new()?;
-	engine
-		.borrow_mut()
-		.set_application("Triangle", temportal_engine::utility::make_version(0, 1, 0));
-	scan_assets()?;
-	Ok(engine)
 }
 
 fn scan_assets() -> VoidResult {
@@ -42,16 +30,21 @@ fn scan_assets() -> VoidResult {
 
 pub fn run(log_name: &str) -> VoidResult {
 	engine::logging::init(log_name)?;
-	let engine = create_engine()?;
+	engine::register_asset_types();
+	scan_assets()?;
 	let (task_spawner, task_watcher) = engine::task::create_system();
 
-	let display = Engine::create_display_manager(&engine)?;
+	let mut display = display::Manager::new()?;
 	let window = display::WindowBuilder::default()
+		.with_info(
+			engine::make_app_info()
+				.with_application("Triangle", temportal_engine::utility::make_version(0, 1, 0)),
+		)
 		.title("Triangle Demo")
 		.size(800, 600)
 		.constraints(vulkan_device_constraints())
 		.resizable(true)
-		.build(&mut display.borrow_mut())?;
+		.build(&mut display)?;
 	let render_chain = window
 		.borrow()
 		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
@@ -64,8 +57,8 @@ pub fn run(log_name: &str) -> VoidResult {
 
 	let _renderer = renderer::Triangle::new(&render_chain);
 
-	while !display.borrow().should_quit() {
-		display.borrow_mut().poll_all_events()?;
+	while !display.should_quit() {
+		display.poll_all_events()?;
 		task_watcher.poll();
 		render_chain.write().unwrap().render_frame()?;
 	}
