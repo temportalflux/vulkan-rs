@@ -44,7 +44,7 @@ impl Info {
 }
 
 impl VulkanInfo<vk_mem::AllocationCreateInfo> for Info {
-	/// Converts the [`AllocationInfo`] into the [`vk_mem::AllocationCreateInfo`] struct.
+	/// Converts the [`Info`] into the [`vk_mem::AllocationCreateInfo`] struct.
 	fn to_vk(&self) -> vk_mem::AllocationCreateInfo {
 		vk_mem::AllocationCreateInfo {
 			usage: self.mem_usage,

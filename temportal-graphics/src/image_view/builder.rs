@@ -62,8 +62,8 @@ impl Builder {
 }
 
 impl VulkanInfo<backend::vk::ImageViewCreateInfo> for Builder {
-	/// Converts the [`ViewInfo`] into the [`backend::vk::ImageViewCreateInfo`] struct
-	/// used to create a [`image::View`].
+	/// Converts the [`Builder`] into the [`backend::vk::ImageViewCreateInfo`] struct
+	/// used to create a [`image_view::View`].
 	fn to_vk(&self) -> backend::vk::ImageViewCreateInfo {
 		let image_rc = self.image.upgrade().unwrap();
 		backend::vk::ImageViewCreateInfo::builder()
@@ -77,7 +77,7 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for Builder {
 }
 
 impl Builder {
-	/// Creates an [`image::View`] object, thereby consuming the info.
+	/// Creates an [`image_view::View`] object, thereby consuming the info.
 	pub fn build(
 		&mut self,
 		device: &sync::Arc<logical::Device>,

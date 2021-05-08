@@ -87,8 +87,8 @@ impl Builder {
 }
 
 impl utility::VulkanInfo<backend::vk::SamplerCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`image::Image`].
+	/// Converts the [`Builder`] into the [`backend::vk::SamplerCreateInfo`] struct
+	/// used to create a [`sampler::Sampler`].
 	fn to_vk(&self) -> backend::vk::SamplerCreateInfo {
 		backend::vk::SamplerCreateInfo::builder()
 			.mag_filter(self.magnification)

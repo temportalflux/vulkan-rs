@@ -59,8 +59,8 @@ impl Builder {
 }
 
 impl utility::VulkanInfo<backend::vk::BufferCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`image::Image`].
+	/// Converts the [`Builder`] into the [`backend::vk::BufferCreateInfo`] struct
+	/// used to create a [`Buffer`].
 	fn to_vk(&self) -> backend::vk::BufferCreateInfo {
 		backend::vk::BufferCreateInfo::builder()
 			.size(self.size as u64)
@@ -72,7 +72,7 @@ impl utility::VulkanInfo<backend::vk::BufferCreateInfo> for Builder {
 }
 
 impl Builder {
-	/// Creates an [`object::Buffer`] object, thereby consuming the info.
+	/// Creates an [`Buffer`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let buffer_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
