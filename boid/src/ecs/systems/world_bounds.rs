@@ -1,5 +1,5 @@
 use crate::{
-	ecs::{self, components::Position2D},
+	ecs::{self, components::Position2D, NamedSystem},
 	engine::math::Vector,
 };
 
@@ -14,6 +14,15 @@ impl Default for WorldBounds {
 			min: Vector::filled(0.0),
 			max: Vector::filled(0.0),
 		}
+	}
+}
+
+impl NamedSystem for WorldBounds {
+	fn name() -> &'static str {
+		"world_bounds"
+	}
+	fn dependencies(&self) -> Vec<&'static str> {
+		vec![ecs::systems::MoveEntities::name()]
 	}
 }
 

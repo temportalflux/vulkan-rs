@@ -3,6 +3,7 @@ use crate::{
 		self,
 		components::{Orientation, Position2D, Velocity2D},
 		resources::DeltaTime,
+		NamedSystem,
 	},
 	engine::{math::Quaternion, world},
 };
@@ -12,6 +13,12 @@ pub struct MoveEntities {}
 impl Default for MoveEntities {
 	fn default() -> MoveEntities {
 		MoveEntities {}
+	}
+}
+
+impl NamedSystem for MoveEntities {
+	fn name() -> &'static str {
+		"move_entities"
 	}
 }
 

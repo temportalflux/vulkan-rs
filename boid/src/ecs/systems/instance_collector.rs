@@ -2,6 +2,7 @@ use crate::{
 	ecs::{
 		self,
 		components::{BoidRender, Orientation, Position2D},
+		NamedSystem,
 	},
 	graphics,
 };
@@ -21,6 +22,15 @@ impl InstanceCollector {
 			renderer,
 			expansion_step,
 		}
+	}
+}
+
+impl NamedSystem for InstanceCollector {
+	fn name() -> &'static str {
+		"render_instance_collector"
+	}
+	fn dependencies(&self) -> Vec<&'static str> {
+		vec![ecs::systems::WorldBounds::name()]
 	}
 }
 
