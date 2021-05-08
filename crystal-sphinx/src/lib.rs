@@ -31,6 +31,34 @@ pub fn run() -> VoidResult {
 		.with_application::<CrystalSphinx>()
 		.build(&engine)?;
 
+	let mut ui_app = engine::ui::core::application::Application::new();
+	let atlas_mapping = std::collections::HashMap::new();
+	let image_sizes = std::collections::HashMap::new();
+	let mut ui_renderer = engine::ui::renderer::tesselate::renderer::TesselateRenderer::new(
+		engine::ui::prelude::TesselationVerticesFormat::Interleaved,
+		(),
+		&atlas_mapping,
+		&image_sizes,
+	);
+
+	let tree = engine::ui::core::widget! {
+		(engine::ui::core::widget::component::containers::vertical_box::vertical_box [
+			(#{"hi"} engine::ui::core::widget::component::interactive::button::button: { "Say hi".to_owned() })
+		])
+	};
+
+	ui_app.apply(tree);
+
+	let mapping = engine::ui::core::layout::CoordsMapping::new(engine::ui::prelude::Rect {
+		left: 0.0,
+		right: 1280.0,
+		top: 0.0,
+		bottom: 720.0,
+	});
+	if let Ok(output) = ui_app.render(&mapping, &mut ui_renderer) {
+		log::debug!("{:?}", output);
+	}
+
 	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
 	let _text_render = TextRender::new(&chain);
 
