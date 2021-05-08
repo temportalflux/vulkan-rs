@@ -1,7 +1,5 @@
 use engine::{
-	asset, display,
 	graphics::{device::physical, flags, renderpass},
-	math::Vector,
 	utility::VoidResult,
 	Application,
 };
@@ -30,37 +28,21 @@ impl Application for TriangleDemo {
 }
 
 pub fn run() -> VoidResult {
-	engine::logging::init::<TriangleDemo>()?;
-	let task_watcher = engine::task::initialize_system();
-	engine::register_asset_types();
-	asset::Library::scan_application::<TriangleDemo>()?;
+	let engine = engine::Engine::new::<TriangleDemo>()?;
 
-	let mut display = display::Manager::new()?;
-	let window = display::WindowBuilder::default()
+	let mut window = engine::window::Window::builder()
+		.with_title(TriangleDemo::display_name())
+		.with_size(800.0, 600.0)
+		.with_resizable(true)
 		.with_application::<TriangleDemo>()
-		.title(TriangleDemo::display_name())
-		.size(800, 600)
-		.constraints(vulkan_device_constraints())
-		.resizable(true)
-		.build(&mut display)?;
-	let render_chain = window.create_render_chain(create_render_pass_info())?;
-	render_chain
-		.write()
-		.unwrap()
-		.add_clear_value(renderpass::ClearValue::Color(Vector::new([
-			0.0, 0.0, 0.0, 1.0,
-		])));
+		.with_constraints(vulkan_device_constraints())
+		.build(&engine)?;
 
-	let _renderer = renderer::Triangle::new(&render_chain);
+	let chain = window.create_render_chain(create_render_pass_info())?;
+	let _renderer = renderer::Triangle::new(&chain);
 
-	while !display.should_quit() {
-		display.poll_all_events()?;
-		task_watcher.poll();
-		render_chain.write().unwrap().render_frame()?;
-	}
-	task_watcher.poll_until_empty();
-	render_chain.read().unwrap().logical().wait_until_idle()?;
-
+	engine.run(chain);
+	window.wait_until_idle().unwrap();
 	Ok(())
 }
 
