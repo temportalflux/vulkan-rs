@@ -209,7 +209,7 @@ impl RenderBoids {
 		let shader = engine
 			.assets
 			.loader
-			.load_sync(&engine.assets.types, &engine.assets.library, &id)?
+			.load_sync(&engine.assets.library, &id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 
@@ -228,7 +228,6 @@ impl RenderBoids {
 			.assets
 			.loader
 			.load_sync(
-				&engine.assets.types,
 				&engine.assets.library,
 				&engine::asset::Id::new(crate::name(), "boid"),
 			)?

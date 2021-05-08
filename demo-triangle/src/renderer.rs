@@ -36,7 +36,6 @@ impl Triangle {
 					.assets
 					.loader
 					.load_sync(
-						&engine.assets.types,
 						&engine.assets.library,
 						&engine::asset::Id::new("demo-triangle", "triangle_vert"),
 					)?
@@ -49,7 +48,6 @@ impl Triangle {
 					.assets
 					.loader
 					.load_sync(
-						&engine.assets.types,
 						&engine.assets.library,
 						&engine::asset::Id::new("demo-triangle", "triangle_frag"),
 					)?

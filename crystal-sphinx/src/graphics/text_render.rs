@@ -24,7 +24,7 @@ impl ShaderItem {
 		let shader = engine
 			.assets
 			.loader
-			.load_sync(&engine.assets.types, &engine.assets.library, &asset_id)?
+			.load_sync(&engine.assets.library, &asset_id)?
 			.downcast::<engine::graphics::Shader>()
 			.unwrap();
 		self.bytes = shader.contents().clone();
@@ -109,7 +109,6 @@ impl TextRender {
 				.assets
 				.loader
 				.load_sync(
-					&engine.assets.types,
 					&engine.assets.library,
 					&engine::asset::Id::new(crate::name(), "font/unispace"),
 				)?
