@@ -137,7 +137,7 @@ impl graphics::RenderChainElement for Triangle {
 				.copy_stage_to_buffer(&self.vertex_buffer.as_ref().unwrap())
 				.end()?;
 			let gpu_signal = copy_task.gpu_signal_on_complete();
-			copy_task.send_to(render_chain.task_spawner());
+			copy_task.send_to(engine::task::sender());
 			gpu_signal
 		};
 
@@ -162,7 +162,7 @@ impl graphics::RenderChainElement for Triangle {
 				.copy_stage_to_buffer(&self.index_buffer.as_ref().unwrap())
 				.end()?;
 			let gpu_signal = copy_task.gpu_signal_on_complete();
-			copy_task.send_to(render_chain.task_spawner());
+			copy_task.send_to(engine::task::sender());
 			gpu_signal
 		};
 

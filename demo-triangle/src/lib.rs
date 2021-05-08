@@ -31,9 +31,9 @@ impl Application for TriangleDemo {
 
 pub fn run() -> VoidResult {
 	engine::logging::init::<TriangleDemo>()?;
+	let task_watcher = engine::task::initialize_system();
 	engine::register_asset_types();
 	asset::Library::scan_application::<TriangleDemo>()?;
-	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut display = display::Manager::new()?;
 	let window = display::WindowBuilder::default()
@@ -45,7 +45,7 @@ pub fn run() -> VoidResult {
 		.build(&mut display)?;
 	let render_chain = window
 		.borrow()
-		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
+		.create_render_chain(create_render_pass_info())?;
 	render_chain
 		.write()
 		.unwrap()

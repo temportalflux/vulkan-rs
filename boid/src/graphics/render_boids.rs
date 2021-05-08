@@ -563,7 +563,7 @@ impl RenderBoids {
 				.end()?;
 			self.pending_gpu_signals
 				.push(copy_task.gpu_signal_on_complete());
-			copy_task.send_to(chain.task_spawner());
+			copy_task.send_to(engine::task::sender());
 		}
 
 		if instances.len() != self.active_instance_count {

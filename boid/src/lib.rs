@@ -31,9 +31,9 @@ impl Application for BoidDemo {
 
 pub fn run() -> VoidResult {
 	engine::logging::init::<BoidDemo>()?;
+	let task_watcher = engine::task::initialize_system();
 	engine::register_asset_types();
 	asset::Library::scan_application::<BoidDemo>()?;
-	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut world = ecs::World::new();
 	world.register::<ecs::components::Position2D>();
@@ -50,7 +50,7 @@ pub fn run() -> VoidResult {
 		.build(&mut display)?;
 	let render_chain = window
 		.borrow()
-		.create_render_chain(create_render_pass_info(), task_spawner.clone())?;
+		.create_render_chain(create_render_pass_info())?;
 	render_chain
 		.write()
 		.unwrap()
