@@ -3,18 +3,13 @@ use engine::utility::VoidResult;
 use temportal_engine as engine;
 use temportal_engine_editor as editor;
 
-fn name() -> &'static str {
-	std::env!("CARGO_PKG_NAME")
-}
-
 fn main() -> VoidResult {
 	#[cfg(feature = "profile")]
 	{
 		optick::start_capture();
 	}
-	engine::logging::init(name())?;
 
-	let editor = editor::Editor::new(crystal_sphinx::name())?;
+	let editor = editor::Editor::new::<crystal_sphinx::CrystalSphinx>()?;
 	if editor.borrow().run_commandlets()? {
 		return Ok(());
 	}

@@ -4,9 +4,7 @@ use temportal_engine as engine;
 use temportal_engine_editor as editor;
 
 fn main() -> VoidResult {
-	engine::logging::init(demo_triangle::name())?;
-
-	let editor = editor::Editor::new(demo_triangle::name())?;
+	let editor = editor::Editor::new::<demo_triangle::TriangleDemo>()?;
 	if editor.borrow().run_commandlets()? {
 		return Ok(());
 	}

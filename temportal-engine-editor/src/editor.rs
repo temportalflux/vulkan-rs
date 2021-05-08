@@ -1,6 +1,6 @@
 use crate::{
 	asset,
-	engine::{self, utility::AnyError},
+	engine::{self, utility::AnyError, Application},
 	graphics,
 	settings::{self, Settings},
 };
@@ -15,12 +15,14 @@ pub struct Editor {
 }
 
 impl Editor {
-	pub fn new(module_name: &str) -> Result<Rc<RefCell<Editor>>, AnyError> {
+	pub fn new<T: Application>() -> Result<Rc<RefCell<Editor>>, AnyError> {
+		engine::logging::init_named(&(T::name().to_string() + "_editor"))?;
+
 		log::info!(target: EDITOR_LOG, "Initializing editor");
 		let mut editor = Editor {
 			asset_manager: asset::Manager::new(),
 			settings: settings::Editor::load()?,
-			module_name: module_name.to_string(),
+			module_name: T::name().to_string(),
 		};
 		editor
 			.asset_manager

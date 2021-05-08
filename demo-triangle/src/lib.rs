@@ -3,6 +3,7 @@ use engine::{
 	graphics::{device::physical, flags, renderpass},
 	math::Vector,
 	utility::VoidResult,
+	Application,
 };
 pub use temportal_engine as engine;
 
@@ -12,35 +13,32 @@ mod renderer;
 mod vertex;
 pub use vertex::*;
 
-pub fn name() -> &'static str {
-	std::env!("CARGO_PKG_NAME")
+pub struct TriangleDemo();
+impl Application for TriangleDemo {
+	fn name() -> &'static str {
+		std::env!("CARGO_PKG_NAME")
+	}
+	fn display_name() -> &'static str {
+		"Triangle Demo"
+	}
+	fn location() -> &'static str {
+		std::env!("CARGO_MANIFEST_DIR")
+	}
+	fn version() -> u32 {
+		temportal_engine::utility::make_version(0, 1, 0)
+	}
 }
 
-fn scan_assets() -> VoidResult {
-	let mut library = asset::Library::get().write().unwrap();
-	library.scan_pak(
-		&[
-			std::env!("CARGO_MANIFEST_DIR"),
-			format!("{}.pak", name()).as_str(),
-		]
-		.iter()
-		.collect::<std::path::PathBuf>(),
-	)
-}
-
-pub fn run(log_name: &str) -> VoidResult {
-	engine::logging::init(log_name)?;
+pub fn run() -> VoidResult {
+	engine::logging::init::<TriangleDemo>()?;
 	engine::register_asset_types();
-	scan_assets()?;
+	asset::Library::scan_application::<TriangleDemo>()?;
 	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut display = display::Manager::new()?;
 	let window = display::WindowBuilder::default()
-		.with_info(
-			engine::make_app_info()
-				.with_application("Triangle", temportal_engine::utility::make_version(0, 1, 0)),
-		)
-		.title("Triangle Demo")
+		.with_application::<TriangleDemo>()
+		.title(TriangleDemo::display_name())
 		.size(800, 600)
 		.constraints(vulkan_device_constraints())
 		.resizable(true)

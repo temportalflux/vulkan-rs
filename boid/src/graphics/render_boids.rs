@@ -3,11 +3,13 @@ use crate::{
 		self, asset,
 		math::*,
 		utility::{self, AnyError},
+		Application,
 	},
 	graphics::{
 		self, buffer, command, flags, image, image_view, pipeline, sampler, shader, structs,
 		Instance, RenderChain, Vertex,
 	},
+	BoidDemo,
 };
 use std::sync::{Arc, RwLock, Weak};
 
@@ -59,11 +61,11 @@ impl RenderBoids {
 	) -> Result<Arc<RwLock<RenderBoids>>, AnyError> {
 		let vert_shader = Arc::new(Self::load_shader(
 			&render_chain.read().unwrap(),
-			engine::asset::Id::new(crate::name(), "vertex"),
+			engine::asset::Id::new(BoidDemo::name(), "vertex"),
 		)?);
 		let frag_shader = Arc::new(Self::load_shader(
 			&render_chain.read().unwrap(),
-			engine::asset::Id::new(crate::name(), "fragment"),
+			engine::asset::Id::new(BoidDemo::name(), "fragment"),
 		)?);
 
 		let image =
@@ -212,7 +214,7 @@ impl RenderBoids {
 
 	fn load_boid_texture() -> Result<Box<graphics::Texture>, AnyError> {
 		Ok(
-			asset::Loader::load_sync(&engine::asset::Id::new(crate::name(), "boid"))?
+			asset::Loader::load_sync(&engine::asset::Id::new(BoidDemo::name(), "boid"))?
 				.downcast::<graphics::Texture>()
 				.unwrap(),
 		)

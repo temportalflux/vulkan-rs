@@ -3,7 +3,7 @@ use engine::{
 	ecs::{Builder, WorldExt},
 	math::{vector, Quaternion, Vector},
 	utility::VoidResult,
-	world,
+	world, Application,
 };
 pub use temportal_engine as engine;
 
@@ -13,26 +13,26 @@ pub mod graphics;
 #[path = "ecs/_.rs"]
 pub mod ecs;
 
-pub fn name() -> &'static str {
-	std::env!("CARGO_PKG_NAME")
-}
-
-fn scan_assets() -> VoidResult {
-	let mut library = asset::Library::get().write().unwrap();
-	library.scan_pak(
-		&[
-			std::env!("CARGO_MANIFEST_DIR"),
-			format!("{}.pak", name()).as_str(),
-		]
-		.iter()
-		.collect::<std::path::PathBuf>(),
-	)
+pub struct BoidDemo();
+impl Application for BoidDemo {
+	fn name() -> &'static str {
+		std::env!("CARGO_PKG_NAME")
+	}
+	fn display_name() -> &'static str {
+		"Boids"
+	}
+	fn location() -> &'static str {
+		std::env!("CARGO_MANIFEST_DIR")
+	}
+	fn version() -> u32 {
+		temportal_engine::utility::make_version(0, 1, 0)
+	}
 }
 
 pub fn run() -> VoidResult {
-	engine::logging::init(name())?;
+	engine::logging::init::<BoidDemo>()?;
 	engine::register_asset_types();
-	scan_assets()?;
+	asset::Library::scan_application::<BoidDemo>()?;
 	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut world = ecs::World::new();
@@ -43,11 +43,8 @@ pub fn run() -> VoidResult {
 
 	let mut display = engine::display::Manager::new()?;
 	let window = display::WindowBuilder::default()
-		.with_info(
-			engine::make_app_info()
-				.with_application("Boids", temportal_engine::utility::make_version(0, 1, 0)),
-		)
-		.title("Boids")
+		.with_application::<BoidDemo>()
+		.title(BoidDemo::display_name())
 		.size(1000, 1000)
 		.constraints(vulkan_device_constraints())
 		.build(&mut display)?;

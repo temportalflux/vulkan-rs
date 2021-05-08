@@ -1,10 +1,15 @@
-use crate::engine::{
-	self, asset,
-	graphics::{
-		self, buffer, command, flags, image_view, pipeline, sampler, shader, structs, RenderChain,
+use crate::{
+	engine::{
+		self, asset,
+		graphics::{
+			self, buffer, command, flags, image_view, pipeline, sampler, shader, structs,
+			RenderChain,
+		},
+		math::Vector,
+		utility::{self, AnyError},
+		Application,
 	},
-	math::Vector,
-	utility::{self, AnyError},
+	CrystalSphinx,
 };
 use std::{collections::HashMap, sync};
 
@@ -80,11 +85,11 @@ pub struct TextRender {
 
 impl TextRender {
 	fn vertex_shader_path() -> engine::asset::Id {
-		engine::asset::Id::new(crate::name(), "shaders/text/vertex")
+		engine::asset::Id::new(CrystalSphinx::name(), "shaders/text/vertex")
 	}
 
 	fn fragment_shader_path() -> engine::asset::Id {
-		engine::asset::Id::new(crate::name(), "shaders/text/fragment")
+		engine::asset::Id::new(CrystalSphinx::name(), "shaders/text/fragment")
 	}
 
 	pub fn new(
@@ -96,10 +101,12 @@ impl TextRender {
 		let font_atlas = {
 			optick::event!("load-font-image");
 
-			let font =
-				asset::Loader::load_sync(&engine::asset::Id::new(crate::name(), "font/unispace"))?
-					.downcast::<engine::graphics::font::Font>()
-					.unwrap();
+			let font = asset::Loader::load_sync(&engine::asset::Id::new(
+				CrystalSphinx::name(),
+				"font/unispace",
+			))?
+			.downcast::<engine::graphics::font::Font>()
+			.unwrap();
 			let font_sdf_image_data: Vec<u8> =
 				font.binary().iter().flatten().map(|alpha| *alpha).collect();
 

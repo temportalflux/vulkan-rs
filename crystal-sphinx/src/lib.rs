@@ -1,39 +1,36 @@
-use engine::{asset, display, math::Vector, utility::VoidResult};
+use engine::{asset, display, math::Vector, utility::VoidResult, Application};
 pub use temportal_engine as engine;
 
 #[path = "graphics/_.rs"]
 mod graphics;
 use graphics::TextRender;
 
-pub fn name() -> &'static str {
-	std::env!("CARGO_PKG_NAME")
-}
-
-fn scan_assets() -> VoidResult {
-	let mut library = asset::Library::get().write().unwrap();
-	library.scan_pak(
-		&[
-			std::env!("CARGO_MANIFEST_DIR"),
-			format!("{}.pak", name()).as_str(),
-		]
-		.iter()
-		.collect::<std::path::PathBuf>(),
-	)
+pub struct CrystalSphinx();
+impl Application for CrystalSphinx {
+	fn name() -> &'static str {
+		std::env!("CARGO_PKG_NAME")
+	}
+	fn display_name() -> &'static str {
+		"Crystal Sphinx"
+	}
+	fn location() -> &'static str {
+		std::env!("CARGO_MANIFEST_DIR")
+	}
+	fn version() -> u32 {
+		temportal_engine::utility::make_version(0, 1, 0)
+	}
 }
 
 pub fn run() -> VoidResult {
-	engine::logging::init(name())?;
+	engine::logging::init::<CrystalSphinx>()?;
 	engine::register_asset_types();
-	scan_assets()?;
+	asset::Library::scan_application::<CrystalSphinx>()?;
 	let (task_spawner, task_watcher) = engine::task::create_system();
 
 	let mut display = engine::display::Manager::new()?;
 	let window = display::WindowBuilder::default()
-		.with_info(engine::make_app_info().with_application(
-			"Crystal Sphinx",
-			temportal_engine::utility::make_version(0, 1, 0),
-		))
-		.title("Crystal Sphinx")
+		.with_application::<CrystalSphinx>()
+		.title(CrystalSphinx::display_name())
 		.size(1280, 720)
 		.constraints(vulkan_device_constraints())
 		.resizable(true)
