@@ -292,12 +292,9 @@ impl Mul<Source> for Factor {
 
 impl Source {
 	fn pick(&self, a: &SourceModifiedFactor, b: &SourceModifiedFactor) -> ModifiedFactor {
-		if a.source == *self
-		{
+		if a.source == *self {
 			a.factor
-		}
-		else
-		{
+		} else {
 			b.factor
 		}
 	}
@@ -332,14 +329,17 @@ impl Sub<SourceModifiedFactor> for SourceModifiedFactor {
 		}
 		Expression {
 			src: Source::New.pick(&self, &other).into(),
-			op: if self.source == Source::New { vk::BlendOp::SUBTRACT } else { vk::BlendOp::REVERSE_SUBTRACT },
+			op: if self.source == Source::New {
+				vk::BlendOp::SUBTRACT
+			} else {
+				vk::BlendOp::REVERSE_SUBTRACT
+			},
 			dst: Source::Old.pick(&self, &other).into(),
 		}
 	}
 }
 
-impl SourceModifiedFactor
-{
+impl SourceModifiedFactor {
 	pub fn min(&self, other: &Self) -> Expression {
 		if self.source == other.source {
 			panic!("Cannot min two factors of the same source");
@@ -396,5 +396,4 @@ mod expression {
 			((SrcAlpha * New) + ((One - SrcAlpha) * Old)).into()
 		);
 	}
-
 }
