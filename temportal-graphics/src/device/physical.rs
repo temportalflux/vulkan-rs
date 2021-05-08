@@ -203,6 +203,28 @@ pub enum Constraint {
 	PrioritizedSet(Vec<Constraint>, /*set_is_optional*/ bool),
 }
 
+pub fn default_constraints() -> Vec<Constraint> {
+	use physical::Constraint::*;
+	vec![
+		HasSurfaceFormats(Format::B8G8R8A8_SRGB, ColorSpace::SRGB_NONLINEAR),
+		HasExtension(String::from("VK_KHR_swapchain")),
+		PrioritizedSet(
+			vec![
+				CanPresentWith(PresentMode::MAILBOX, Some(1)),
+				CanPresentWith(PresentMode::FIFO, None),
+			],
+			false,
+		),
+		PrioritizedSet(
+			vec![
+				IsDeviceType(physical::Kind::DISCRETE_GPU, Some(100)),
+				IsDeviceType(physical::Kind::INTEGRATED_GPU, Some(0)),
+			],
+			false,
+		),
+	]
+}
+
 #[doc(hidden)]
 impl Device {
 	/// Determines if the device can support all the desired rules/properties.
