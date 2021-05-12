@@ -31,30 +31,45 @@ pub fn run() -> VoidResult {
 		.with_application::<CrystalSphinx>()
 		.build(&engine)?;
 
-	let mut ui_app = engine::ui::core::application::Application::new();
+	use engine::ui::prelude::*;
+
+	let mut ui_app = Application::new();
+	ui_app.setup(widget::setup);
 	let atlas_mapping = std::collections::HashMap::new();
 	let image_sizes = std::collections::HashMap::new();
-	let mut ui_renderer = engine::ui::renderer::tesselate::renderer::TesselateRenderer::new(
-		engine::ui::prelude::TesselationVerticesFormat::Interleaved,
+	let mut ui_renderer = TesselateRenderer::new(
+		TesselationVerticesFormat::Interleaved,
 		(),
 		&atlas_mapping,
 		&image_sizes,
 	);
 
-	let tree = engine::ui::core::widget! {
-		(engine::ui::core::widget::component::containers::vertical_box::vertical_box [
-			(#{"hi"} engine::ui::core::widget::component::interactive::button::button: { "Say hi".to_owned() })
-		])
+	let tree = widget! {
+		(text_box: { Props::new(TextBoxProps {
+			text: "Hello World!".to_owned(),
+			color: utils::Color {
+				r: 1.0,
+				g: 1.0,
+				b: 1.0,
+				a: 1.0,
+			},
+			font: TextBoxFont {
+				name: "unispace".to_owned(),
+				size: 60.0,
+			},
+			.. Default::default()
+		}) })
 	};
 
 	ui_app.apply(tree);
 
-	let mapping = engine::ui::core::layout::CoordsMapping::new(engine::ui::prelude::Rect {
+	let mapping = CoordsMapping::new(Rect {
 		left: 0.0,
 		right: 1280.0,
 		top: 0.0,
 		bottom: 720.0,
 	});
+	let _res = ui_app.layout(&mapping, &mut DefaultLayoutEngine);
 	if let Ok(output) = ui_app.render(&mapping, &mut ui_renderer) {
 		log::debug!("{:?}", output);
 	}
