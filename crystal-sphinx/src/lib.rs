@@ -74,6 +74,7 @@ pub fn run() -> VoidResult {
 		log::debug!("{:?}", output);
 	}
 
+	// TODO: create a non-default renderpass info which has multiple subpasses (one for world, and at least one more for just ui)
 	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
 	let _ui_render = graphics::UIRender::new(&chain);
 

@@ -412,8 +412,8 @@ impl graphics::CommandRecorder for UIRender {
 	/// Or in the case of the UI Render, record changes to the secondary command buffer.
 	fn prerecord_update(
 		&mut self,
-		buffer: &command::Buffer,
-		frame: usize,
+		_buffer: &command::Buffer,
+		_frame: usize,
 		_resolution: &Vector<u32, 2>,
 	) -> utility::Result<bool> {
 		//self.ui_command_buffers[frame].begin(None, Some(buffer))?;
@@ -423,7 +423,7 @@ impl graphics::CommandRecorder for UIRender {
 	}
 
 	/// Record to the primary command buffer for a given frame
-	fn record_to_buffer(&self, buffer: &mut command::Buffer, frame: usize) -> utility::Result<()> {
+	fn record_to_buffer(&self, buffer: &mut command::Buffer, _frame: usize) -> utility::Result<()> {
 		optick::event!();
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
