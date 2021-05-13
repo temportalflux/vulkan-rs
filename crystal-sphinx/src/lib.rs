@@ -69,6 +69,7 @@ pub fn run() -> VoidResult {
 		top: 0.0,
 		bottom: 720.0,
 	});
+	ui_app.process();
 	let _res = ui_app.layout(&mapping, &mut DefaultLayoutEngine);
 	if let Ok(output) = ui_app.render(&mapping, &mut ui_renderer) {
 		log::debug!("{:?}", output);
