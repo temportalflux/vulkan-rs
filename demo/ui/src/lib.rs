@@ -35,7 +35,7 @@ pub fn run() -> VoidResult {
 		.with_application::<UIDemo>()
 		.build(&engine)?;
 
-	use engine::ui::prelude::*;
+	use engine::ui::*;
 
 	let mut ui_app = Application::new();
 	ui_app.setup(widget::setup);
