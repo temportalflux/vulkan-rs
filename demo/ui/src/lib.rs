@@ -3,7 +3,7 @@ pub use temportal_engine as engine;
 
 #[path = "ui_render.rs"]
 mod ui_render;
-use ui_render::*;
+pub use ui_render::*;
 
 pub struct UIDemo();
 impl Application for UIDemo {
