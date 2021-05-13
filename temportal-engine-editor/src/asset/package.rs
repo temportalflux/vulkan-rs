@@ -2,14 +2,10 @@ use crate::engine::{asset, utility::VoidResult};
 use std::{self, fs, io::Write, path::PathBuf};
 use zip;
 
-pub fn package(module_name: &str) -> VoidResult {
-	let module_dir = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
-		.iter()
-		.collect::<PathBuf>()
-		.canonicalize()?;
-	let mut output_dir_path = module_dir.clone();
+pub fn package(module_name: &str, module_location: &PathBuf) -> VoidResult {
+	let mut output_dir_path = module_location.clone();
 	output_dir_path.push("binaries");
-	let mut zip_path = module_dir.clone();
+	let mut zip_path = module_location.clone();
 	zip_path.push(format!("{}.pak", module_name));
 
 	log::info!(

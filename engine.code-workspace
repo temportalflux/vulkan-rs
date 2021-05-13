@@ -5,32 +5,12 @@
 			"path": "."
 		},
 		{
-			"name": "Temportal (Graphics)",
-			"path": "temportal-graphics"
+			"name": "Crystal Sphinx (Game)",
+			"path": "crystal-sphinx"
 		},
 		{
-			"name": "Temportal (Math)",
-			"path": "temportal-math"
-		},
-		{
-			"name": "Temportal (Graphics)",
-			"path": "temportal-graphics"
-		},
-		{
-			"name": "Temportal Engine",
-			"path": "temportal-engine"
-		},
-		{
-			"name": "Temportal Engine (Editor)",
-			"path": "temportal-engine-editor"
-		},
-		{
-			"name": "Triangle (Demo)",
-			"path": "demo-triangle"
-		},
-		{
-			"name": "Triangle (Editor)",
-			"path": "demo-triangle-editor"
+			"name": "Crystal Sphinx (Editor)",
+			"path": "crystal-sphinx-editor"
 		},
 		{
 			"name": "Boid (Demo)",
@@ -41,12 +21,36 @@
 			"path": "boid-editor"
 		},
 		{
-			"name": "Crystal Sphinx (Game)",
-			"path": "crystal-sphinx"
+			"name": "UI (Demo)",
+			"path": "demo/ui"
 		},
 		{
-			"name": "Crystal Sphinx (Editor)",
-			"path": "crystal-sphinx-editor"
+			"name": "UI (Editor)",
+			"path": "demo/ui-editor"
+		},
+		{
+			"name": "Triangle (Demo)",
+			"path": "demo-triangle"
+		},
+		{
+			"name": "Triangle (Editor)",
+			"path": "demo-triangle-editor"
+		},
+		{
+			"name": "Temportal Engine",
+			"path": "temportal-engine"
+		},
+		{
+			"name": "Temportal Engine (Editor)",
+			"path": "temportal-engine-editor"
+		},
+		{
+			"name": "Temportal (Graphics)",
+			"path": "temportal-graphics"
+		},
+		{
+			"name": "Temportal (Math)",
+			"path": "temportal-math"
 		},
 		{
 			"name": "extern-reader",

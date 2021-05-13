@@ -21,13 +21,13 @@ impl ui::Element for Workspace {
 				let build = imgui::MenuItem::new(im_str!("Build")).build(&ui);
 				let rebuild = imgui::MenuItem::new(im_str!("Build (Force)")).build(&ui);
 				if build || rebuild {
-					match asset::build(editor.asset_manager(), &editor.module_name, rebuild) {
+					match asset::build(editor.asset_manager(), &editor.module_location, rebuild) {
 						Ok(_) => {}
 						Err(e) => log::error!(target: "ui", "Failed to build... {:?}", e),
 					}
 				}
 				if imgui::MenuItem::new(im_str!("Package")).build(&ui) {
-					match asset::package(&editor.module_name) {
+					match asset::package(&editor.module_name, &editor.module_location) {
 						Ok(_) => {}
 						Err(e) => log::error!(target: "ui", "Failed to package... {:?}", e),
 					}

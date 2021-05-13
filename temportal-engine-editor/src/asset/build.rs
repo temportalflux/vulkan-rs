@@ -7,22 +7,37 @@ use std::{
 
 pub fn build(
 	asset_manager: &crate::asset::Manager,
-	module_name: &str,
+	module_location: &PathBuf,
 	force_build: bool,
 ) -> engine::utility::VoidResult {
-	log::info!(target: asset::LOG, "Building module {}", module_name);
-	let crate_path = [std::env!("CARGO_MANIFEST_DIR"), "..", module_name]
-		.iter()
-		.collect::<PathBuf>()
-		.canonicalize()?;
-	let mut assets_dir_path = crate_path.clone();
+	log::info!(target: asset::LOG, "Building module {:?}", module_location);
+	let mut assets_dir_path = module_location.clone();
 	assets_dir_path.push("assets");
-	let mut output_dir_path = crate_path.clone();
+	let mut output_dir_path = module_location.clone();
 	output_dir_path.push("binaries");
 
+	if !assets_dir_path.exists() {
+		log::info!(
+			target: asset::LOG,
+			"Generating assets directory {:?}",
+			assets_dir_path
+		);
+		fs::create_dir(&assets_dir_path)?;
+	}
+
 	if !output_dir_path.exists() {
+		log::info!(
+			target: asset::LOG,
+			"Generating output directory {:?}",
+			output_dir_path
+		);
 		fs::create_dir(&output_dir_path)?;
 	} else if force_build {
+		log::info!(
+			target: asset::LOG,
+			"Wiping output directory {:?}",
+			output_dir_path
+		);
 		fs::remove_dir_all(&output_dir_path)?;
 	}
 
@@ -57,6 +72,8 @@ pub fn build(
 		}
 	}
 
+	log::info!(target: asset::LOG, "Removing old binaries");
+
 	for binary_file_path in collect_file_paths(&output_dir_path, &intended_binaries)?.iter() {
 		log::info!(
 			target: asset::LOG,
@@ -70,6 +87,7 @@ pub fn build(
 }
 
 pub fn collect_file_paths(path: &Path, ignore: &Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
+	log::info!(target: asset::LOG, "Scanning {:?}", path);
 	let mut file_paths: Vec<PathBuf> = Vec::new();
 	if !path.is_dir() {
 		return Ok(file_paths);

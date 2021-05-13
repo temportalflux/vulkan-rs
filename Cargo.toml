@@ -1,18 +1,19 @@
 
 [workspace]
 members = [
-	"extern-reader",
-	"install-externs",
+	"extern-reader", "install-externs",
 	"temportal-math",
 	"temportal-graphics",
 	"temportal-engine", "temportal-engine-editor",
 	"demo-triangle", "demo-triangle-editor",
 	"boid", "boid-editor",
-	"crystal-sphinx", "crystal-sphinx-editor"
+	"crystal-sphinx", "crystal-sphinx-editor",
+	"demo/ui", "demo/ui-editor",
 ]
 default-members = [
 	"temportal-math", "temportal-graphics",
 	"demo-triangle", "demo-triangle-editor",
 	"boid", "boid-editor",
 	"crystal-sphinx", "crystal-sphinx-editor",
+	"demo/ui", "demo/ui-editor",
 ]

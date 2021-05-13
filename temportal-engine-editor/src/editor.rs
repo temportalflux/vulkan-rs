@@ -12,6 +12,7 @@ pub struct Editor {
 	asset_manager: asset::Manager,
 	pub settings: settings::Editor,
 	pub module_name: String,
+	pub module_location: std::path::PathBuf,
 }
 
 impl Editor {
@@ -23,6 +24,7 @@ impl Editor {
 			asset_manager: asset::Manager::new(),
 			settings: settings::Editor::load()?,
 			module_name: T::name().to_string(),
+			module_location: std::path::PathBuf::from(T::location()),
 		};
 		editor
 			.asset_manager
@@ -52,12 +54,12 @@ impl Editor {
 			if should_build_assets {
 				asset::build(
 					self.asset_manager(),
-					&self.module_name,
+					&self.module_location,
 					args.any(|arg| arg == "-force"),
 				)?;
 			}
 			if should_package_assets {
-				asset::package(&self.module_name)?;
+				asset::package(&self.module_name, &self.module_location)?;
 			}
 			return Ok(true);
 		}
