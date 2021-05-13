@@ -15,10 +15,12 @@ impl Pool {
 	pub fn create(
 		device: &sync::Arc<logical::Device>,
 		queue_family_index: usize,
+		flags: Option<flags::CommandPoolCreate>,
 	) -> utility::Result<Pool> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::CommandPoolCreateInfo::builder()
 			.queue_family_index(queue_family_index as u32)
+			.flags(flags.unwrap_or_default())
 			.build();
 		let internal =
 			utility::as_vulkan_error(unsafe { device.unwrap().create_command_pool(&info, None) })?;

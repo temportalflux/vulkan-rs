@@ -471,7 +471,12 @@ impl graphics::CommandRecorder for RenderBoids {
 		Ok(())
 	}
 
-	fn update_pre_submit(&mut self, frame: usize, _: &Vector<u32, 2>) -> utility::Result<bool> {
+	fn prerecord_update(
+		&mut self,
+		_buffer: &command::Buffer,
+		frame: usize,
+		_: &Vector<u32, 2>,
+	) -> utility::Result<bool> {
 		let camera_position = Vector::new([0.0, 0.0, -10.0]);
 		let camera_orientation = Quaternion::identity();
 		let camera_forward = camera_orientation.rotate(&engine::world::global_forward());

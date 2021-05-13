@@ -81,6 +81,8 @@ pub struct TextRender {
 
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
+
+	ui_command_buffers: Vec<command::Buffer>,
 }
 
 impl TextRender {
@@ -162,6 +164,7 @@ impl TextRender {
 		);
 
 		let mut instance = TextRender {
+			ui_command_buffers: Vec::new(),
 			pipeline_layout: None,
 			pipeline: None,
 			shaders: HashMap::new(),
@@ -341,6 +344,7 @@ impl graphics::RenderChainElement for TextRender {
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
 		self.pipeline = None;
 		self.pipeline_layout = None;
+		self.ui_command_buffers = Vec::new();
 		Ok(())
 	}
 
@@ -392,12 +396,34 @@ impl graphics::RenderChainElement for TextRender {
 				)?,
 		);
 
+		// Allocate the secondary command buffers per frame so that the immediate mode UI
+		// can be re-recorded every frame without requiring the entire command buffer per frame to be re-recorded
+		self.ui_command_buffers = render_chain.frame_command_pool().allocate_buffers(
+			render_chain.frame_count(),
+			flags::CommandBufferLevel::SECONDARY,
+		)?;
+
 		Ok(())
 	}
 }
 
 impl graphics::CommandRecorder for TextRender {
-	fn record_to_buffer(&self, buffer: &mut command::Buffer, _: usize) -> utility::Result<()> {
+	/// Update the data (like uniforms) for a given frame -
+	/// Or in the case of the UI Render, record changes to the secondary command buffer.
+	fn prerecord_update(
+		&mut self,
+		buffer: &command::Buffer,
+		frame: usize,
+		_resolution: &Vector<u32, 2>,
+	) -> utility::Result<bool> {
+		//self.ui_command_buffers[frame].begin(None, Some(buffer))?;
+		// NOTE: This is where the UI render bindings will go
+		//self.ui_command_buffers[frame].end()?;
+		Ok(false)
+	}
+
+	/// Record to the primary command buffer for a given frame
+	fn record_to_buffer(&self, buffer: &mut command::Buffer, frame: usize) -> utility::Result<()> {
 		optick::event!();
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
@@ -412,6 +438,14 @@ impl graphics::CommandRecorder for TextRender {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
+
+		// self.ui_command_buffers[frame].begin(
+		// 	Some(flags::CommandBufferUsage::RENDER_PASS_CONTINUE),
+		// 	Some(buffer),
+		// )?;
+		// self.ui_command_buffers[frame].end()?;
+		// buffer.execute(vec![&self.ui_command_buffers[frame]]);
+
 		Ok(())
 	}
 }

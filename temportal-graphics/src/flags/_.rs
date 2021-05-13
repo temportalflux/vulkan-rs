@@ -9,6 +9,7 @@ pub use backend::vk::ColorComponentFlags as ColorComponent;
 pub use backend::vk::ColorSpaceKHR as ColorSpace;
 pub use backend::vk::CommandBufferLevel;
 pub use backend::vk::CommandBufferUsageFlags as CommandBufferUsage;
+pub use backend::vk::CommandPoolCreateFlags as CommandPoolCreate;
 pub use backend::vk::CompareOp;
 pub use backend::vk::ComponentSwizzle;
 pub use backend::vk::CompositeAlphaFlagsKHR as CompositeAlpha;

@@ -7,6 +7,8 @@ use crate::{
 use std::sync;
 
 pub struct Buffer {
+	recording_framebuffer: Option<backend::vk::Framebuffer>,
+	recording_render_pass: Option<backend::vk::RenderPass>,
 	internal: backend::vk::CommandBuffer,
 	device: sync::Arc<logical::Device>,
 }
@@ -16,14 +18,41 @@ impl Buffer {
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::CommandBuffer,
 	) -> Buffer {
-		Buffer { device, internal }
+		Buffer {
+			device,
+			internal,
+			recording_render_pass: None,
+			recording_framebuffer: None,
+		}
 	}
 
-	pub fn begin(&self, usage: Option<flags::CommandBufferUsage>) -> utility::Result<()> {
+	pub fn begin(
+		&self,
+		usage: Option<flags::CommandBufferUsage>,
+		primary: Option<&command::Buffer>,
+	) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
+		let inheritance_info = match primary {
+			Some(primary_buffer) => backend::vk::CommandBufferInheritanceInfo::builder()
+				.render_pass(
+					primary_buffer
+						.recording_render_pass
+						.unwrap_or(backend::vk::RenderPass::null()),
+				)
+				.subpass(0)
+				.framebuffer(
+					primary_buffer
+						.recording_framebuffer
+						.unwrap_or(backend::vk::Framebuffer::null()),
+				)
+				.occlusion_query_enable(false)
+				.query_flags(backend::vk::QueryControlFlags::default())
+				.pipeline_statistics(backend::vk::QueryPipelineStatisticFlags::default()),
+			None => backend::vk::CommandBufferInheritanceInfo::builder(),
+		};
 		let info = backend::vk::CommandBufferBeginInfo::builder()
 			.flags(usage.unwrap_or(flags::CommandBufferUsage::empty()))
-			.build();
+			.inheritance_info(&inheritance_info);
 		utility::as_vulkan_error(unsafe {
 			self.device
 				.unwrap()
@@ -135,10 +164,11 @@ impl Buffer {
 	}
 
 	pub fn start_render_pass(
-		&self,
+		&mut self,
 		frame_buffer: &command::framebuffer::Framebuffer,
 		render_pass: &renderpass::Pass,
 		info: renderpass::RecordInstruction,
+		uses_secondary_buffers: bool,
 	) {
 		use backend::version::DeviceV1_0;
 		let clear_values = info
@@ -156,14 +186,22 @@ impl Buffer {
 			self.device.unwrap().cmd_begin_render_pass(
 				self.internal,
 				&info,
-				backend::vk::SubpassContents::INLINE,
+				if uses_secondary_buffers {
+					backend::vk::SubpassContents::SECONDARY_COMMAND_BUFFERS
+				} else {
+					backend::vk::SubpassContents::INLINE
+				},
 			)
 		};
+		self.recording_render_pass = Some(*render_pass.unwrap());
+		self.recording_framebuffer = Some(*frame_buffer.unwrap());
 	}
 
-	pub fn stop_render_pass(&self) {
+	pub fn stop_render_pass(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.unwrap().cmd_end_render_pass(self.internal) };
+		self.recording_render_pass = None;
+		self.recording_framebuffer = None;
 	}
 
 	pub fn bind_pipeline(
@@ -265,6 +303,19 @@ impl Buffer {
 				vertex_offset as i32,
 				first_instance as u32,
 			)
+		};
+	}
+
+	pub fn execute(&self, secondary_buffers: Vec<&command::Buffer>) {
+		use backend::version::DeviceV1_0;
+		let unwraped = secondary_buffers
+			.iter()
+			.map(|cmd_buffer| *cmd_buffer.unwrap())
+			.collect::<Vec<_>>();
+		unsafe {
+			self.device
+				.unwrap()
+				.cmd_execute_commands(self.internal, &unwraped)
 		};
 	}
 }
