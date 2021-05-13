@@ -1,2 +1,2 @@
-mod text_render;
-pub use text_render::*;
+mod ui_render;
+pub use ui_render::*;

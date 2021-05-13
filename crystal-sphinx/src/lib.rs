@@ -3,7 +3,6 @@ pub use temportal_engine as engine;
 
 #[path = "graphics/_.rs"]
 mod graphics;
-use graphics::TextRender;
 
 pub struct CrystalSphinx();
 impl Application for CrystalSphinx {
@@ -76,7 +75,7 @@ pub fn run() -> VoidResult {
 	}
 
 	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
-	let _text_render = TextRender::new(&chain);
+	let _ui_render = graphics::UIRender::new(&chain);
 
 	engine.run(chain);
 	window.wait_until_idle().unwrap();

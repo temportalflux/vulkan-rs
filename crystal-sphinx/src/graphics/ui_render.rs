@@ -66,7 +66,7 @@ impl pipeline::vertex::Object for Vertex {
 	}
 }
 
-pub struct TextRender {
+pub struct UIRender {
 	index_buffer: Option<sync::Arc<buffer::Buffer>>,
 	vertex_buffer: Option<sync::Arc<buffer::Buffer>>,
 	indices: Vec<u32>,
@@ -85,7 +85,7 @@ pub struct TextRender {
 	ui_command_buffers: Vec<command::Buffer>,
 }
 
-impl TextRender {
+impl UIRender {
 	fn vertex_shader_path() -> engine::asset::Id {
 		engine::asset::Id::new(CrystalSphinx::name(), "shaders/text/vertex")
 	}
@@ -96,7 +96,7 @@ impl TextRender {
 
 	pub fn new(
 		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
-	) -> Result<sync::Arc<sync::RwLock<TextRender>>, AnyError> {
+	) -> Result<sync::Arc<sync::RwLock<UIRender>>, AnyError> {
 		optick::event!();
 
 		let font_atlas_format = flags::Format::R8_SRGB;
@@ -163,7 +163,7 @@ impl TextRender {
 				.build(&render_chain.read().unwrap().logical())?,
 		);
 
-		let mut instance = TextRender {
+		let mut instance = UIRender {
 			ui_command_buffers: Vec::new(),
 			pipeline_layout: None,
 			pipeline: None,
@@ -219,10 +219,10 @@ impl TextRender {
 
 		instance
 			.shader_item_mut(flags::ShaderKind::Vertex)
-			.load_bytes(&TextRender::vertex_shader_path())?;
+			.load_bytes(&UIRender::vertex_shader_path())?;
 		instance
 			.shader_item_mut(flags::ShaderKind::Fragment)
-			.load_bytes(&TextRender::fragment_shader_path())?;
+			.load_bytes(&UIRender::fragment_shader_path())?;
 
 		let strong = sync::Arc::new(sync::RwLock::new(instance));
 		{
@@ -234,7 +234,7 @@ impl TextRender {
 	}
 }
 
-impl TextRender {
+impl UIRender {
 	fn shader_item_mut(&mut self, kind: flags::ShaderKind) -> &mut ShaderItem {
 		self.shaders.get_mut(&kind).unwrap()
 	}
@@ -243,7 +243,7 @@ impl TextRender {
 	}
 }
 
-impl graphics::RenderChainElement for TextRender {
+impl graphics::RenderChainElement for UIRender {
 	fn initialize_with(
 		&mut self,
 		render_chain: &mut graphics::RenderChain,
@@ -407,7 +407,7 @@ impl graphics::RenderChainElement for TextRender {
 	}
 }
 
-impl graphics::CommandRecorder for TextRender {
+impl graphics::CommandRecorder for UIRender {
 	/// Update the data (like uniforms) for a given frame -
 	/// Or in the case of the UI Render, record changes to the secondary command buffer.
 	fn prerecord_update(
