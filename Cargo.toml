@@ -7,13 +7,13 @@ members = [
 	"temportal-engine", "temportal-engine-editor",
 	"demo/triangle", "demo/triangle-editor",
 	"demo/ui", "demo/ui-editor",
-	"boid", "boid-editor",
+	"demo/boid", "demo/boid-editor",
 	"crystal-sphinx", "crystal-sphinx-editor",
 ]
 default-members = [
 	"temportal-math", "temportal-graphics",
 	"demo/triangle", "demo/triangle-editor",
 	"demo/ui", "demo/ui-editor",
-	"boid", "boid-editor",
+	"demo/boid", "demo/boid-editor",
 	"crystal-sphinx", "crystal-sphinx-editor",
 ]
