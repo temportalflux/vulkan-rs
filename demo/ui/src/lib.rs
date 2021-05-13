@@ -11,13 +11,17 @@ impl Application for UIDemo {
 		std::env!("CARGO_PKG_NAME")
 	}
 	fn display_name() -> &'static str {
-		"Crystal Sphinx"
+		"(RA)UI Demo"
 	}
 	fn location() -> &'static str {
 		std::env!("CARGO_MANIFEST_DIR")
 	}
 	fn version() -> u32 {
-		temportal_engine::utility::make_version(0, 1, 0)
+		engine::utility::make_version(
+			std::env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap(),
+			std::env!("CARGO_PKG_VERSION_MINOR").parse().unwrap(),
+			std::env!("CARGO_PKG_VERSION_PATCH").parse().unwrap(),
+		)
 	}
 }
 

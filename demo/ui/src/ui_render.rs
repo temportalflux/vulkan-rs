@@ -395,7 +395,6 @@ impl graphics::RenderChainElement for UIRender {
 }
 
 impl graphics::CommandRecorder for UIRender {
-
 	/// Update the data (like uniforms) for a given frame -
 	/// Or in the case of the UI Render, record changes to the secondary command buffer.
 	fn prerecord_update(

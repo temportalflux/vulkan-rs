@@ -16,7 +16,11 @@ impl Application for CrystalSphinx {
 		std::env!("CARGO_MANIFEST_DIR")
 	}
 	fn version() -> u32 {
-		temportal_engine::utility::make_version(0, 1, 0)
+		engine::utility::make_version(
+			std::env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap(),
+			std::env!("CARGO_PKG_VERSION_MINOR").parse().unwrap(),
+			std::env!("CARGO_PKG_VERSION_PATCH").parse().unwrap(),
+		)
 	}
 }
 
