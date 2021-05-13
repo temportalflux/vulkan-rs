@@ -81,8 +81,6 @@ pub struct UIRender {
 
 	pipeline: Option<pipeline::Pipeline>,
 	pipeline_layout: Option<pipeline::Layout>,
-
-	ui_command_buffers: Vec<command::Buffer>,
 }
 
 impl UIRender {
@@ -162,7 +160,6 @@ impl UIRender {
 		);
 
 		let mut instance = UIRender {
-			ui_command_buffers: Vec::new(),
 			pipeline_layout: None,
 			pipeline: None,
 			shaders: HashMap::new(),
@@ -342,7 +339,6 @@ impl graphics::RenderChainElement for UIRender {
 	fn destroy_render_chain(&mut self, _: &graphics::RenderChain) -> utility::Result<()> {
 		self.pipeline = None;
 		self.pipeline_layout = None;
-		self.ui_command_buffers = Vec::new();
 		Ok(())
 	}
 
@@ -394,18 +390,12 @@ impl graphics::RenderChainElement for UIRender {
 				)?,
 		);
 
-		// Allocate the secondary command buffers per frame so that the immediate mode UI
-		// can be re-recorded every frame without requiring the entire command buffer per frame to be re-recorded
-		self.ui_command_buffers = render_chain.frame_command_pool().allocate_buffers(
-			render_chain.frame_count(),
-			flags::CommandBufferLevel::SECONDARY,
-		)?;
-
 		Ok(())
 	}
 }
 
 impl graphics::CommandRecorder for UIRender {
+
 	/// Update the data (like uniforms) for a given frame -
 	/// Or in the case of the UI Render, record changes to the secondary command buffer.
 	fn prerecord_update(
@@ -414,10 +404,7 @@ impl graphics::CommandRecorder for UIRender {
 		_frame: usize,
 		_resolution: &Vector<u32, 2>,
 	) -> utility::Result<bool> {
-		//self.ui_command_buffers[frame].begin(None, Some(buffer))?;
-		// NOTE: This is where the UI render bindings will go
-		//self.ui_command_buffers[frame].end()?;
-		Ok(false)
+		Ok(true) // the ui uses immediate mode, and therefore requires re-recording every frame
 	}
 
 	/// Record to the primary command buffer for a given frame
@@ -436,14 +423,6 @@ impl graphics::CommandRecorder for UIRender {
 		buffer.bind_vertex_buffers(0, vec![self.vertex_buffer.as_ref().unwrap()], vec![0]);
 		buffer.bind_index_buffer(self.index_buffer.as_ref().unwrap(), 0);
 		buffer.draw(self.indices.len(), 0, 1, 0, 0);
-
-		// self.ui_command_buffers[frame].begin(
-		// 	Some(flags::CommandBufferUsage::RENDER_PASS_CONTINUE),
-		// 	Some(buffer),
-		// )?;
-		// self.ui_command_buffers[frame].end()?;
-		// buffer.execute(vec![&self.ui_command_buffers[frame]]);
-
 		Ok(())
 	}
 }
