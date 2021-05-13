@@ -30,11 +30,11 @@
 		},
 		{
 			"name": "Triangle (Demo)",
-			"path": "demo-triangle"
+			"path": "demo/triangle"
 		},
 		{
 			"name": "Triangle (Editor)",
-			"path": "demo-triangle-editor"
+			"path": "demo/triangle-editor"
 		},
 		{
 			"name": "Temportal Engine",
