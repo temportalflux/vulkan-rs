@@ -1,4 +1,5 @@
-use engine::{utility::VoidResult, Application};
+use engine::{ui, utility::VoidResult, Application};
+use std::sync::{Arc, RwLock};
 pub use temportal_engine as engine;
 
 #[path = "ui_render.rs"]
@@ -26,7 +27,7 @@ impl Application for UIDemo {
 }
 
 pub fn run() -> VoidResult {
-	let engine = engine::Engine::new::<UIDemo>()?;
+	let mut engine = engine::Engine::new::<UIDemo>()?;
 
 	let mut window = engine::window::Window::builder()
 		.with_title(UIDemo::display_name())
@@ -35,52 +36,39 @@ pub fn run() -> VoidResult {
 		.with_application::<UIDemo>()
 		.build(&engine)?;
 
-	use engine::ui::*;
-
-	let mut ui_app = Application::new();
-	ui_app.setup(widget::setup);
-	let atlas_mapping = std::collections::HashMap::new();
-	let image_sizes = std::collections::HashMap::new();
-	let mut ui_renderer = TesselateRenderer::new(
-		TesselationVerticesFormat::Interleaved,
-		(),
-		&atlas_mapping,
-		&image_sizes,
-	);
-
-	let tree = widget! {
-		(text_box: { Props::new(TextBoxProps {
-			text: "Hello World!".to_owned(),
-			color: utils::Color {
-				r: 1.0,
-				g: 1.0,
-				b: 1.0,
-				a: 1.0,
-			},
-			font: TextBoxFont {
-				name: "unispace".to_owned(),
-				size: 60.0,
-			},
-			.. Default::default()
-		}) })
-	};
-
-	ui_app.apply(tree);
-
-	let mapping = CoordsMapping::new(Rect {
-		left: 0.0,
-		right: 1280.0,
-		top: 0.0,
-		bottom: 720.0,
-	});
-	ui_app.process();
-	let _res = ui_app.layout(&mapping, &mut DefaultLayoutEngine);
-	if let Ok(output) = ui_app.render(&mapping, &mut ui_renderer) {
-		log::debug!("{:?}", output);
-	}
-
 	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
-	let _ui_render = UIRender::new(&chain);
+
+	{
+		let ui_system = Arc::new(RwLock::new({
+			use ui::*;
+			let mut system = ui::System::new();
+
+			system.apply_tree(widget! {
+				(text_box: { Props::new(TextBoxProps {
+					text: "Hello World!".to_owned(),
+					color: utils::Color {
+						r: 1.0,
+						g: 1.0,
+						b: 1.0,
+						a: 1.0,
+					},
+					font: TextBoxFont {
+						name: "unispace".to_owned(),
+						size: 60.0,
+					},
+					.. Default::default()
+				}) })
+			});
+
+			system.set_resolution(engine::math::vector![1280, 720]);
+
+			system
+		}));
+		engine.add_system(&ui_system);
+		let mut chain = chain.write().unwrap();
+		chain.add_render_chain_element(&ui_system)?;
+		chain.add_command_recorder(&ui_system)?;
+	}
 
 	engine.run(chain);
 	window.wait_until_idle().unwrap();
