@@ -95,12 +95,9 @@ impl UIRender {
 	pub fn new(
 		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<UIRender>>, AnyError> {
-		optick::event!();
 
 		let font_atlas_format = flags::Format::R8_SRGB;
 		let font_atlas = {
-			optick::event!("load-font-image");
-
 			let font =
 				asset::Loader::load_sync(&engine::asset::Id::new(UIDemo::name(), "font/unispace"))?
 					.downcast::<engine::graphics::font::Font>()
@@ -243,7 +240,6 @@ impl graphics::RenderChainElement for UIRender {
 		&mut self,
 		render_chain: &mut graphics::RenderChain,
 	) -> utility::Result<Vec<sync::Arc<command::Semaphore>>> {
-		optick::event!();
 		use graphics::descriptor::*;
 		let font_sampler_binding_number = 0;
 
@@ -348,7 +344,6 @@ impl graphics::RenderChainElement for UIRender {
 		resolution: structs::Extent2D,
 	) -> utility::Result<()> {
 		use flags::blend::{Constant::*, Factor::*, Source::*};
-		optick::event!();
 		self.pipeline_layout = Some(
 			pipeline::Layout::builder()
 				.with_descriptors(self.font_atlas_descriptor_layout.as_ref().unwrap())
@@ -408,7 +403,6 @@ impl graphics::CommandRecorder for UIRender {
 
 	/// Record to the primary command buffer for a given frame
 	fn record_to_buffer(&self, buffer: &mut command::Buffer, _frame: usize) -> utility::Result<()> {
-		optick::event!();
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
 			flags::PipelineBindPoint::GRAPHICS,

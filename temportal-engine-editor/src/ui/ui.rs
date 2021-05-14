@@ -82,7 +82,6 @@ impl Ui {
 		editor: &mut Editor,
 		event_pump: sdl2::EventPump,
 	) -> engine::utility::VoidResult {
-		optick::next_frame();
 		self.imgui_win.prepare_frame(
 			self.imgui_ctx.io_mut(),
 			&self.sdl_window,
@@ -115,7 +114,7 @@ impl Ui {
 		self.imgui_renderer.render(ui_builder);
 
 		self.sdl_window.gl_swap_window();
-
+		engine::profiling::finish_frame!();
 		Ok(())
 	}
 }

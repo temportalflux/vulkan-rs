@@ -2,6 +2,7 @@ use crate::engine::{
 	graphics::font,
 	math::{self, Vector},
 	utility::AnyError,
+	profiling::{self, optick},
 };
 use std::path::{Path, PathBuf};
 
@@ -71,7 +72,7 @@ impl SDFBuilder {
 	pub fn build(self, font_library: &freetype::Library) -> Result<font::SDF, AnyError> {
 		use freetype::{face::LoadFlag, outline::Curve};
 		assert!(self.font_path.exists());
-		optick::event!("build-font-sdf");
+		profiling::scope!("build-font-sdf");
 		optick::tag!(
 			"font-name",
 			self.font_path.file_name().unwrap().to_str().unwrap()
@@ -100,9 +101,9 @@ impl SDFBuilder {
 		let mut glyphs: Vec<SDFGlyph> = Vec::new();
 
 		{
-			optick::event!("calc-sdf-all");
+			profiling::scope!("calc-sdf-all");
 			for unicode in self.unicode_ranges.iter().flat_map(|codes| codes.clone()) {
-				optick::event!("calc-sdf");
+				profiling::scope!("calc-sdf");
 				optick::tag!("code", unicode);
 
 				face.load_char(unicode as usize, LoadFlag::empty())?;
@@ -231,8 +232,8 @@ impl SDFBuilder {
 	/// original performance of O(nlog(n)) into O(mnlog(n)) where m is the number of iterations required when resizing the atlas.
 	/// https://en.wikipedia.org/wiki/Bin_packing_problem#First_Fit_Decreasing_(FFD)
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
+	#[profiling::function]
 	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> font::SDF {
-		optick::event!();
 		optick::tag!("glyph-count", sorted_fields.len() as u32);
 		optick::tag!("min-atlas-size.x", self.minimum_atlas_size.x() as u32);
 		optick::tag!("min-atlas-size.y", self.minimum_atlas_size.y() as u32);
@@ -249,7 +250,7 @@ impl SDFBuilder {
 		loop {
 			match SDFBuilder::plan_cell_packing(atlas_size.clone(), &glyph_sizes) {
 				Some(glyph_positions) => {
-					optick::event!("process-packing");
+					profiling::scope!("process-packing");
 					let mut binary: Vec<Vec<u8>> = vec![vec![0; atlas_size.x()]; atlas_size.y()];
 					let mut glyphs: Vec<font::Glyph> = Vec::new();
 					for (field, &atlas_pos) in sorted_fields.iter().zip(glyph_positions.iter()) {
@@ -297,11 +298,11 @@ impl SDFBuilder {
 	/// and moving first across the row and then to the next row.
 	/// If some value is returned, it will always have the same length as `cell_item_sizes`,
 	/// where each returned position matches 1:1 with a provided size at the same index.
+	#[profiling::function]
 	fn plan_cell_packing(
 		atlas_size: Vector<usize, 2>,
 		cell_item_sizes: &Vec</*size*/ Vector<usize, 2>>,
 	) -> Option<Vec</*position*/ Vector<usize, 2>>> {
-		optick::event!();
 		optick::tag!("atlas-size.x", atlas_size.x() as u32);
 		optick::tag!("atlas-size.y", atlas_size.y() as u32);
 
@@ -355,7 +356,7 @@ impl SDFBuilder {
 			.zip(cell_item_positions.iter_mut())
 			.enumerate()
 		{
-			optick::event!();
+			profiling::scope!("pack-item");
 			optick::tag!("item", idx_item as u32);
 			match cells
 				.iter()

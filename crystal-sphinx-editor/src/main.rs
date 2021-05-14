@@ -6,7 +6,7 @@ use temportal_engine_editor as editor;
 fn main() -> VoidResult {
 	#[cfg(feature = "profile")]
 	{
-		optick::start_capture();
+		engine::profiling::optick::start_capture();
 	}
 
 	let editor = editor::Editor::new::<crystal_sphinx::CrystalSphinx>()?;
@@ -27,7 +27,8 @@ fn main() -> VoidResult {
 
 	#[cfg(feature = "profile")]
 	{
-		optick::stop_capture(name());
+		use engine::Application;
+		engine::profiling::optick::stop_capture(crystal_sphinx::CrystalSphinx::name());
 	}
 	Ok(())
 }
