@@ -95,7 +95,6 @@ impl UIRender {
 	pub fn new(
 		render_chain: &sync::Arc<sync::RwLock<RenderChain>>,
 	) -> Result<sync::Arc<sync::RwLock<UIRender>>, AnyError> {
-
 		let font_atlas_format = flags::Format::R8_SRGB;
 		let font_atlas = {
 			let font =

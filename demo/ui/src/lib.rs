@@ -41,7 +41,7 @@ pub fn run() -> VoidResult {
 	{
 		let ui_system = Arc::new(RwLock::new({
 			use ui::*;
-			let mut system = ui::System::new();
+			let mut system = ui::System::new(&chain.read().unwrap())?;
 
 			system.apply_tree(widget! {
 				(text_box: { Props::new(TextBoxProps {

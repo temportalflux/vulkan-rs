@@ -1,8 +1,8 @@
 use crate::engine::{
 	graphics::font,
 	math::{self, Vector},
-	utility::AnyError,
 	profiling::{self, optick},
+	utility::AnyError,
 };
 use std::path::{Path, PathBuf};
 
