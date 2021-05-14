@@ -42,6 +42,9 @@ pub fn run() -> VoidResult {
 		let ui_system = Arc::new(RwLock::new({
 			use ui::*;
 			let mut system = ui::System::new(&chain.read().unwrap())?;
+			system.add_text_shader(&UIDemo::get_asset_id("shaders/text/vertex"))?;
+			system.add_text_shader(&UIDemo::get_asset_id("shaders/text/fragment"))?;
+			system.add_font(&UIDemo::get_asset_id("font/unispace"))?;
 
 			system.apply_tree(widget! {
 				(text_box: { Props::new(TextBoxProps {
