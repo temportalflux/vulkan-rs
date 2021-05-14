@@ -17,6 +17,17 @@
 				}
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "UI Demo - Run (Profile)",
+			"command": "cargo",
+			"args": [
+				"run",
+				"--bin", "demo-ui",
+				"--features", "profile",
+				"--", "-v"
+			],
+			"problemMatcher": []
 		}
 	]
 }
