@@ -473,6 +473,7 @@ impl graphics::CommandRecorder for RenderBoids {
 
 	fn prerecord_update(
 		&mut self,
+		_: &graphics::RenderChain,
 		_buffer: &command::Buffer,
 		frame: usize,
 		_: &Vector<u32, 2>,

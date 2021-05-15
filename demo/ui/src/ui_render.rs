@@ -393,6 +393,7 @@ impl graphics::CommandRecorder for UIRender {
 	/// Or in the case of the UI Render, record changes to the secondary command buffer.
 	fn prerecord_update(
 		&mut self,
+		_: &graphics::RenderChain,
 		_buffer: &command::Buffer,
 		_frame: usize,
 		_resolution: &Vector<u32, 2>,
