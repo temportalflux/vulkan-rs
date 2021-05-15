@@ -2,10 +2,6 @@ use engine::{ui, utility::VoidResult, Application};
 use std::sync::{Arc, RwLock};
 pub use temportal_engine as engine;
 
-#[path = "ui_render.rs"]
-mod ui_render;
-pub use ui_render::*;
-
 pub struct UIDemo();
 impl Application for UIDemo {
 	fn name() -> &'static str {
