@@ -488,12 +488,12 @@ impl<T, const N: usize> Vector<T, N> {
 	/// ```
 	pub fn from<U>(other: Vector<U, N>) -> Self
 	where
-		T: Default + Copy,
-		U: Into<T> + Copy,
+		T: Default + Copy + From<U>,
+		U: Copy,
 	{
 		let mut vret: Vector<T, N> = Vector::filled(T::default());
 		for i in 0..N {
-			vret.data[i] = other.data[i].into()
+			vret.data[i] = T::from(other.data[i]);
 		}
 		vret
 	}

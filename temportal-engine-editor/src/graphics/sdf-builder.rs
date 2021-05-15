@@ -1,6 +1,6 @@
 use crate::engine::{
 	graphics::font,
-	math::{self, Vector},
+	math::{self, vector, Vector},
 	profiling::{self, optick},
 	utility::AnyError,
 };
@@ -19,9 +19,9 @@ struct SDFGlyph {
 	unicode: u32,
 	texture_size: Vector<usize, 2>,
 	texels: Vec<Vec<u8>>,
-	metric_size: Vector<usize, 2>,
-	metric_bearing: Vector<usize, 2>,
-	metric_advance: usize,
+	metric_size: Vector<f32, 2>,
+	metric_bearing: Vector<f32, 2>,
+	metric_advance: f32,
 }
 
 impl Default for SDFBuilder {
@@ -117,7 +117,6 @@ impl SDFBuilder {
 				]);
 				optick::tag!("size.x", metric_size.x() as u32);
 				optick::tag!("size.y", metric_size.y() as u32);
-				let metric_advance = (metrics.horiAdvance as usize) / 64;
 				let metric_bearing = Vector::new([
 					(metrics.horiBearingX as usize) / 64,
 					(metrics.horiBearingY as usize) / 64,
@@ -195,13 +194,18 @@ impl SDFBuilder {
 					texels[glyph_pos.y()][glyph_pos.x()] = dist_scaled as u8;
 				}
 
+				let rendered_font_size = self.glyph_height as f32;
+				let rescale = 64.0 * rendered_font_size;
 				glyphs.push(SDFGlyph {
 					unicode,
 					texture_size,
 					texels,
-					metric_size,
-					metric_bearing,
-					metric_advance,
+					metric_size: vector![metrics.width as f32, metrics.height as f32] / rescale,
+					metric_bearing: vector![
+						metrics.horiBearingX as f32,
+						metrics.horiBearingY as f32
+					] / rescale,
+					metric_advance: metrics.horiAdvance as f32 / rescale,
 				});
 			}
 		}
@@ -214,15 +218,16 @@ impl SDFBuilder {
 		});
 		log::debug!("SDF calculations complete, starting atlas generation.");
 
-		let font_sdf = self.binpack_pow2_atlas(&glyphs);
+		let (size, binary, glyphs) = self.binpack_pow2_atlas(&glyphs);
+		log::debug!("Packed {} glyphs into a {} SDF texture", glyphs.len(), size);
 
-		log::debug!(
-			"Packed {} glyphs into a {} SDF texture",
-			font_sdf.glyphs.len(),
-			font_sdf.size
-		);
-
-		Ok(font_sdf)
+		Ok(font::SDF {
+			size,
+			binary,
+			glyphs,
+			line_height: face.size_metrics().unwrap().height as f32
+				/ (72.0 * (self.glyph_height as f32)),
+		})
 	}
 
 	/// Pack an unknown nuimber of rectangles into a single rectangle with the smallest possible size.
@@ -233,7 +238,10 @@ impl SDFBuilder {
 	/// https://en.wikipedia.org/wiki/Bin_packing_problem#First_Fit_Decreasing_(FFD)
 	/// https://dev.to/thatkyleburke/generating-signed-distance-fields-from-truetype-fonts-generating-the-texture-atlas-1l0
 	#[profiling::function]
-	fn binpack_pow2_atlas(&self, sorted_fields: &Vec<SDFGlyph>) -> font::SDF {
+	fn binpack_pow2_atlas(
+		&self,
+		sorted_fields: &Vec<SDFGlyph>,
+	) -> (Vector<usize, 2>, Vec<Vec<u8>>, Vec<font::Glyph>) {
 		optick::tag!("glyph-count", sorted_fields.len() as u32);
 		optick::tag!("min-atlas-size.x", self.minimum_atlas_size.x() as u32);
 		optick::tag!("min-atlas-size.y", self.minimum_atlas_size.y() as u32);
@@ -265,17 +273,15 @@ impl SDFBuilder {
 							unicode: field.unicode,
 							atlas_pos: atlas_pos + padding_offset,
 							atlas_size: field.texture_size,
-							metric_size: field.metric_size,
-							metric_bearing: field.metric_bearing,
-							metric_advance: field.metric_advance,
+							metrics: font::GlyphMetrics {
+								size: field.metric_size,
+								bearing: field.metric_bearing,
+								advance: field.metric_advance,
+							},
 						});
 					}
 					glyphs.sort_unstable_by(|a, b| a.unicode.cmp(&b.unicode));
-					return font::SDF {
-						size: atlas_size,
-						binary,
-						glyphs,
-					};
+					return (atlas_size, binary, glyphs);
 				}
 				None => {
 					// Expand the atlas such that each dimension that is being expanded (width and/or height),

@@ -47,20 +47,66 @@ pub fn run() -> VoidResult {
 			system.add_font(&UIDemo::get_asset_id("font/unispace"))?;
 
 			system.apply_tree(widget! {
-				(text_box: { Props::new(TextBoxProps {
-					text: "Hello World!".to_owned(),
-					color: utils::Color {
-						r: 1.0,
-						g: 1.0,
-						b: 1.0,
-						a: 1.0,
-					},
-					font: TextBoxFont {
-						name: "unispace".to_owned(),
-						size: 60.0,
-					},
-					.. Default::default()
-				}) })
+				(horizontal_box [
+					(vertical_box [
+						(#{"hello_world"} text_box: { Props::new(TextBoxProps {
+							text: "Hello World!".to_owned(),
+							color: utils::Color {
+								r: 0.0,
+								g: 1.0,
+								b: 1.0,
+								a: 1.0,
+							},
+							font: TextBoxFont {
+								name: "unispace".to_owned(),
+								size: 40.0,
+							},
+							.. Default::default()
+						}) })
+						(#{"item2"} text_box: { Props::new(TextBoxProps {
+							text: "item 2".to_owned(),
+							color: utils::Color {
+								r: 1.0,
+								g: 1.0,
+								b: 1.0,
+								a: 1.0,
+							},
+							font: TextBoxFont {
+								name: "unispace".to_owned(),
+								size: 20.0,
+							},
+							.. Default::default()
+						}) })
+						(#{"item3"} text_box: { Props::new(TextBoxProps {
+							text: "fdsa".to_owned(),
+							color: utils::Color {
+								r: 1.0,
+								g: 1.0,
+								b: 1.0,
+								a: 1.0,
+							},
+							font: TextBoxFont {
+								name: "unispace".to_owned(),
+								size: 20.0,
+							},
+							.. Default::default()
+						}) })
+					])
+					(#{"row1column1"} text_box: { Props::new(TextBoxProps {
+						text: "C".to_owned(),
+						color: utils::Color {
+							r: 0.0,
+							g: 0.0,
+							b: 1.0,
+							a: 1.0,
+						},
+						font: TextBoxFont {
+							name: "unispace".to_owned(),
+							size: 30.0,
+						},
+						.. Default::default()
+					}) })
+				])
 			});
 
 			system.set_resolution(engine::math::vector![1280, 720]);

@@ -44,6 +44,22 @@ where
 		}
 		matrix
 	}
+
+	pub fn from_column_major<const N_SLICE: usize>(matrix: &[T; N_SLICE]) -> Self {
+		let mut mat = Self::default();
+		let mut i = 0;
+		for col in 0..WIDTH {
+			for row in 0..HEIGHT {
+				if i < matrix.len() {
+					mat[col][row] = matrix[i];
+					i += 1;
+				} else {
+					return mat;
+				}
+			}
+		}
+		mat
+	}
 }
 
 impl<T, const WIDTH: usize, const HEIGHT: usize> Index<usize> for Matrix<T, WIDTH, HEIGHT> {
@@ -161,6 +177,15 @@ where
 {
 	fn from(vec: Vector<T, 3>) -> Self {
 		Matrix::new([[vec.x()], [vec.y()], [vec.z()], [1_i32.into()]])
+	}
+}
+
+impl<T> From<Vector<T, 4>> for Matrix<T, 1, 4>
+where
+	T: Sized + Default + Copy,
+{
+	fn from(vec: Vector<T, 4>) -> Self {
+		Matrix::new([[vec.x()], [vec.y()], [vec.z()], [vec.w()]])
 	}
 }
 
