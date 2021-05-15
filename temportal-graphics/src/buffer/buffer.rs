@@ -55,6 +55,17 @@ impl Buffer {
 			)
 			.build(allocator)
 	}
+
+	pub fn resize(&mut self, allocator: &alloc::Allocator, new_size: usize) -> bool {
+		let success = allocator
+			.unwrap()
+			.resize_allocation(&self.allocation_handle, new_size)
+			.is_ok();
+		if success {
+			self.size = new_size;
+		}
+		success
+	}
 }
 
 /// A trait exposing the internal value for the wrapped [`backend::vk::Buffer`].
