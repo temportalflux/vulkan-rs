@@ -60,7 +60,7 @@ pub fn run() -> VoidResult {
 							.. Default::default()
 						}) })
 						(#{"item2"} text_box: { Props::new(TextBoxProps {
-							text: "item 2".to_owned(),
+							text: "item 2\nand another line".to_owned(),
 							color: utils::Color {
 								r: 1.0,
 								g: 0.0,
