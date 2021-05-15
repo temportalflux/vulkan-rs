@@ -11,10 +11,8 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {	
-	vec4 pixel = texture(fontAtlasSampler, fragTexCoord);	
-	outColor = vec4(1, 0, 0, pixel.r);
-	
+	vec4 pixel = texture(fontAtlasSampler, fragTexCoord);
 	float distance = 1.0 - pixel.r;
 	float alpha = 1 - smoothstep(fragWidthEdge.x, fragWidthEdge.x + fragWidthEdge.y, distance);
-	//outColor = fragColor * vec4(1, 1, 1, alpha);
+	outColor = fragColor * vec4(1, 1, 1, alpha);
 }
