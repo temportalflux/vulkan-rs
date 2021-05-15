@@ -55,7 +55,7 @@ pub fn run() -> VoidResult {
 							},
 							font: TextBoxFont {
 								name: "unispace".to_owned(),
-								size: 40.0,
+								size: 100.0,
 							},
 							.. Default::default()
 						}) })
@@ -63,8 +63,8 @@ pub fn run() -> VoidResult {
 							text: "item 2".to_owned(),
 							color: utils::Color {
 								r: 1.0,
-								g: 1.0,
-								b: 1.0,
+								g: 0.0,
+								b: 0.0,
 								a: 1.0,
 							},
 							font: TextBoxFont {
@@ -115,7 +115,6 @@ pub fn run() -> VoidResult {
 		chain.add_command_recorder(&ui_system)?;
 	}
 
-	engine.run(chain);
-	window.wait_until_idle().unwrap();
+	engine.run(chain.clone());
 	Ok(())
 }
