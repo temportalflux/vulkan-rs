@@ -237,7 +237,7 @@ impl RenderBoids {
 				.with_usage(flags::ImageUsage::SAMPLED)
 				.build(&render_chain.allocator())?,
 		);
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
+		graphics::TaskGpuCopy::new(&render_chain)?
 			.begin()?
 			.format_image_for_write(&image)
 			.stage(&texture.binary()[..])?
@@ -294,7 +294,7 @@ impl RenderBoids {
 			.with_sharing(flags::SharingMode::EXCLUSIVE)
 			.build(&render_chain.allocator())?;
 
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
+		graphics::TaskGpuCopy::new(&render_chain)?
 			.begin()?
 			.stage(&vertices[..])?
 			.copy_stage_to_buffer(&vertex_buffer)
@@ -313,7 +313,7 @@ impl RenderBoids {
 			.with_sharing(flags::SharingMode::EXCLUSIVE)
 			.build(&render_chain.allocator())?;
 
-		graphics::TaskCopyImageToGpu::new(&render_chain)?
+		graphics::TaskGpuCopy::new(&render_chain)?
 			.begin()?
 			.stage(&indices[..])?
 			.copy_stage_to_buffer(&index_buffer)
@@ -562,7 +562,7 @@ impl RenderBoids {
 
 		// Update buffer with data
 		if instances.len() > 0 {
-			let copy_task = graphics::TaskCopyImageToGpu::new(&mut chain)?
+			let copy_task = graphics::TaskGpuCopy::new(&mut chain)?
 				.begin()?
 				.stage(&instances[..])?
 				.copy_stage_to_buffer(&self.active_instance_buffer)
