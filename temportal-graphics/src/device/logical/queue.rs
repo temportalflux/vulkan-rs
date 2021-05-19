@@ -1,7 +1,7 @@
 use crate::{
 	backend, command,
 	device::logical,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 
 use std::sync;
@@ -37,10 +37,10 @@ impl Queue {
 		use backend::version::DeviceV1_0;
 		let infos = infos.iter().map(|info| info.to_vk()).collect::<Vec<_>>();
 		utility::as_vulkan_error(unsafe {
-			self.device.unwrap().queue_submit(
+			self.device.queue_submit(
 				self.internal,
 				&infos,
-				signal_fence_when_complete.map_or(backend::vk::Fence::null(), |obj| *obj.unwrap()),
+				signal_fence_when_complete.map_or(backend::vk::Fence::null(), |obj| **obj),
 			)
 		})
 	}
@@ -55,13 +55,9 @@ impl Queue {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Queue`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Queue> for Queue {
-	fn unwrap(&self) -> &backend::vk::Queue {
+impl std::ops::Deref for Queue {
+	type Target = backend::vk::Queue;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Queue {
-		&mut self.internal
 	}
 }

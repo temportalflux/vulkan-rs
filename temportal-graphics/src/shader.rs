@@ -3,7 +3,7 @@ use crate::{
 	device::logical,
 	flags::ShaderKind,
 	shader,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -47,7 +47,7 @@ impl Module {
 			.build();
 
 		let internal =
-			utility::as_vulkan_error(unsafe { device.unwrap().create_shader_module(&info, None) })?;
+			utility::as_vulkan_error(unsafe { device.create_shader_module(&info, None) })?;
 		Ok(Module {
 			device,
 			internal,
@@ -67,25 +67,17 @@ impl Module {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::ShaderModule`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::ShaderModule> for Module {
-	fn unwrap(&self) -> &backend::vk::ShaderModule {
+impl std::ops::Deref for Module {
+	type Target = backend::vk::ShaderModule;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::ShaderModule {
-		&mut self.internal
 	}
 }
 
 impl Drop for Module {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe {
-			self.device
-				.unwrap()
-				.destroy_shader_module(self.internal, None)
-		};
+		unsafe { self.device.destroy_shader_module(self.internal, None) };
 	}
 }
 
@@ -93,7 +85,7 @@ impl VulkanInfo<backend::vk::PipelineShaderStageCreateInfo> for Module {
 	fn to_vk(&self) -> backend::vk::PipelineShaderStageCreateInfo {
 		backend::vk::PipelineShaderStageCreateInfo::builder()
 			.stage(self.kind.to_vk())
-			.module(*self.unwrap())
+			.module(**self)
 			.name(&self.entry_point)
 			.build()
 	}

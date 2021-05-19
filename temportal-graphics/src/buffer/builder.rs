@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Buffer,
 	flags::{BufferUsage, SharingMode},
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -76,11 +76,8 @@ impl Builder {
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let buffer_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
-		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(
-			allocator
-				.unwrap()
-				.create_buffer(&buffer_info, &alloc_create_info),
-		)?;
+		let (internal, alloc_handle, alloc_info) =
+			utility::as_alloc_error(allocator.create_buffer(&buffer_info, &alloc_create_info))?;
 		Ok(Buffer::from(
 			allocator.clone(),
 			internal,

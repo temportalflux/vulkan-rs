@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, utility::VulkanObject};
+use crate::{backend, device::logical};
 
 use std::sync;
 
@@ -15,20 +15,16 @@ impl Pipeline {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Pipeline`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Pipeline> for Pipeline {
-	fn unwrap(&self) -> &backend::vk::Pipeline {
+impl std::ops::Deref for Pipeline {
+	type Target = backend::vk::Pipeline;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Pipeline {
-		&mut self.internal
 	}
 }
 
 impl Drop for Pipeline {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().destroy_pipeline(self.internal, None) };
+		unsafe { self.device.destroy_pipeline(self.internal, None) };
 	}
 }

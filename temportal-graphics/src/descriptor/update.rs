@@ -1,6 +1,4 @@
-use crate::{
-	backend, buffer, descriptor, device::logical, flags, image_view, sampler, utility::VulkanObject,
-};
+use crate::{backend, buffer, descriptor, device::logical, flags, image_view, sampler};
 use std::sync;
 
 pub struct SetUpdate {
@@ -74,7 +72,7 @@ impl SetUpdate {
 				UpdateOperation::Write(op) => {
 					if let Some(set_rc) = op.destination.set.upgrade() {
 						let mut builder = backend::vk::WriteDescriptorSet::builder()
-							.dst_set(*set_rc.unwrap())
+							.dst_set(**set_rc)
 							.dst_binding(op.destination.binding_index)
 							.dst_array_element(op.destination.array_element)
 							.descriptor_type(op.kind);
@@ -85,8 +83,8 @@ impl SetUpdate {
 								for info in infos {
 									write_images_per_operation[idx_ops].push(
 										backend::vk::DescriptorImageInfo::builder()
-											.sampler(*info.sampler.unwrap())
-											.image_view(*info.view.unwrap())
+											.sampler(**info.sampler)
+											.image_view(**info.view)
 											.image_layout(info.layout)
 											.build(),
 									);
@@ -100,7 +98,7 @@ impl SetUpdate {
 								for info in infos {
 									write_buffers_per_operation[idx_ops].push(
 										backend::vk::DescriptorBufferInfo::builder()
-											.buffer(*info.buffer.unwrap())
+											.buffer(**info.buffer)
 											.offset(info.offset as u64)
 											.range(info.range as u64)
 											.build(),
@@ -120,10 +118,10 @@ impl SetUpdate {
 						(Some(source_set), Some(destination_set)) => {
 							copies.push(
 								backend::vk::CopyDescriptorSet::builder()
-									.src_set(*source_set.unwrap())
+									.src_set(**source_set)
 									.src_binding(op.source.binding_index)
 									.src_array_element(op.source.array_element)
-									.dst_set(*destination_set.unwrap())
+									.dst_set(**destination_set)
 									.dst_binding(op.destination.binding_index)
 									.dst_array_element(op.destination.array_element)
 									.descriptor_count(op.descriptor_count)
@@ -136,9 +134,7 @@ impl SetUpdate {
 			}
 		}
 		unsafe {
-			device
-				.unwrap()
-				.update_descriptor_sets(&writes[..], &copies[..]);
+			device.update_descriptor_sets(&writes[..], &copies[..]);
 		}
 	}
 }

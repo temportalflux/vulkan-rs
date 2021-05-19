@@ -7,7 +7,7 @@ use crate::{
 	},
 	general::Surface,
 	structs::Extent2D,
-	utility::{self, VulkanObject},
+	utility,
 };
 
 use std::sync;
@@ -128,7 +128,7 @@ impl Info {
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
 		let info = backend::vk::SwapchainCreateInfoKHR::builder()
-			.surface(*surface.unwrap())
+			.surface(**surface)
 			.min_image_count(self.image_count)
 			.image_format(self.image_format)
 			.image_color_space(self.image_color_space)
@@ -140,7 +140,7 @@ impl Info {
 			.composite_alpha(self.composite_alpha)
 			.present_mode(self.present_mode)
 			.clipped(self.is_clipped)
-			.old_swapchain(old.map_or(backend::vk::SwapchainKHR::null(), |chain| *chain.unwrap()))
+			.old_swapchain(old.map_or(backend::vk::SwapchainKHR::null(), |chain| **chain))
 			.build();
 		let vk = utility::as_vulkan_error(unsafe {
 			device.unwrap_swapchain().create_swapchain(&info, None)

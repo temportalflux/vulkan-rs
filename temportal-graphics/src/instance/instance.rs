@@ -1,10 +1,4 @@
-use crate::{
-	backend,
-	device::physical,
-	general::Surface,
-	utility::{self, VulkanObject},
-	Context,
-};
+use crate::{backend, device::physical, general::Surface, utility, Context};
 
 use raw_window_handle;
 use std::sync;
@@ -103,14 +97,10 @@ impl Instance {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::Instance`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::Instance> for Instance {
-	fn unwrap(&self) -> &backend::Instance {
+impl std::ops::Deref for Instance {
+	type Target = backend::Instance;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::Instance {
-		&mut self.internal
 	}
 }
 

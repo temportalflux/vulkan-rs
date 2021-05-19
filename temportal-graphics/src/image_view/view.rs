@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, image, image_view::Builder, utility::VulkanObject};
+use crate::{backend, device::logical, image, image_view::Builder};
 
 use std::sync;
 
@@ -31,20 +31,16 @@ impl View {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::ImageView`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::ImageView> for View {
-	fn unwrap(&self) -> &backend::vk::ImageView {
+impl std::ops::Deref for View {
+	type Target = backend::vk::ImageView;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::ImageView {
-		&mut self.internal
 	}
 }
 
 impl Drop for View {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().destroy_image_view(self.internal, None) };
+		unsafe { self.device.destroy_image_view(self.internal, None) };
 	}
 }

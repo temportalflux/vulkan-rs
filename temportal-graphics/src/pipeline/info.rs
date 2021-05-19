@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::logical,
 	pipeline, renderpass, shader,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 
 use std::sync;
@@ -101,17 +101,13 @@ impl Info {
 			.rasterization_state(&rasterizer)
 			.multisample_state(&self.multisampling)
 			.color_blend_state(&color_blending)
-			.layout(*layout.unwrap())
-			.render_pass(*render_pass.unwrap())
+			.layout(**layout)
+			.render_pass(**render_pass)
 			.subpass(0)
 			.build();
 
 		let pipelines = match unsafe {
-			device.unwrap().create_graphics_pipelines(
-				backend::vk::PipelineCache::null(),
-				&[info],
-				None,
-			)
+			device.create_graphics_pipelines(backend::vk::PipelineCache::null(), &[info], None)
 		} {
 			Ok(pipelines) => Ok(pipelines),
 			Err((pipelines, vk_result)) => match vk_result {

@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::logical,
 	flags,
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 
 use std::sync;
@@ -16,8 +16,7 @@ impl Semaphore {
 	pub fn new(device: &sync::Arc<logical::Device>) -> utility::Result<Semaphore> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::SemaphoreCreateInfo::builder().build();
-		let vk =
-			utility::as_vulkan_error(unsafe { device.unwrap().create_semaphore(&info, None) })?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_semaphore(&info, None) })?;
 		Ok(Semaphore::from(device.clone(), vk))
 	}
 
@@ -26,21 +25,17 @@ impl Semaphore {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Semaphore`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Semaphore> for Semaphore {
-	fn unwrap(&self) -> &backend::vk::Semaphore {
+impl std::ops::Deref for Semaphore {
+	type Target = backend::vk::Semaphore;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Semaphore {
-		&mut self.internal
 	}
 }
 
 impl Drop for Semaphore {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().destroy_semaphore(self.internal, None) };
+		unsafe { self.device.destroy_semaphore(self.internal, None) };
 	}
 }
 
@@ -56,7 +51,7 @@ impl Fence {
 	) -> utility::Result<Fence> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::FenceCreateInfo::builder().flags(state).build();
-		let vk = utility::as_vulkan_error(unsafe { device.unwrap().create_fence(&info, None) })?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_fence(&info, None) })?;
 		Ok(Fence::from(device.clone(), vk))
 	}
 
@@ -65,20 +60,16 @@ impl Fence {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Fence`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Fence> for Fence {
-	fn unwrap(&self) -> &backend::vk::Fence {
+impl std::ops::Deref for Fence {
+	type Target = backend::vk::Fence;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Fence {
-		&mut self.internal
 	}
 }
 
 impl Drop for Fence {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().destroy_fence(self.internal, None) };
+		unsafe { self.device.destroy_fence(self.internal, None) };
 	}
 }

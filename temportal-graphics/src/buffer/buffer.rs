@@ -1,7 +1,7 @@
 use crate::{
 	alloc, backend, buffer,
 	flags::{BufferUsage, MemoryProperty, MemoryUsage, SharingMode},
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 use std::sync;
 
@@ -58,7 +58,6 @@ impl Buffer {
 
 	pub fn resize(&mut self, allocator: &alloc::Allocator, new_size: usize) -> bool {
 		let success = allocator
-			.unwrap()
 			.resize_allocation(&self.allocation_handle, new_size)
 			.is_ok();
 		if success {
@@ -68,14 +67,10 @@ impl Buffer {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Buffer`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Buffer> for Buffer {
-	fn unwrap(&self) -> &backend::vk::Buffer {
+impl std::ops::Deref for Buffer {
+	type Target = backend::vk::Buffer;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Buffer {
-		&mut self.internal
 	}
 }
 
@@ -83,8 +78,7 @@ impl Drop for Buffer {
 	fn drop(&mut self) {
 		utility::as_alloc_error(
 			self.allocator
-				.unwrap()
-				.destroy_buffer(*self.unwrap(), &self.allocation_handle),
+				.destroy_buffer(**self, &self.allocation_handle),
 		)
 		.unwrap();
 	}

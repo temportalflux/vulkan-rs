@@ -1,4 +1,4 @@
-use crate::{backend, descriptor, utility::VulkanObject};
+use crate::{backend, descriptor};
 use std::sync::Arc;
 
 pub struct Set {
@@ -15,13 +15,9 @@ impl Set {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::DescriptorSetLayout`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::DescriptorSet> for Set {
-	fn unwrap(&self) -> &backend::vk::DescriptorSet {
+impl std::ops::Deref for Set {
+	type Target = backend::vk::DescriptorSet;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::DescriptorSet {
-		&mut self.internal
 	}
 }

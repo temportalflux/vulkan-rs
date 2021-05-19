@@ -1,7 +1,4 @@
-use crate::{
-	backend, device::logical, image_view, renderpass, structs::Extent2D, utility,
-	utility::VulkanObject,
-};
+use crate::{backend, device::logical, image_view, renderpass, structs::Extent2D, utility};
 use std::sync;
 
 /// Information used to construct a [`Framebuffer`].
@@ -32,16 +29,15 @@ impl Info {
 		device: &sync::Arc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		use backend::version::DeviceV1_0;
-		let attachments = vec![*swapchain_image_view.unwrap()];
+		let attachments = vec![**swapchain_image_view];
 		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
 			.height(self.extent.height)
 			.layers(self.layer_count)
-			.render_pass(*render_pass.unwrap())
+			.render_pass(**render_pass)
 			.attachments(&attachments[..])
 			.build();
-		let vk =
-			utility::as_vulkan_error(unsafe { device.unwrap().create_framebuffer(&info, None) })?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_framebuffer(&info, None) })?;
 		Ok(Framebuffer::from(device.clone(), vk))
 	}
 }
@@ -60,24 +56,16 @@ impl Framebuffer {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Framebuffer`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Framebuffer> for Framebuffer {
-	fn unwrap(&self) -> &backend::vk::Framebuffer {
+impl std::ops::Deref for Framebuffer {
+	type Target = backend::vk::Framebuffer;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Framebuffer {
-		&mut self.internal
 	}
 }
 
 impl Drop for Framebuffer {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe {
-			self.device
-				.unwrap()
-				.destroy_framebuffer(self.internal, None)
-		};
+		unsafe { self.device.destroy_framebuffer(self.internal, None) };
 	}
 }

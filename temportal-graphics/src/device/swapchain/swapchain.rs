@@ -1,9 +1,4 @@
-use crate::{
-	backend, command,
-	device::logical,
-	image::Image,
-	utility::{self, VulkanObject},
-};
+use crate::{backend, command, device::logical, image::Image, utility};
 
 use std::sync;
 
@@ -46,21 +41,17 @@ impl Swapchain {
 			self.device.unwrap_swapchain().acquire_next_image(
 				self.internal,
 				timeout,
-				semaphore.map_or(backend::vk::Semaphore::null(), |obj| *obj.unwrap()),
-				fence.map_or(backend::vk::Fence::null(), |obj| *obj.unwrap()),
+				semaphore.map_or(backend::vk::Semaphore::null(), |obj| **obj),
+				fence.map_or(backend::vk::Fence::null(), |obj| **obj),
 			)
 		})
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::SwapchainKHR`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::SwapchainKHR> for Swapchain {
-	fn unwrap(&self) -> &backend::vk::SwapchainKHR {
+impl std::ops::Deref for Swapchain {
+	type Target = backend::vk::SwapchainKHR;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::SwapchainKHR {
-		&mut self.internal
 	}
 }
 

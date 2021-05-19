@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::{logical, physical},
 	instance::Instance,
-	utility::{self, VulkanObject},
+	utility,
 };
 
 pub struct DeviceQueue {
@@ -122,9 +122,7 @@ impl Info {
 		info.p_enabled_features = &self.features as _;
 
 		let internal = utility::as_vulkan_error(unsafe {
-			instance
-				.unwrap()
-				.create_device(*physical_device.unwrap(), &info, None)
+			instance.create_device(**physical_device, &info, None)
 		})?;
 		Ok(logical::Device::from(&instance, internal))
 	}

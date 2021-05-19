@@ -4,7 +4,7 @@ use crate::{
 	flags::{ComponentSwizzle, Format, ImageViewType},
 	image, image_view,
 	structs::{subresource, ComponentMapping},
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 
 use std::sync;
@@ -67,7 +67,7 @@ impl VulkanInfo<backend::vk::ImageViewCreateInfo> for Builder {
 	fn to_vk(&self) -> backend::vk::ImageViewCreateInfo {
 		let image_rc = self.image.upgrade().unwrap();
 		backend::vk::ImageViewCreateInfo::builder()
-			.image(*image_rc.unwrap())
+			.image(**image_rc)
 			.view_type(self.view_type)
 			.format(self.format)
 			.components(self.components)
@@ -85,8 +85,7 @@ impl Builder {
 		use backend::version::DeviceV1_0;
 		let image = self.image.upgrade().unwrap();
 		let info = self.to_vk();
-		let vk =
-			utility::as_vulkan_error(unsafe { device.unwrap().create_image_view(&info, None) })?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_image_view(&info, None) })?;
 		Ok(image_view::View::from(device.clone(), image, vk))
 	}
 }

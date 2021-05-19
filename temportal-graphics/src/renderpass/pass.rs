@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, utility::VulkanObject};
+use crate::{backend, device::logical};
 
 use std::sync;
 
@@ -16,24 +16,16 @@ impl Pass {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::RenderPass`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::RenderPass> for Pass {
-	fn unwrap(&self) -> &backend::vk::RenderPass {
+impl std::ops::Deref for Pass {
+	type Target = backend::vk::RenderPass;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::RenderPass {
-		&mut self.internal
 	}
 }
 
 impl Drop for Pass {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe {
-			self.device
-				.unwrap()
-				.destroy_render_pass(self.internal, None)
-		};
+		unsafe { self.device.destroy_render_pass(self.internal, None) };
 	}
 }

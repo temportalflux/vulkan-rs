@@ -1,7 +1,7 @@
 use crate::{
 	backend, descriptor,
 	device::logical,
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 use std::sync;
 
@@ -29,16 +29,13 @@ impl Pool {
 		layouts: &Vec<sync::Arc<descriptor::SetLayout>>,
 	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
 		use ash::version::DeviceV1_0;
-		let set_layouts = layouts
-			.iter()
-			.map(|layout| *layout.unwrap())
-			.collect::<Vec<_>>();
+		let set_layouts = layouts.iter().map(|layout| ***layout).collect::<Vec<_>>();
 		let create_info = backend::vk::DescriptorSetAllocateInfo::builder()
-			.descriptor_pool(*self.unwrap())
+			.descriptor_pool(**self)
 			.set_layouts(&set_layouts)
 			.build();
 		let raw_sets = utility::as_vulkan_error(unsafe {
-			self.device.unwrap().allocate_descriptor_sets(&create_info)
+			self.device.allocate_descriptor_sets(&create_info)
 		})?;
 		Ok(raw_sets
 			.into_iter()
@@ -52,14 +49,10 @@ impl Pool {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::DescriptorPool`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::DescriptorPool> for Pool {
-	fn unwrap(&self) -> &backend::vk::DescriptorPool {
+impl std::ops::Deref for Pool {
+	type Target = backend::vk::DescriptorPool;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::DescriptorPool {
-		&mut self.internal
 	}
 }
 
@@ -67,9 +60,7 @@ impl Drop for Pool {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe {
-			self.device
-				.unwrap()
-				.destroy_descriptor_pool(self.internal, None);
+			self.device.destroy_descriptor_pool(self.internal, None);
 		}
 	}
 }

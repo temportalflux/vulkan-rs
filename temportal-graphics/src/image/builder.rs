@@ -3,7 +3,7 @@ use crate::{
 	flags::{Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode},
 	image,
 	structs::Extent3D,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 use temportal_math::Vector;
@@ -103,11 +103,8 @@ impl Builder {
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<image::Image> {
 		let image_info = self.to_vk();
 		let alloc_create_info = self.mem_info.to_vk();
-		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(
-			allocator
-				.unwrap()
-				.create_image(&image_info, &alloc_create_info),
-		)?;
+		let (internal, alloc_handle, alloc_info) =
+			utility::as_alloc_error(allocator.create_image(&image_info, &alloc_create_info))?;
 		Ok(image::Image::new(
 			allocator.clone(),
 			internal,

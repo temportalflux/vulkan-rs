@@ -4,8 +4,7 @@ use crate::{
 	flags::{ColorSpace, Format, PresentMode, QueueFlags, SurfaceTransform},
 	instance::Instance,
 	structs::Extent2D,
-	utility::{self, VulkanObject},
-	Surface,
+	utility, Surface,
 };
 use std::collections::hash_map::HashMap;
 use std::sync;
@@ -72,11 +71,8 @@ impl Device {
 				.map(|(index, properties)| QueueFamily {
 					index,
 					properties,
-					supports_surface: instance.does_physical_device_surface_support_khr(
-						&vk,
-						index,
-						&surface.unwrap(),
-					),
+					supports_surface: instance
+						.does_physical_device_surface_support_khr(&vk, index, surface),
 				})
 				.collect(),
 			extension_properties: instance
@@ -139,23 +135,19 @@ impl Device {
 		let surface = self.surface.upgrade().unwrap();
 		SurfaceSupport {
 			surface_capabilities: instance
-				.get_physical_device_surface_capabilities(&self._internal, &surface.unwrap()),
+				.get_physical_device_surface_capabilities(&self._internal, &*surface),
 			surface_formats: instance
-				.get_physical_device_surface_formats(&self._internal, &surface.unwrap()),
+				.get_physical_device_surface_formats(&self._internal, &*surface),
 			present_modes: instance
-				.get_physical_device_surface_present_modes(&self._internal, &surface.unwrap()),
+				.get_physical_device_surface_present_modes(&self._internal, &*surface),
 		}
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::PhysicalDevice`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::PhysicalDevice> for Device {
-	fn unwrap(&self) -> &backend::vk::PhysicalDevice {
+impl std::ops::Deref for Device {
+	type Target = backend::vk::PhysicalDevice;
+	fn deref(&self) -> &Self::Target {
 		&self._internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::PhysicalDevice {
-		&mut self._internal
 	}
 }
 

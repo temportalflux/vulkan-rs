@@ -3,7 +3,7 @@ use crate::{
 	flags::{Access, ImageLayout, PipelineStage},
 	image,
 	structs::subresource,
-	utility::{VulkanInfo, VulkanObject},
+	utility::VulkanInfo,
 };
 use std::sync;
 
@@ -75,7 +75,7 @@ impl VulkanInfo<backend::vk::BufferMemoryBarrier> for BufferBarrier {
 			.src_queue_family_index(self.src_queue_family)
 			.dst_access_mask(self.dst_access)
 			.dst_queue_family_index(self.dst_queue_family)
-			.buffer(*self.buffer.upgrade().unwrap().unwrap())
+			.buffer(**self.buffer.upgrade().unwrap())
 			.offset(self.offset as u64)
 			.size(self.size as u64)
 			.build()
@@ -147,7 +147,7 @@ impl VulkanInfo<backend::vk::ImageMemoryBarrier> for ImageBarrier {
 			.src_queue_family_index(self.src_queue_family)
 			.dst_access_mask(self.dst_access)
 			.dst_queue_family_index(self.dst_queue_family)
-			.image(*self.image.upgrade().unwrap().unwrap())
+			.image(**self.image.upgrade().unwrap())
 			.old_layout(self.old_layout)
 			.new_layout(self.new_layout)
 			.subresource_range(self.range.to_vk())

@@ -1,8 +1,4 @@
-use crate::{
-	backend, command,
-	device::swapchain::Swapchain,
-	utility::{VulkanInfo, VulkanObject},
-};
+use crate::{backend, command, device::swapchain::Swapchain, utility::VulkanInfo};
 
 /// Data used to present frames via a [`Queue`](crate::device::logical::Queue).
 /// It is NOT safe to keep this struct around for more than 1 stack,
@@ -25,12 +21,12 @@ impl Default for PresentInfo {
 
 impl PresentInfo {
 	pub fn wait_for(mut self, semaphore: &command::Semaphore) -> Self {
-		self.semaphores_to_wait_for.push(*semaphore.unwrap());
+		self.semaphores_to_wait_for.push(**semaphore);
 		self
 	}
 
 	pub fn add_swapchain(mut self, swapchain: &Swapchain) -> Self {
-		self.swapchains.push(*swapchain.unwrap());
+		self.swapchains.push(**swapchain);
 		self
 	}
 

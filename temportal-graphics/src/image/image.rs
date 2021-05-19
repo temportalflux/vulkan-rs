@@ -1,7 +1,4 @@
-use crate::{
-	backend, flags, image,
-	utility::{self, VulkanObject},
-};
+use crate::{backend, flags, image, utility};
 use std::sync;
 use temportal_math::Vector;
 
@@ -51,14 +48,10 @@ impl Image {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Image`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Image> for Image {
-	fn unwrap(&self) -> &backend::vk::Image {
+impl std::ops::Deref for Image {
+	type Target = backend::vk::Image;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Image {
-		&mut self.internal
 	}
 }
 

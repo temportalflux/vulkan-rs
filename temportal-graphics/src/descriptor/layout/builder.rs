@@ -3,7 +3,7 @@ use crate::{
 	descriptor::layout,
 	device::logical,
 	flags::{DescriptorKind, ShaderKind},
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -55,9 +55,7 @@ impl Builder {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
 		let internal = utility::as_vulkan_error(unsafe {
-			device
-				.unwrap()
-				.create_descriptor_set_layout(&create_info, None)
+			device.create_descriptor_set_layout(&create_info, None)
 		})?;
 		Ok(layout::SetLayout::from(device.clone(), internal))
 	}

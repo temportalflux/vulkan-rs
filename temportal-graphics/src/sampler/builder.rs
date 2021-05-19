@@ -3,7 +3,7 @@ use crate::{
 	device::logical,
 	flags::{BorderColor, CompareOp, Filter, SamplerAddressMode, SamplerMipmapMode},
 	sampler,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -114,9 +114,7 @@ impl Builder {
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<sampler::Sampler> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
-		let vk = utility::as_vulkan_error(unsafe {
-			device.unwrap().create_sampler(&create_info, None)
-		})?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_sampler(&create_info, None) })?;
 		Ok(sampler::Sampler::from(device.clone(), vk))
 	}
 }

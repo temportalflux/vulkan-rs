@@ -2,7 +2,7 @@ use crate::{
 	backend, buffer, command, descriptor,
 	device::logical,
 	flags, image, pipeline, renderpass, structs,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -53,16 +53,12 @@ impl Buffer {
 		let info = backend::vk::CommandBufferBeginInfo::builder()
 			.flags(usage.unwrap_or(flags::CommandBufferUsage::empty()))
 			.inheritance_info(&inheritance_info);
-		utility::as_vulkan_error(unsafe {
-			self.device
-				.unwrap()
-				.begin_command_buffer(self.internal, &info)
-		})
+		utility::as_vulkan_error(unsafe { self.device.begin_command_buffer(self.internal, &info) })
 	}
 
 	pub fn end(&self) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		utility::as_vulkan_error(unsafe { self.device.unwrap().end_command_buffer(self.internal) })
+		utility::as_vulkan_error(unsafe { self.device.end_command_buffer(self.internal) })
 	}
 
 	pub fn mark_pipeline_barrier(&self, barrier: command::PipelineBarrier) {
@@ -84,7 +80,7 @@ impl Buffer {
 			}
 		}
 		unsafe {
-			self.device.unwrap().cmd_pipeline_barrier(
+			self.device.cmd_pipeline_barrier(
 				self.internal,
 				barrier.src_stage,
 				barrier.dst_stage,
@@ -126,10 +122,10 @@ impl Buffer {
 			})
 			.collect::<Vec<_>>();
 		unsafe {
-			self.device.unwrap().cmd_copy_buffer_to_image(
+			self.device.cmd_copy_buffer_to_image(
 				self.internal,
-				*buffer.unwrap(),
-				*image.unwrap(),
+				**buffer,
+				**image,
 				layout,
 				&regions[..],
 			);
@@ -154,12 +150,8 @@ impl Buffer {
 			})
 			.collect::<Vec<_>>();
 		unsafe {
-			self.device.unwrap().cmd_copy_buffer(
-				self.internal,
-				*src.unwrap(),
-				*dst.unwrap(),
-				&regions[..],
-			);
+			self.device
+				.cmd_copy_buffer(self.internal, **src, **dst, &regions[..]);
 		}
 	}
 
@@ -177,13 +169,13 @@ impl Buffer {
 			.map(|value| value.to_vk())
 			.collect::<Vec<_>>();
 		let info = backend::vk::RenderPassBeginInfo::builder()
-			.render_pass(*render_pass.unwrap())
-			.framebuffer(*frame_buffer.unwrap())
+			.render_pass(**render_pass)
+			.framebuffer(**frame_buffer)
 			.render_area(info.render_area)
 			.clear_values(&clear_values)
 			.build();
 		unsafe {
-			self.device.unwrap().cmd_begin_render_pass(
+			self.device.cmd_begin_render_pass(
 				self.internal,
 				&info,
 				if uses_secondary_buffers {
@@ -193,13 +185,13 @@ impl Buffer {
 				},
 			)
 		};
-		self.recording_render_pass = Some(*render_pass.unwrap());
-		self.recording_framebuffer = Some(*frame_buffer.unwrap());
+		self.recording_render_pass = Some(**render_pass);
+		self.recording_framebuffer = Some(**frame_buffer);
 	}
 
 	pub fn stop_render_pass(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().cmd_end_render_pass(self.internal) };
+		unsafe { self.device.cmd_end_render_pass(self.internal) };
 		self.recording_render_pass = None;
 		self.recording_framebuffer = None;
 	}
@@ -212,8 +204,7 @@ impl Buffer {
 		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device
-				.unwrap()
-				.cmd_bind_pipeline(self.internal, bind_point, *pipeline.unwrap())
+				.cmd_bind_pipeline(self.internal, bind_point, **pipeline)
 		};
 	}
 
@@ -225,13 +216,13 @@ impl Buffer {
 		sets: Vec<&descriptor::Set>,
 	) {
 		use backend::version::DeviceV1_0;
-		let vk_sets = sets.iter().map(|set| *set.unwrap()).collect::<Vec<_>>();
+		let vk_sets = sets.iter().map(|set| ***set).collect::<Vec<_>>();
 		let offsets = Vec::new();
 		unsafe {
-			self.device.unwrap().cmd_bind_descriptor_sets(
+			self.device.cmd_bind_descriptor_sets(
 				self.internal,
 				bind_point,
-				*layout.unwrap(),
+				**layout,
 				first_set_index as u32,
 				&vk_sets[..],
 				&offsets[..],
@@ -246,12 +237,9 @@ impl Buffer {
 		offsets: Vec<u64>,
 	) {
 		use backend::version::DeviceV1_0;
-		let vk_buffers = buffers
-			.iter()
-			.map(|buffer| *buffer.unwrap())
-			.collect::<Vec<_>>();
+		let vk_buffers = buffers.iter().map(|buffer| ***buffer).collect::<Vec<_>>();
 		unsafe {
-			self.device.unwrap().cmd_bind_vertex_buffers(
+			self.device.cmd_bind_vertex_buffers(
 				self.internal,
 				binding_index,
 				&vk_buffers[..],
@@ -263,9 +251,9 @@ impl Buffer {
 	pub fn bind_index_buffer(&self, buffer: &buffer::Buffer, offset: u64) {
 		use backend::version::DeviceV1_0;
 		unsafe {
-			self.device.unwrap().cmd_bind_index_buffer(
+			self.device.cmd_bind_index_buffer(
 				self.internal,
-				*buffer.unwrap(),
+				**buffer,
 				offset,
 				backend::vk::IndexType::UINT32,
 			)
@@ -275,7 +263,7 @@ impl Buffer {
 	pub fn draw_vertices(&self, vertex_count: u32) {
 		use backend::version::DeviceV1_0;
 		unsafe {
-			self.device.unwrap().cmd_draw(
+			self.device.cmd_draw(
 				self.internal,
 				vertex_count,
 				/*instance count*/ 1,
@@ -295,7 +283,7 @@ impl Buffer {
 	) {
 		use backend::version::DeviceV1_0;
 		unsafe {
-			self.device.unwrap().cmd_draw_indexed(
+			self.device.cmd_draw_indexed(
 				self.internal,
 				index_count as u32,
 				instance_count as u32,
@@ -310,24 +298,16 @@ impl Buffer {
 		use backend::version::DeviceV1_0;
 		let unwraped = secondary_buffers
 			.iter()
-			.map(|cmd_buffer| *cmd_buffer.unwrap())
+			.map(|cmd_buffer| ***cmd_buffer)
 			.collect::<Vec<_>>();
-		unsafe {
-			self.device
-				.unwrap()
-				.cmd_execute_commands(self.internal, &unwraped)
-		};
+		unsafe { self.device.cmd_execute_commands(self.internal, &unwraped) };
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::CommandBuffer`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::CommandBuffer> for Buffer {
-	fn unwrap(&self) -> &backend::vk::CommandBuffer {
+impl std::ops::Deref for Buffer {
+	type Target = backend::vk::CommandBuffer;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::CommandBuffer {
-		&mut self.internal
 	}
 }
 

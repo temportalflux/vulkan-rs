@@ -1,7 +1,4 @@
-use crate::{
-	backend, command, flags,
-	utility::{VulkanInfo, VulkanObject},
-};
+use crate::{backend, command, flags, utility::VulkanInfo};
 use std::sync;
 
 /// Data used to submit commands to a [`Queue`](crate::device::logical::Queue).
@@ -28,25 +25,24 @@ impl Default for SubmitInfo {
 impl SubmitInfo {
 	pub fn wait_for_semaphores(mut self, semaphores: &Vec<sync::Arc<command::Semaphore>>) -> Self {
 		for rc in semaphores {
-			self.semaphores_to_wait_for.push(*rc.unwrap());
+			self.semaphores_to_wait_for.push(***rc);
 		}
 		self
 	}
 
 	pub fn wait_for(mut self, semaphore: &command::Semaphore, stage: flags::PipelineStage) -> Self {
-		self.semaphores_to_wait_for.push(*semaphore.unwrap());
+		self.semaphores_to_wait_for.push(**semaphore);
 		self.stages_waited_for.push(stage);
 		self
 	}
 
 	pub fn add_buffer(mut self, buffer: &command::Buffer) -> Self {
-		self.buffers.push(*buffer.unwrap());
+		self.buffers.push(**buffer);
 		self
 	}
 
 	pub fn signal_when_complete(mut self, semaphore: &command::Semaphore) -> Self {
-		self.semaphors_to_signal_when_complete
-			.push(*semaphore.unwrap());
+		self.semaphors_to_signal_when_complete.push(**semaphore);
 		self
 	}
 }

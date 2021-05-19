@@ -3,7 +3,7 @@ use crate::{
 	descriptor::pool,
 	device::logical,
 	flags::DescriptorKind,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -56,9 +56,8 @@ impl Builder {
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<pool::Pool> {
 		use backend::version::DeviceV1_0;
 		let create_info = self.to_vk();
-		let internal = utility::as_vulkan_error(unsafe {
-			device.unwrap().create_descriptor_pool(&create_info, None)
-		})?;
+		let internal =
+			utility::as_vulkan_error(unsafe { device.create_descriptor_pool(&create_info, None) })?;
 		Ok(pool::Pool::from(device.clone(), internal))
 	}
 }

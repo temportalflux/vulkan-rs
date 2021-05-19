@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::logical,
 	flags, renderpass,
-	utility::{self, VulkanInfo, VulkanObject},
+	utility::{self, VulkanInfo},
 };
 use std::sync;
 
@@ -146,9 +146,7 @@ impl Info {
 			.subpasses(&subpasses)
 			.dependencies(&dependencies)
 			.build();
-		let vk = utility::as_vulkan_error(unsafe {
-			device.unwrap().create_render_pass(&vk_info, None)
-		})?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_render_pass(&vk_info, None) })?;
 		Ok(renderpass::Pass::from(device.clone(), vk))
 	}
 }

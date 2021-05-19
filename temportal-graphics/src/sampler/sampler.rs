@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, sampler::Builder, utility::VulkanObject};
+use crate::{backend, device::logical, sampler::Builder};
 use std::sync;
 
 pub struct Sampler {
@@ -16,20 +16,16 @@ impl Sampler {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::vk::Buffer`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<backend::vk::Sampler> for Sampler {
-	fn unwrap(&self) -> &backend::vk::Sampler {
+impl std::ops::Deref for Sampler {
+	type Target = backend::vk::Sampler;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::vk::Sampler {
-		&mut self.internal
 	}
 }
 
 impl Drop for Sampler {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
-		unsafe { self.device.unwrap().destroy_sampler(self.internal, None) };
+		unsafe { self.device.destroy_sampler(self.internal, None) };
 	}
 }

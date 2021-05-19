@@ -1,7 +1,7 @@
 use crate::{
 	device::{logical, physical},
 	image, instance,
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 
 pub struct Allocator {
@@ -15,9 +15,9 @@ impl Allocator {
 		logical: &logical::Device,
 	) -> utility::Result<Allocator> {
 		let info = vk_mem::AllocatorCreateInfo {
-			instance: instance.unwrap().clone(),
-			physical_device: *physical.unwrap(),
-			device: logical.unwrap().clone(),
+			instance: (**instance).clone(),
+			physical_device: **physical,
+			device: (**logical).clone(),
 			flags: vk_mem::AllocatorCreateFlags::NONE,
 			preferred_large_heap_block_size: 0,
 			frame_in_use_count: 0,
@@ -31,12 +31,10 @@ impl Allocator {
 
 /// A trait exposing the internal value for the wrapped [`vk_mem::Allocator`].
 /// Crates using `temportal_graphics` should NOT use this.
-impl VulkanObject<vk_mem::Allocator> for Allocator {
-	fn unwrap(&self) -> &vk_mem::Allocator {
+impl std::ops::Deref for Allocator {
+	type Target = vk_mem::Allocator;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut vk_mem::Allocator {
-		&mut self.internal
 	}
 }
 
@@ -53,9 +51,6 @@ impl image::Owner for Allocator {
 		obj: &image::Image,
 		allocation: Option<&vk_mem::Allocation>,
 	) -> utility::Result<()> {
-		utility::as_alloc_error(
-			self.internal
-				.destroy_image(*obj.unwrap(), allocation.unwrap()),
-		)
+		utility::as_alloc_error(self.internal.destroy_image(**obj, allocation.unwrap()))
 	}
 }

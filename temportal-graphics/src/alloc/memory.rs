@@ -1,6 +1,6 @@
 use crate::{
 	alloc,
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 use std::{io::Write, sync};
 
@@ -22,7 +22,7 @@ pub struct Memory {
 impl Memory {
 	pub fn new(obj: &impl Object) -> utility::Result<Memory> {
 		Ok(Memory {
-			ptr: obj.allocator().unwrap().map_memory(&obj.handle())?,
+			ptr: obj.allocator().map_memory(&obj.handle())?,
 			size: obj.size(),
 			amount_written: 0,
 			handle: obj.handle().clone(),
@@ -75,7 +75,7 @@ impl Memory {
 
 impl Drop for Memory {
 	fn drop(&mut self) {
-		self.allocator.unwrap().unmap_memory(&self.handle).unwrap();
+		self.allocator.unmap_memory(&self.handle).unwrap();
 	}
 }
 
@@ -88,7 +88,6 @@ impl Write for Memory {
 	}
 	fn flush(&mut self) -> std::io::Result<()> {
 		self.allocator
-			.unwrap()
 			.flush_allocation(&self.handle, 0, self.size)
 			.unwrap();
 		Ok(())

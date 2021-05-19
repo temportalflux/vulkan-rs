@@ -2,7 +2,7 @@ use crate::{
 	backend, command,
 	device::logical,
 	image, instance,
-	utility::{self, VulkanObject},
+	utility::{self},
 };
 use std::sync;
 
@@ -17,7 +17,7 @@ impl Device {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
 	pub fn from(instance: &instance::Instance, internal: backend::Device) -> Device {
 		Device {
-			swapchain: backend::extensions::khr::Swapchain::new(instance.unwrap(), &internal),
+			swapchain: backend::extensions::khr::Swapchain::new(&**instance, &internal),
 			internal,
 		}
 	}
@@ -25,22 +25,20 @@ impl Device {
 	pub fn get_queue(device: &sync::Arc<Self>, queue_family_index: usize) -> logical::Queue {
 		use backend::version::DeviceV1_0;
 		let vk = unsafe {
-			device
-				.unwrap()
-				.get_device_queue(queue_family_index as u32, /*queue index*/ 0)
+			device.get_device_queue(queue_family_index as u32, /*queue index*/ 0)
 		};
 		logical::Queue::from(device.clone(), vk, queue_family_index)
 	}
 
 	pub fn wait_for(&self, fence: &command::Fence, timeout: u64) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		let fences = [*fence.unwrap()];
+		let fences = [**fence];
 		utility::as_vulkan_error(unsafe { self.internal.wait_for_fences(&fences, true, timeout) })
 	}
 
 	pub fn reset_fences(&self, fences: &[&command::Fence]) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		let fences = fences.iter().map(|f| *f.unwrap()).collect::<Vec<_>>();
+		let fences = fences.iter().map(|f| ***f).collect::<Vec<_>>();
 		utility::as_vulkan_error(unsafe { self.internal.reset_fences(&fences[..]) })
 	}
 
@@ -50,14 +48,10 @@ impl Device {
 	}
 }
 
-/// A trait exposing the internal value for the wrapped [`backend::Device`].
-/// Crates using `temportal_graphics` should NOT use this.
-impl utility::VulkanObject<backend::Device> for Device {
-	fn unwrap(&self) -> &backend::Device {
+impl std::ops::Deref for Device {
+	type Target = backend::Device;
+	fn deref(&self) -> &Self::Target {
 		&self.internal
-	}
-	fn unwrap_mut(&mut self) -> &mut backend::Device {
-		&mut self.internal
 	}
 }
 
@@ -80,7 +74,7 @@ impl Drop for Device {
 impl image::Owner for Device {
 	fn destroy(&self, obj: &image::Image, _: Option<&vk_mem::Allocation>) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		unsafe { self.internal.destroy_image(*obj.unwrap(), None) };
+		unsafe { self.internal.destroy_image(**obj, None) };
 		Ok(())
 	}
 }
