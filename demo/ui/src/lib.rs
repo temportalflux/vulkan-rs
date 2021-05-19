@@ -72,6 +72,7 @@ pub fn run() -> VoidResult {
 					}
 				}),
 			)?;
+			system.add_texture(&UIDemo::get_asset_id("textures/background"))?;
 
 			system.apply_tree(widget! {
 				(horizontal_box [
@@ -141,6 +142,25 @@ pub fn run() -> VoidResult {
 							material: ImageBoxMaterial::Color(ImageBoxColor {
 								color: Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 },
 								scaling: ImageBoxImageScaling::Stretch,
+							}),
+							transform: Transform {
+								pivot: Vec2 { x: 0.0, y: 0.0 },
+								align: Vec2 { x: 0.0, y: 0.0 },
+								translation: Vec2 { x: 0.0, y: 0.0 },
+								rotation: 0.0,
+								scale: Vec2 { x: 1.0, y: 1.0 },
+								skew: Vec2 { x: 0.0, y: 0.0 },
+							},
+						}) })
+						(#{"row3colum1"} image_box: { Props::new(ImageBoxProps {
+							width: ImageBoxSizeValue::Fill,
+							height: ImageBoxSizeValue::Fill,
+							content_keep_aspect_ratio: None,
+							material: ImageBoxMaterial::Image(ImageBoxImage {
+								id: "textures/background".to_owned(),
+								source_rect: None,
+								scaling: ImageBoxImageScaling::Stretch,
+								tint: Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
 							}),
 							transform: Transform {
 								pivot: Vec2 { x: 0.0, y: 0.0 },

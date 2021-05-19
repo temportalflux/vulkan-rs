@@ -1,4 +1,4 @@
-use crate::{backend, flags, image, utility};
+use crate::{alloc, backend, flags, image, utility};
 use std::sync;
 use temportal_math::Vector;
 
@@ -45,6 +45,24 @@ impl Image {
 			allocation_info,
 			image_info,
 		}
+	}
+
+	pub fn create_gpu(
+		allocator: &sync::Arc<alloc::Allocator>,
+		format: flags::Format,
+		size: Vector<usize, 3>,
+	) -> utility::Result<Self> {
+		Ok(Self::builder()
+			.with_alloc(
+				alloc::Info::default()
+					.with_usage(flags::MemoryUsage::GpuOnly)
+					.requires(flags::MemoryProperty::DEVICE_LOCAL),
+			)
+			.with_format(format)
+			.with_size(size)
+			.with_usage(flags::ImageUsage::TRANSFER_DST)
+			.with_usage(flags::ImageUsage::SAMPLED)
+			.build(allocator)?)
 	}
 }
 
