@@ -38,8 +38,26 @@ pub fn run() -> VoidResult {
 		let ui_system = Arc::new(RwLock::new({
 			use ui::*;
 			let mut system = ui::System::new(&chain.read().unwrap())?;
-			system.add_text_shader(&UIDemo::get_asset_id("shaders/text/vertex"))?;
-			system.add_text_shader(&UIDemo::get_asset_id("shaders/text/fragment"))?;
+			system.add_shader(
+				SystemShader::TextVertex,
+				&UIDemo::get_asset_id("shaders/ui/text/vertex"),
+			)?;
+			system.add_shader(
+				SystemShader::TextFragment,
+				&UIDemo::get_asset_id("shaders/ui/text/fragment"),
+			)?;
+			system.add_shader(
+				SystemShader::MeshVertex,
+				&UIDemo::get_asset_id("shaders/ui/mesh/vertex"),
+			)?;
+			system.add_shader(
+				SystemShader::MeshSimpleFragment,
+				&UIDemo::get_asset_id("shaders/ui/mesh/simple_fragment"),
+			)?;
+			system.add_shader(
+				SystemShader::MeshImageFragment,
+				&UIDemo::get_asset_id("shaders/ui/mesh/image_fragment"),
+			)?;
 			system.add_font(&UIDemo::get_asset_id("font/unispace"))?;
 
 			system.apply_tree(widget! {
@@ -108,7 +126,7 @@ pub fn run() -> VoidResult {
 							height: ImageBoxSizeValue::Fill,
 							content_keep_aspect_ratio: None,
 							material: ImageBoxMaterial::Color(ImageBoxColor {
-								color: Color { r: 0.5, g: 1.0, b: 0.0, a: 1.0 },
+								color: Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 },
 								scaling: ImageBoxImageScaling::Stretch,
 							}),
 							transform: Transform {
