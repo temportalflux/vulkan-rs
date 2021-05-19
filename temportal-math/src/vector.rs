@@ -175,6 +175,16 @@ where
 	pub fn subvec<const N2: usize>(&self, offset: Option<usize>) -> Vector<T, N2> {
 		Vector::partial(&mut self.data.iter().cloned(), offset)
 	}
+
+	pub fn extend<const N2: usize, const N3: usize>(&self, other: Vector<T, N2>) -> Vector<T, N3> {
+		let mut vec = self.subvec(None);
+		for i in 0..(N3 - N).min(N2) {
+			if i < N2 {
+				vec[i + N] = other[i];
+			}
+		}
+		vec
+	}
 }
 
 #[cfg(test)]
@@ -499,6 +509,12 @@ impl<T, const N: usize> Vector<T, N> {
 	}
 }
 
+impl<T, const N: usize> From<[T; N]> for Vector<T, N> {
+	fn from(slice: [T; N]) -> Self {
+		Vector::new(slice)
+	}
+}
+
 #[cfg(test)]
 mod conversions {
 	use super::*;
@@ -789,6 +805,23 @@ impl<const N: usize> Vector<f64, N> {
 			vret.data[i] = vret.data[i].rem_euclid(rhs);
 		}
 		vret
+	}
+}
+
+impl<const N: usize> Vector<f32, N> {
+	pub fn min(&self, other: Vector<f32, N>) -> Self {
+		let mut vec = Vector::default();
+		for i in 0..N {
+			vec[i] = self[i].min(other[i]);
+		}
+		vec
+	}
+	pub fn max(&self, other: Vector<f32, N>) -> Self {
+		let mut vec = Vector::default();
+		for i in 0..N {
+			vec[i] = self[i].max(other[i]);
+		}
+		vec
 	}
 }
 

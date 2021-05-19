@@ -88,20 +88,39 @@ pub fn run() -> VoidResult {
 							.. Default::default()
 						}) })
 					])
-					(#{"row1column1"} text_box: { Props::new(TextBoxProps {
-						text: "C".to_owned(),
-						color: utils::Color {
-							r: 0.0,
-							g: 0.0,
-							b: 1.0,
-							a: 1.0,
-						},
-						font: TextBoxFont {
-							name: "unispace".to_owned(),
-							size: 30.0,
-						},
-						.. Default::default()
-					}) })
+					(vertical_box [
+						(#{"row1column1"} text_box: { Props::new(TextBoxProps {
+							text: "C".to_owned(),
+							color: utils::Color {
+								r: 0.0,
+								g: 0.0,
+								b: 1.0,
+								a: 1.0,
+							},
+							font: TextBoxFont {
+								name: "unispace".to_owned(),
+								size: 30.0,
+							},
+							.. Default::default()
+						}) })
+						(#{"row2colum1"} image_box: { Props::new(ImageBoxProps {
+							width: ImageBoxSizeValue::Fill,
+							height: ImageBoxSizeValue::Fill,
+							content_keep_aspect_ratio: None,
+							material: ImageBoxMaterial::Color(ImageBoxColor {
+								color: Color { r: 0.5, g: 1.0, b: 0.0, a: 1.0 },
+								scaling: ImageBoxImageScaling::Stretch,
+							}),
+							transform: Transform {
+								pivot: Vec2 { x: 0.0, y: 0.0 },
+								align: Vec2 { x: 0.0, y: 0.0 },
+								translation: Vec2 { x: 0.0, y: 0.0 },
+								rotation: 0.0,
+								scale: Vec2 { x: 1.0, y: 1.0 },
+								skew: Vec2 { x: 0.0, y: 0.0 },
+							},
+						}) })
+					])
 				])
 			});
 

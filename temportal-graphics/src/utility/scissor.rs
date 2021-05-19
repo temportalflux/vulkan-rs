@@ -17,6 +17,10 @@ impl Default for Scissor {
 }
 
 impl Scissor {
+	pub fn new(offset: Vector<i32, 2>, size: Vector<u32, 2>) -> Self {
+		Self { offset, size }
+	}
+
 	pub fn set_size(mut self, extent: Extent2D) -> Self {
 		*self.size.x_mut() = extent.width;
 		*self.size.y_mut() = extent.height;
