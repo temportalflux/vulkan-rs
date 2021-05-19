@@ -1,4 +1,4 @@
-use crate::{backend, flags, utility::VulkanInfo};
+use crate::{backend, flags};
 
 /// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
 /// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
@@ -30,10 +30,8 @@ impl Subpass {
 		);
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::SubpassDescription> for Subpass {
-	fn to_vk(&self) -> backend::vk::SubpassDescription {
+	pub(crate) fn as_vk(&self) -> backend::vk::SubpassDescription {
 		backend::vk::SubpassDescription::builder()
 			.pipeline_bind_point(self.bind_point)
 			.color_attachments(&self.attachment_refs)

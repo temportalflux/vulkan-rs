@@ -1,7 +1,4 @@
-use crate::{
-	backend,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, utility};
 
 /// Information about the engine and the application using Vulkan.
 #[derive(Debug, Clone, Default)]
@@ -86,11 +83,8 @@ impl AppInfo {
 			self.app_version()
 		)
 	}
-}
 
-impl VulkanInfo<backend::vk::ApplicationInfo> for AppInfo {
-	/// Converts the [`AppInfo`] into the [`backend::vk::ApplicationInfo`] struct
-	fn to_vk(&self) -> backend::vk::ApplicationInfo {
+	pub(crate) fn as_vk(&self) -> backend::vk::ApplicationInfo {
 		backend::vk::ApplicationInfo::builder()
 			.api_version(self.api_version)
 			.engine_name(&self.engine_name_c)

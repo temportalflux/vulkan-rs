@@ -1,8 +1,6 @@
-use crate::{
-	flags::{CreateAllocation, MemoryProperty, MemoryUsage},
-	utility::VulkanInfo,
-};
+use crate::flags::{CreateAllocation, MemoryProperty, MemoryUsage};
 
+#[derive(Clone)]
 pub struct Info {
 	mem_usage: MemoryUsage,
 	alloc_flags: CreateAllocation,
@@ -43,9 +41,8 @@ impl Info {
 	}
 }
 
-impl VulkanInfo<vk_mem::AllocationCreateInfo> for Info {
-	/// Converts the [`Info`] into the [`vk_mem::AllocationCreateInfo`] struct.
-	fn to_vk(&self) -> vk_mem::AllocationCreateInfo {
+impl Into<vk_mem::AllocationCreateInfo> for Info {
+	fn into(self) -> vk_mem::AllocationCreateInfo {
 		vk_mem::AllocationCreateInfo {
 			usage: self.mem_usage,
 			flags: self.alloc_flags,

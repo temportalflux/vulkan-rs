@@ -1,5 +1,6 @@
 pub use crate::{backend, flags::ImageAspect, utility};
 
+#[derive(Clone, Copy)]
 pub struct Range {
 	aspect: ImageAspect,
 	mip_level_start: u32,
@@ -55,8 +56,8 @@ impl Range {
 	}
 }
 
-impl utility::VulkanInfo<backend::vk::ImageSubresourceRange> for Range {
-	fn to_vk(&self) -> backend::vk::ImageSubresourceRange {
+impl Into<backend::vk::ImageSubresourceRange> for Range {
+	fn into(self) -> backend::vk::ImageSubresourceRange {
 		backend::vk::ImageSubresourceRange::builder()
 			.aspect_mask(self.aspect)
 			.base_mip_level(self.mip_level_start)
@@ -111,8 +112,8 @@ impl Layers {
 	}
 }
 
-impl utility::VulkanInfo<backend::vk::ImageSubresourceLayers> for Layers {
-	fn to_vk(&self) -> backend::vk::ImageSubresourceLayers {
+impl Into<backend::vk::ImageSubresourceLayers> for Layers {
+	fn into(self) -> backend::vk::ImageSubresourceLayers {
 		backend::vk::ImageSubresourceLayers::builder()
 			.aspect_mask(self.aspect)
 			.mip_level(self.mip_level)

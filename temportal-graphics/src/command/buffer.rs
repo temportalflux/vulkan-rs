@@ -1,8 +1,6 @@
 use crate::{
-	backend, buffer, command, descriptor,
-	device::logical,
-	flags, image, pipeline, renderpass, structs,
-	utility::{self, VulkanInfo},
+	backend, buffer, command, descriptor, device::logical, flags, image, pipeline, renderpass,
+	structs, utility,
 };
 use std::sync;
 
@@ -69,13 +67,13 @@ impl Buffer {
 		for barrier_kind in barrier.kinds {
 			match barrier_kind {
 				command::BarrierKind::Memory(info) => {
-					memory_barriers.push(info.to_vk());
+					memory_barriers.push(info.into());
 				}
 				command::BarrierKind::Buffer(info) => {
-					buffer_barriers.push(info.to_vk());
+					buffer_barriers.push(info.as_vk());
 				}
 				command::BarrierKind::Image(info) => {
-					image_barriers.push(info.to_vk());
+					image_barriers.push(info.as_vk());
 				}
 			}
 		}
@@ -107,7 +105,7 @@ impl Buffer {
 					.buffer_offset(region.buffer_offset as u64)
 					.buffer_row_length(0)
 					.buffer_image_height(0)
-					.image_subresource(region.layers.to_vk())
+					.image_subresource(region.layers.into())
 					.image_offset(structs::Offset3D {
 						x: region.offset.x(),
 						y: region.offset.y(),
@@ -166,7 +164,7 @@ impl Buffer {
 		let clear_values = info
 			.clear_values
 			.iter()
-			.map(|value| value.to_vk())
+			.map(|value| (*value).into())
 			.collect::<Vec<_>>();
 		let info = backend::vk::RenderPassBeginInfo::builder()
 			.render_pass(**render_pass)

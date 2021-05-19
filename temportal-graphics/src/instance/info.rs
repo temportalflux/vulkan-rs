@@ -1,10 +1,4 @@
-use crate::{
-	backend,
-	context::Context,
-	instance,
-	utility::{self, VulkanInfo, VulkanInfoMut},
-	AppInfo,
-};
+use crate::{backend, context::Context, instance, utility, AppInfo};
 
 /// Information used to construct a [`Vulkan Instance`](instance::Instance).
 #[derive(Debug)]
@@ -135,7 +129,7 @@ impl Info {
 		if let Some(layer) = self.has_invalid_layer(&ctx) {
 			return Err(utility::Error::InvalidInstanceLayer(layer));
 		}
-		let create_info = self.to_vk();
+		let create_info = self.create_vk();
 		let internal = match unsafe { ctx.loader.create_instance(&create_info, None) } {
 			Ok(inst) => inst,
 			Err(err) => match err {
@@ -149,13 +143,9 @@ impl Info {
 		};
 		instance::Instance::from(internal, &ctx, self.validation_enabled)
 	}
-}
 
-impl utility::VulkanInfoMut<backend::vk::InstanceCreateInfo> for Info {
-	/// Converts the [`Info`] into the [`backend::vk::InstanceCreateInfo`] struct
-	/// used to create a [`instance::Instance`].
-	fn to_vk(&mut self) -> backend::vk::InstanceCreateInfo {
-		self.app_info_raw = self.app_info.to_vk();
+	fn create_vk(&mut self) -> backend::vk::InstanceCreateInfo {
+		self.app_info_raw = self.app_info.as_vk();
 		self.extensions_raw = self
 			.extensions
 			.iter()

@@ -1,8 +1,9 @@
-use crate::{backend, flags, utility};
+use crate::{backend, flags};
 
 /// The load and store operations that can be performed on an image
 /// that is attached to a ['Render Pass'](crate::renderpass::Pass)
 /// and its ['Subpasses'](crate::renderpass::Subpass).
+#[derive(Clone)]
 pub struct AttachmentOps {
 	pub load: flags::AttachmentLoadOp,
 	pub store: flags::AttachmentStoreOp,
@@ -20,6 +21,7 @@ impl Default for AttachmentOps {
 /// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
 /// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
 /// images used for each frame that is shown.
+#[derive(Clone)]
 pub struct Attachment {
 	format: flags::Format,
 	samples: flags::SampleCount,
@@ -74,8 +76,8 @@ impl Attachment {
 	}
 }
 
-impl utility::VulkanInfo<backend::vk::AttachmentDescription> for Attachment {
-	fn to_vk(&self) -> backend::vk::AttachmentDescription {
+impl Into<backend::vk::AttachmentDescription> for Attachment {
+	fn into(self) -> backend::vk::AttachmentDescription {
 		backend::vk::AttachmentDescription::builder()
 			.format(self.format)
 			.samples(self.samples)

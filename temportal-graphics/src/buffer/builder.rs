@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Buffer,
 	flags::{BufferUsage, SharingMode},
-	utility::{self, VulkanInfo},
+	utility,
 };
 use std::sync;
 
@@ -58,24 +58,16 @@ impl Builder {
 	}
 }
 
-impl utility::VulkanInfo<backend::vk::BufferCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::BufferCreateInfo`] struct
-	/// used to create a [`Buffer`].
-	fn to_vk(&self) -> backend::vk::BufferCreateInfo {
-		backend::vk::BufferCreateInfo::builder()
+impl Builder {
+	/// Creates an [`Buffer`] object, thereby consuming the info.
+	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
+		let buffer_info = backend::vk::BufferCreateInfo::builder()
 			.size(self.size as u64)
 			.usage(self.usage)
 			.sharing_mode(self.sharing_mode)
 			.queue_family_indices(&self.queue_families[..])
-			.build()
-	}
-}
-
-impl Builder {
-	/// Creates an [`Buffer`] object, thereby consuming the info.
-	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
-		let buffer_info = self.to_vk();
-		let alloc_create_info = self.mem_info.to_vk();
+			.build();
+		let alloc_create_info = self.mem_info.clone().into();
 		let (internal, alloc_handle, alloc_info) =
 			utility::as_alloc_error(allocator.create_buffer(&buffer_info, &alloc_create_info))?;
 		Ok(Buffer::from(

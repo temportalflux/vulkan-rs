@@ -1,4 +1,4 @@
-use crate::{backend, flags, pipeline::vertex, utility::VulkanInfo};
+use crate::{backend, flags, pipeline::vertex};
 
 pub struct Layout {
 	bindings: Vec<backend::vk::VertexInputBindingDescription>,
@@ -38,10 +38,8 @@ impl Layout {
 		}
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::PipelineVertexInputStateCreateInfo> for Layout {
-	fn to_vk(&self) -> backend::vk::PipelineVertexInputStateCreateInfo {
+	pub(crate) fn as_vk(&self) -> backend::vk::PipelineVertexInputStateCreateInfo {
 		backend::vk::PipelineVertexInputStateCreateInfo::builder()
 			.vertex_binding_descriptions(&self.bindings[..])
 			.vertex_attribute_descriptions(&self.attributes[..])

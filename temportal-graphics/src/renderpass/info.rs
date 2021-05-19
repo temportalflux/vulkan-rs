@@ -1,9 +1,4 @@
-use crate::{
-	backend,
-	device::logical,
-	flags, renderpass,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, device::logical, flags, renderpass, utility};
 use std::sync;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
@@ -118,9 +113,13 @@ impl Info {
 		let attachments = self
 			.attachments
 			.iter()
-			.map(|v| v.to_vk())
+			.map(|v| v.clone().into())
 			.collect::<Vec<_>>();
-		let subpasses = self.subpasses.iter().map(|v| v.to_vk()).collect::<Vec<_>>();
+		let subpasses = self
+			.subpasses
+			.iter()
+			.map(renderpass::Subpass::as_vk)
+			.collect::<Vec<_>>();
 		let dependencies = self
 			.dependencies
 			.iter()

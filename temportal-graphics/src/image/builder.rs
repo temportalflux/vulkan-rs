@@ -3,11 +3,12 @@ use crate::{
 	flags::{Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode},
 	image,
 	structs::Extent3D,
-	utility::{self, VulkanInfo},
+	utility,
 };
 use std::sync;
 use temportal_math::Vector;
 
+#[derive(Clone)]
 pub struct Builder {
 	pub mem_info: alloc::Info,
 	pub image_type: ImageType,
@@ -79,10 +80,8 @@ impl Builder {
 	}
 }
 
-impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`image::Image`].
-	fn to_vk(&self) -> backend::vk::ImageCreateInfo {
+impl Into<backend::vk::ImageCreateInfo> for Builder {
+	fn into(self) -> backend::vk::ImageCreateInfo {
 		backend::vk::ImageCreateInfo::builder()
 			.image_type(self.image_type)
 			.format(self.format)
@@ -101,10 +100,10 @@ impl VulkanInfo<backend::vk::ImageCreateInfo> for Builder {
 impl Builder {
 	/// Creates an [`image::Image`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<image::Image> {
-		let image_info = self.to_vk();
-		let alloc_create_info = self.mem_info.to_vk();
-		let (internal, alloc_handle, alloc_info) =
-			utility::as_alloc_error(allocator.create_image(&image_info, &alloc_create_info))?;
+		let alloc_create_info = self.mem_info.clone().into();
+		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(
+			allocator.create_image(&self.clone().into(), &alloc_create_info),
+		)?;
 		Ok(image::Image::new(
 			allocator.clone(),
 			internal,

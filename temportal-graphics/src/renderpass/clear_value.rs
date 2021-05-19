@@ -1,5 +1,4 @@
-use crate::{backend, utility::VulkanInfo};
-
+use crate::backend;
 use temportal_math::Vector;
 
 #[derive(Copy, Clone, Debug)]
@@ -8,9 +7,9 @@ pub enum ClearValue {
 	DepthStencil(f32, u32),
 }
 
-impl VulkanInfo<backend::vk::ClearValue> for ClearValue {
-	fn to_vk(&self) -> backend::vk::ClearValue {
-		match *self {
+impl Into<backend::vk::ClearValue> for ClearValue {
+	fn into(self) -> backend::vk::ClearValue {
+		match self {
 			ClearValue::Color(values) => backend::vk::ClearValue {
 				color: backend::vk::ClearColorValue {
 					float32: *values.data(),

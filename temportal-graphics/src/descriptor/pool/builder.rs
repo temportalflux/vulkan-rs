@@ -1,10 +1,4 @@
-use crate::{
-	backend,
-	descriptor::pool,
-	device::logical,
-	flags::DescriptorKind,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, descriptor::pool, device::logical, flags::DescriptorKind, utility};
 use std::sync;
 
 pub struct Builder {
@@ -40,22 +34,14 @@ impl Builder {
 	}
 }
 
-impl VulkanInfo<backend::vk::DescriptorPoolCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`crate::image::Image`].
-	fn to_vk(&self) -> backend::vk::DescriptorPoolCreateInfo {
-		backend::vk::DescriptorPoolCreateInfo::builder()
-			.max_sets(self.max_sets)
-			.pool_sizes(&self.descriptors)
-			.build()
-	}
-}
-
 impl Builder {
 	/// Creates an [`crate::descriptor::pool::Pool`] object, thereby consuming the info.
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<pool::Pool> {
 		use backend::version::DeviceV1_0;
-		let create_info = self.to_vk();
+		let create_info = backend::vk::DescriptorPoolCreateInfo::builder()
+			.max_sets(self.max_sets)
+			.pool_sizes(&self.descriptors)
+			.build();
 		let internal =
 			utility::as_vulkan_error(unsafe { device.create_descriptor_pool(&create_info, None) })?;
 		Ok(pool::Pool::from(device.clone(), internal))

@@ -1,4 +1,4 @@
-use crate::{backend, command, flags, utility::VulkanInfo};
+use crate::{backend, command, flags};
 use std::sync;
 
 /// Data used to submit commands to a [`Queue`](crate::device::logical::Queue).
@@ -45,10 +45,8 @@ impl SubmitInfo {
 		self.semaphors_to_signal_when_complete.push(**semaphore);
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::SubmitInfo> for SubmitInfo {
-	fn to_vk(&self) -> backend::vk::SubmitInfo {
+	pub(crate) fn as_vk(&self) -> backend::vk::SubmitInfo {
 		backend::vk::SubmitInfo::builder()
 			.wait_semaphores(&self.semaphores_to_wait_for)
 			.wait_dst_stage_mask(&self.stages_waited_for)

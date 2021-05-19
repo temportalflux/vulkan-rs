@@ -1,6 +1,3 @@
-mod vulkan_info;
-pub use vulkan_info::*;
-
 mod macros;
 pub use macros::*;
 

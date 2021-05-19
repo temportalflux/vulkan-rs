@@ -1,9 +1,4 @@
-use crate::{
-	backend,
-	device::logical,
-	pipeline, renderpass, shader,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, device::logical, pipeline, renderpass, shader, utility};
 
 use std::sync;
 
@@ -80,13 +75,19 @@ impl Info {
 			.shaders
 			.iter()
 			.filter_map(|module| match module.upgrade() {
-				Some(module_rc) => Some(module_rc.to_vk()),
+				Some(module_rc) => Some(
+					backend::vk::PipelineShaderStageCreateInfo::builder()
+						.stage(module_rc.kind().into())
+						.module(**module_rc)
+						.name(module_rc.entry_point())
+						.build(),
+				),
 				None => None,
 			})
 			.collect::<Vec<_>>();
-		let vertex_input = self.vertex_input.to_vk();
-		let viewport_state = self.viewport_state.to_vk();
-		let rasterizer = self.rasterization_state.to_vk();
+		let vertex_input = self.vertex_input.as_vk();
+		let viewport_state = self.viewport_state.as_vk();
+		let rasterizer = self.rasterization_state.clone().into();
 
 		let color_blending = backend::vk::PipelineColorBlendStateCreateInfo::builder()
 			.logic_op_enable(false)

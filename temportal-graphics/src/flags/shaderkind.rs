@@ -20,6 +20,12 @@ pub enum ShaderKind {
 	Callable,
 }
 
+impl Into<ShaderStageKind> for ShaderKind {
+	fn into(self) -> ShaderStageKind {
+		self.to_vk()
+	}
+}
+
 impl ShaderKind {
 	pub fn to_vk(&self) -> ShaderStageKind {
 		match self {

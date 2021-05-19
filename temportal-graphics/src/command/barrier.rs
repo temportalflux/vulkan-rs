@@ -3,7 +3,6 @@ use crate::{
 	flags::{Access, ImageLayout, PipelineStage},
 	image,
 	structs::subresource,
-	utility::VulkanInfo,
 };
 use std::sync;
 
@@ -33,8 +32,8 @@ impl Default for MemoryBarrier {
 	}
 }
 
-impl VulkanInfo<backend::vk::MemoryBarrier> for MemoryBarrier {
-	fn to_vk(&self) -> backend::vk::MemoryBarrier {
+impl Into<backend::vk::MemoryBarrier> for MemoryBarrier {
+	fn into(self) -> backend::vk::MemoryBarrier {
 		backend::vk::MemoryBarrier::builder()
 			.src_access_mask(self.src_access)
 			.dst_access_mask(self.dst_access)
@@ -68,8 +67,8 @@ impl Default for BufferBarrier {
 	}
 }
 
-impl VulkanInfo<backend::vk::BufferMemoryBarrier> for BufferBarrier {
-	fn to_vk(&self) -> backend::vk::BufferMemoryBarrier {
+impl BufferBarrier {
+	pub(crate) fn as_vk(&self) -> backend::vk::BufferMemoryBarrier {
 		backend::vk::BufferMemoryBarrier::builder()
 			.src_access_mask(self.src_access)
 			.src_queue_family_index(self.src_queue_family)
@@ -138,10 +137,8 @@ impl ImageBarrier {
 		self.range = range;
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::ImageMemoryBarrier> for ImageBarrier {
-	fn to_vk(&self) -> backend::vk::ImageMemoryBarrier {
+	pub(crate) fn as_vk(&self) -> backend::vk::ImageMemoryBarrier {
 		backend::vk::ImageMemoryBarrier::builder()
 			.src_access_mask(self.src_access)
 			.src_queue_family_index(self.src_queue_family)
@@ -150,7 +147,7 @@ impl VulkanInfo<backend::vk::ImageMemoryBarrier> for ImageBarrier {
 			.image(**self.image.upgrade().unwrap())
 			.old_layout(self.old_layout)
 			.new_layout(self.new_layout)
-			.subresource_range(self.range.to_vk())
+			.subresource_range(self.range.into())
 			.build()
 	}
 }

@@ -3,7 +3,7 @@ use crate::{
 	descriptor::layout,
 	device::logical,
 	flags::{DescriptorKind, ShaderKind},
-	utility::{self, VulkanInfo},
+	utility,
 };
 use std::sync;
 
@@ -39,21 +39,13 @@ impl Builder {
 	}
 }
 
-impl VulkanInfo<backend::vk::DescriptorSetLayoutCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::ImageCreateInfo`] struct
-	/// used to create a [`crate::image::Image`].
-	fn to_vk(&self) -> backend::vk::DescriptorSetLayoutCreateInfo {
-		backend::vk::DescriptorSetLayoutCreateInfo::builder()
-			.bindings(&self.bindings)
-			.build()
-	}
-}
-
 impl Builder {
 	/// Creates an [`crate::descriptor::layout::SetLayout`] object, thereby consuming the info.
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<layout::SetLayout> {
 		use backend::version::DeviceV1_0;
-		let create_info = self.to_vk();
+		let create_info = backend::vk::DescriptorSetLayoutCreateInfo::builder()
+			.bindings(&self.bindings)
+			.build();
 		let internal = utility::as_vulkan_error(unsafe {
 			device.create_descriptor_set_layout(&create_info, None)
 		})?;

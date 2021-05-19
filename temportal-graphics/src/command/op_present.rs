@@ -1,4 +1,4 @@
-use crate::{backend, command, device::swapchain::Swapchain, utility::VulkanInfo};
+use crate::{backend, command, device::swapchain::Swapchain};
 
 /// Data used to present frames via a [`Queue`](crate::device::logical::Queue).
 /// It is NOT safe to keep this struct around for more than 1 stack,
@@ -34,10 +34,8 @@ impl PresentInfo {
 		self.image_indices.push(img);
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::PresentInfoKHR> for PresentInfo {
-	fn to_vk(&self) -> backend::vk::PresentInfoKHR {
+	pub(crate) fn as_vk(&self) -> backend::vk::PresentInfoKHR {
 		backend::vk::PresentInfoKHR::builder()
 			.wait_semaphores(&self.semaphores_to_wait_for)
 			.swapchains(&self.swapchains)

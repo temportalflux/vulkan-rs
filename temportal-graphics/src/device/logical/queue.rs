@@ -1,8 +1,4 @@
-use crate::{
-	backend, command,
-	device::logical,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, command, device::logical, utility};
 
 use std::sync;
 
@@ -35,7 +31,10 @@ impl Queue {
 		signal_fence_when_complete: Option<&command::Fence>,
 	) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		let infos = infos.iter().map(|info| info.to_vk()).collect::<Vec<_>>();
+		let infos = infos
+			.iter()
+			.map(command::SubmitInfo::as_vk)
+			.collect::<Vec<_>>();
 		utility::as_vulkan_error(unsafe {
 			self.device.queue_submit(
 				self.internal,
@@ -46,11 +45,10 @@ impl Queue {
 	}
 	/// returns true if the swapchain is suboptimal
 	pub fn present(&self, info: command::PresentInfo) -> utility::Result</*suboptimal*/ bool> {
-		let vk_info = info.to_vk();
 		utility::as_vulkan_error(unsafe {
 			self.device
 				.unwrap_swapchain()
-				.queue_present(self.internal, &vk_info)
+				.queue_present(self.internal, &info.as_vk())
 		})
 	}
 }

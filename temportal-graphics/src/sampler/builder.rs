@@ -2,8 +2,7 @@ use crate::{
 	backend,
 	device::logical,
 	flags::{BorderColor, CompareOp, Filter, SamplerAddressMode, SamplerMipmapMode},
-	sampler,
-	utility::{self, VulkanInfo},
+	sampler, utility,
 };
 use std::sync;
 
@@ -86,10 +85,8 @@ impl Builder {
 	}
 }
 
-impl utility::VulkanInfo<backend::vk::SamplerCreateInfo> for Builder {
-	/// Converts the [`Builder`] into the [`backend::vk::SamplerCreateInfo`] struct
-	/// used to create a [`sampler::Sampler`].
-	fn to_vk(&self) -> backend::vk::SamplerCreateInfo {
+impl Into<backend::vk::SamplerCreateInfo> for Builder {
+	fn into(self) -> backend::vk::SamplerCreateInfo {
 		backend::vk::SamplerCreateInfo::builder()
 			.mag_filter(self.magnification)
 			.min_filter(self.minification)
@@ -113,8 +110,7 @@ impl utility::VulkanInfo<backend::vk::SamplerCreateInfo> for Builder {
 impl Builder {
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<sampler::Sampler> {
 		use backend::version::DeviceV1_0;
-		let create_info = self.to_vk();
-		let vk = utility::as_vulkan_error(unsafe { device.create_sampler(&create_info, None) })?;
+		let vk = utility::as_vulkan_error(unsafe { device.create_sampler(&self.into(), None) })?;
 		Ok(sampler::Sampler::from(device.clone(), vk))
 	}
 }

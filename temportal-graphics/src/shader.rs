@@ -1,10 +1,4 @@
-use crate::{
-	backend,
-	device::logical,
-	flags::ShaderKind,
-	shader,
-	utility::{self, VulkanInfo},
-};
+use crate::{backend, device::logical, flags::ShaderKind, shader, utility};
 use std::sync;
 
 pub struct Info {
@@ -65,6 +59,14 @@ impl Module {
 		self.kind = kind;
 		self
 	}
+
+	pub fn kind(&self) -> ShaderKind {
+		self.kind
+	}
+
+	pub fn entry_point(&self) -> &std::ffi::CStr {
+		&self.entry_point
+	}
 }
 
 impl std::ops::Deref for Module {
@@ -78,15 +80,5 @@ impl Drop for Module {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_shader_module(self.internal, None) };
-	}
-}
-
-impl VulkanInfo<backend::vk::PipelineShaderStageCreateInfo> for Module {
-	fn to_vk(&self) -> backend::vk::PipelineShaderStageCreateInfo {
-		backend::vk::PipelineShaderStageCreateInfo::builder()
-			.stage(self.kind.to_vk())
-			.module(**self)
-			.name(&self.entry_point)
-			.build()
 	}
 }

@@ -1,6 +1,6 @@
 use crate::{
 	backend,
-	utility::{Scissor, Viewport, VulkanInfo},
+	utility::{Scissor, Viewport},
 };
 
 /// Information about the portion of the viewport a [`Pipeline`](crate::pipeline::Pipeline) should render to.
@@ -28,10 +28,8 @@ impl ViewportState {
 		self.scissors.push(scissor.into());
 		self
 	}
-}
 
-impl VulkanInfo<backend::vk::PipelineViewportStateCreateInfo> for ViewportState {
-	fn to_vk(&self) -> backend::vk::PipelineViewportStateCreateInfo {
+	pub(crate) fn as_vk(&self) -> backend::vk::PipelineViewportStateCreateInfo {
 		let mut info = backend::vk::PipelineViewportStateCreateInfo::default();
 		info.viewport_count = self.viewports.len() as u32;
 		info.p_viewports = self.viewports.as_ptr() as _;

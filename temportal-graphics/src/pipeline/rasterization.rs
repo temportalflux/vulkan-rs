@@ -1,10 +1,10 @@
 use crate::{
 	backend,
 	flags::{CullMode, FrontFace, PolygonMode},
-	utility::VulkanInfo,
 };
 
 /// Bias-information when dealing with depth in a [`Pipeline`](crate::pipeline::Pipeline).
+#[derive(Clone)]
 pub struct DepthBias {
 	constant_factor: f32,
 	clamp: f32,
@@ -12,6 +12,7 @@ pub struct DepthBias {
 }
 
 /// Information about the rasterization of fragments during the execution of a [`Pipeline`](crate::pipeline::Pipeline).
+#[derive(Clone)]
 pub struct RasterizationState {
 	depth_clamp_enabled: bool,
 	depth_bias: Option<DepthBias>,
@@ -73,8 +74,8 @@ impl RasterizationState {
 	}
 }
 
-impl VulkanInfo<backend::vk::PipelineRasterizationStateCreateInfo> for RasterizationState {
-	fn to_vk(&self) -> backend::vk::PipelineRasterizationStateCreateInfo {
+impl Into<backend::vk::PipelineRasterizationStateCreateInfo> for RasterizationState {
+	fn into(self) -> backend::vk::PipelineRasterizationStateCreateInfo {
 		let mut info = backend::vk::PipelineRasterizationStateCreateInfo::builder()
 			.depth_clamp_enable(self.depth_clamp_enabled)
 			.rasterizer_discard_enable(self.rasterizer_discard_enabled)
