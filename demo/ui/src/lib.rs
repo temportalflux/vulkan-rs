@@ -1,4 +1,9 @@
-use engine::{ui, utility::VoidResult, Application};
+use engine::{
+	math::{vector, Vector},
+	ui,
+	utility::VoidResult,
+	Application,
+};
 use std::sync::{Arc, RwLock};
 pub use temportal_engine as engine;
 
@@ -58,7 +63,15 @@ pub fn run() -> VoidResult {
 				SystemShader::MeshImageFragment,
 				&UIDemo::get_asset_id("shaders/ui/mesh/image_fragment"),
 			)?;
-			system.add_font(&UIDemo::get_asset_id("font/unispace"))?;
+			system.add_font(
+				&UIDemo::get_asset_id("font/unispace"),
+				Arc::new(|font_size| -> Vector<f32, 2> {
+					match font_size {
+						f if f >= 100.0 => vector![0.8, 0.09],
+						_ => vector![0.78, 0.08],
+					}
+				}),
+			)?;
 
 			system.apply_tree(widget! {
 				(horizontal_box [
