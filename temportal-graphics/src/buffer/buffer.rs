@@ -18,6 +18,26 @@ impl Buffer {
 		buffer::Builder::default()
 	}
 
+	pub fn create_gpu(
+		allocator: &sync::Arc<alloc::Allocator>,
+		usage: BufferUsage,
+		size: usize,
+	) -> utility::Result<sync::Arc<buffer::Buffer>> {
+		Ok(sync::Arc::new(
+			Self::builder()
+				.with_usage(usage)
+				.with_usage(BufferUsage::TRANSFER_DST)
+				.with_size(size)
+				.with_alloc(
+					alloc::Info::default()
+						.with_usage(MemoryUsage::GpuOnly)
+						.requires(MemoryProperty::DEVICE_LOCAL),
+				)
+				.with_sharing(SharingMode::EXCLUSIVE)
+				.build(&allocator)?,
+		))
+	}
+
 	pub fn from(
 		allocator: sync::Arc<alloc::Allocator>,
 		internal: backend::vk::Buffer,

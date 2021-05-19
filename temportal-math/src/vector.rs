@@ -1157,6 +1157,13 @@ impl<const N: usize> Vector<f32, N> {
 		vret.normalize();
 		vret
 	}
+
+	pub fn scale(mut self, div: Self) -> Self {
+		for i in 0..N {
+			self[i] /= div[i];
+		}
+		self
+	}
 }
 
 #[cfg(test)]
