@@ -10,7 +10,7 @@ pub struct Buffer {
 	allocation_handle: sync::Arc<vk_mem::Allocation>,
 	allocation_info: vk_mem::AllocationInfo,
 	allocator: sync::Arc<alloc::Allocator>,
-	size: usize,
+	builder: buffer::Builder,
 }
 
 impl Buffer {
@@ -30,7 +30,7 @@ impl Buffer {
 			internal,
 			allocation_handle: sync::Arc::new(allocation_handle),
 			allocation_info,
-			size: builder.size,
+			builder,
 		}
 	}
 
@@ -56,14 +56,29 @@ impl Buffer {
 			.build(allocator)
 	}
 
-	pub fn resize(&mut self, allocator: &alloc::Allocator, new_size: usize) -> bool {
-		let success = allocator
+	pub fn resize_allocation(&mut self, new_size: usize) -> bool {
+		let success = self
+			.allocator
 			.resize_allocation(&self.allocation_handle, new_size)
 			.is_ok();
 		if success {
-			self.size = new_size;
+			self.builder.set_size(new_size);
 		}
 		success
+	}
+
+	pub fn expand(&mut self, required_capacity: usize) -> utility::Result<()> {
+		use alloc::Object;
+		if self.size() < required_capacity {
+			self.builder.set_size(required_capacity);
+			if !self.resize_allocation(required_capacity) {
+				let (raw, handle, info) = self.builder.rebuild(&self.allocator())?;
+				self.internal = raw;
+				self.allocation_handle = sync::Arc::new(handle);
+				self.allocation_info = info;
+			}
+		}
+		Ok(())
 	}
 }
 
@@ -86,7 +101,7 @@ impl Drop for Buffer {
 
 impl alloc::Object for Buffer {
 	fn size(&self) -> usize {
-		self.size
+		self.builder.size()
 	}
 
 	fn info(&self) -> &vk_mem::AllocationInfo {

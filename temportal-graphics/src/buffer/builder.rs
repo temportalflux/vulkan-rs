@@ -33,13 +33,21 @@ impl Builder {
 	}
 
 	pub fn with_size(mut self, size: usize) -> Self {
-		self.size = size;
+		self.set_size(size);
 		self
+	}
+
+	pub fn set_size(&mut self, size: usize) {
+		self.size = size;
 	}
 
 	pub fn with_size_of<T: Sized>(mut self, slice: &[T]) -> Self {
 		self.size = std::mem::size_of::<T>() * slice.len();
 		self
+	}
+
+	pub fn size(&self) -> usize {
+		self.size
 	}
 
 	pub fn with_usage(mut self, usage: BufferUsage) -> Self {
@@ -61,15 +69,7 @@ impl Builder {
 impl Builder {
 	/// Creates an [`Buffer`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
-		let buffer_info = backend::vk::BufferCreateInfo::builder()
-			.size(self.size as u64)
-			.usage(self.usage)
-			.sharing_mode(self.sharing_mode)
-			.queue_family_indices(&self.queue_families[..])
-			.build();
-		let alloc_create_info = self.mem_info.clone().into();
-		let (internal, alloc_handle, alloc_info) =
-			utility::as_alloc_error(allocator.create_buffer(&buffer_info, &alloc_create_info))?;
+		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
 		Ok(Buffer::from(
 			allocator.clone(),
 			internal,
@@ -77,5 +77,19 @@ impl Builder {
 			alloc_info,
 			self,
 		))
+	}
+
+	pub(crate) fn rebuild(
+		&self,
+		allocator: &alloc::Allocator,
+	) -> utility::Result<(ash::vk::Buffer, vk_mem::Allocation, vk_mem::AllocationInfo)> {
+		let buffer_info = backend::vk::BufferCreateInfo::builder()
+			.size(self.size as u64)
+			.usage(self.usage)
+			.sharing_mode(self.sharing_mode)
+			.queue_family_indices(&self.queue_families[..])
+			.build();
+		let alloc_create_info = self.mem_info.clone().into();
+		utility::as_alloc_error(allocator.create_buffer(&buffer_info, &alloc_create_info))
 	}
 }
