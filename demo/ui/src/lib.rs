@@ -178,9 +178,10 @@ pub fn run() -> VoidResult {
 			system
 		}));
 		engine.add_system(&ui_system);
-		let mut chain = chain.write().unwrap();
-		chain.add_render_chain_element(&ui_system)?;
-		chain.add_command_recorder(&ui_system)?;
+		chain
+			.write()
+			.unwrap()
+			.add_render_chain_element(&ui_system)?;
 	}
 
 	engine.run(chain.clone());

@@ -72,12 +72,10 @@ impl Triangle {
 			index_buffer: None,
 		}));
 
-		{
-			let mut chain = render_chain.write().unwrap();
-			chain.add_render_chain_element(&strong)?;
-			chain.add_command_recorder(&strong)?;
-		}
-
+		render_chain
+			.write()
+			.unwrap()
+			.add_render_chain_element(&strong)?;
 		Ok(strong)
 	}
 }
@@ -213,9 +211,7 @@ impl graphics::RenderChainElement for Triangle {
 
 		Ok(())
 	}
-}
 
-impl graphics::CommandRecorder for Triangle {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer, _: usize) -> utility::Result<()> {
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),

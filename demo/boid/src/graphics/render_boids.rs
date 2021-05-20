@@ -188,11 +188,10 @@ impl RenderBoids {
 			pending_gpu_signals: Vec::new(),
 		}));
 
-		{
-			let mut chain = render_chain.write().unwrap();
-			chain.add_render_chain_element(&strong)?;
-			chain.add_command_recorder(&strong)?;
-		}
+		render_chain
+			.write()
+			.unwrap()
+			.add_render_chain_element(&strong)?;
 
 		Ok(strong)
 	}
@@ -447,9 +446,7 @@ impl graphics::RenderChainElement for RenderBoids {
 	fn take_gpu_signals(&mut self) -> Vec<Arc<command::Semaphore>> {
 		self.pending_gpu_signals.drain(..).collect()
 	}
-}
 
-impl graphics::CommandRecorder for RenderBoids {
 	fn record_to_buffer(&self, buffer: &mut command::Buffer, frame: usize) -> utility::Result<()> {
 		buffer.bind_pipeline(
 			&self.pipeline.as_ref().unwrap(),
