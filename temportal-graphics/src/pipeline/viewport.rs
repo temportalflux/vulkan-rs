@@ -1,5 +1,5 @@
 use crate::{
-	backend,
+	backend, structs,
 	utility::{Scissor, Viewport},
 };
 
@@ -19,6 +19,12 @@ impl Default for ViewportState {
 }
 
 impl ViewportState {
+	pub fn from(resolution: structs::Extent2D) -> Self {
+		Self::default()
+			.add_viewport(Viewport::default().set_size(resolution))
+			.add_scissor(Scissor::default().set_size(resolution))
+	}
+
 	pub fn add_viewport(mut self, viewport: Viewport) -> Self {
 		self.viewports.push(viewport.into());
 		self

@@ -24,10 +24,29 @@ pub struct ColorBlendAttachment {
 	pub blend: Option<Blend>,
 }
 
+impl Default for ColorBlendAttachment {
+	fn default() -> Self {
+		Self {
+			color_flags: ColorComponent::all(),
+			blend: Some(Blend::alpha_blend()),
+		}
+	}
+}
+
 #[derive(Clone, Copy)]
 pub struct Blend {
 	pub color: blend::Expression,
 	pub alpha: blend::Expression,
+}
+
+impl Blend {
+	pub fn alpha_blend() -> Self {
+		use blend::{Constant::*, Factor::*, Source::*};
+		Self {
+			color: SrcAlpha * New + (One - SrcAlpha) * Old,
+			alpha: One * New + Zero * Old,
+		}
+	}
 }
 
 impl ColorBlendState {
