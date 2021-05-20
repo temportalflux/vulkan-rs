@@ -175,8 +175,6 @@ pub fn run() -> VoidResult {
 				])
 			});
 
-			system.set_resolution(engine::math::vector![1280, 720]);
-
 			system
 		}));
 		engine.add_system(&ui_system);
