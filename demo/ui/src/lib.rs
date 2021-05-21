@@ -33,7 +33,7 @@ pub fn run() -> VoidResult {
 	let mut window = engine::window::Window::builder()
 		.with_title(UIDemo::display_name())
 		.with_size(1280.0, 720.0)
-		.with_resizable(true)
+		.with_resizable(false)
 		.with_application::<UIDemo>()
 		.build(&engine)?;
 
@@ -159,7 +159,22 @@ pub fn run() -> VoidResult {
 							material: ImageBoxMaterial::Image(ImageBoxImage {
 								id: "textures/background".to_owned(),
 								source_rect: None,
-								scaling: ImageBoxImageScaling::Stretch,
+								scaling: ImageBoxImageScaling::Frame(ImageBoxFrame {
+									source: Rect {
+										top: 5.0 / 16.0,
+										right: 5.0 / 16.0,
+										bottom: 5.0 / 16.0,
+										left: 5.0 / 16.0,
+									},
+									destination: Rect {
+										top: 20.0,
+										right: 20.0,
+										bottom: 20.0,
+										left: 20.0,
+									},
+									frame_only: false,
+									frame_keep_aspect_ratio: false,
+								}),
 								tint: Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
 							}),
 							transform: Transform {
