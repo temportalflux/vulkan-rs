@@ -42,8 +42,7 @@ impl Builder {
 			.max_sets(self.max_sets)
 			.pool_sizes(&self.descriptors)
 			.build();
-		let internal =
-			utility::as_vulkan_error(unsafe { device.create_descriptor_pool(&create_info, None) })?;
+		let internal = unsafe { device.create_descriptor_pool(&create_info, None) }?;
 		Ok(pool::Pool::from(device.clone(), internal))
 	}
 }

@@ -39,11 +39,11 @@ impl Swapchain {
 
 	/// Creates the swapchain images from the vulkan device.
 	pub fn get_images(&self) -> Result<Vec<Image>, utility::Error> {
-		Ok(utility::as_vulkan_error(unsafe {
+		Ok(unsafe {
 			self.device
 				.unwrap_swapchain()
 				.get_swapchain_images(self.internal)
-		})?
+		}?
 		.into_iter()
 		// no device reference is passed in because the images are a part of the swapchain
 		.map(|image| Image::from_swapchain(image, self.image_format, self.image_extent))
@@ -59,14 +59,14 @@ impl Swapchain {
 		semaphore: Option<&command::Semaphore>,
 		fence: Option<&command::Fence>,
 	) -> utility::Result<(/*image index*/ u32, /*is suboptimal*/ bool)> {
-		utility::as_vulkan_error(unsafe {
+		Ok(unsafe {
 			self.device.unwrap_swapchain().acquire_next_image(
 				self.internal,
 				timeout,
 				semaphore.map_or(backend::vk::Semaphore::null(), |obj| **obj),
 				fence.map_or(backend::vk::Fence::null(), |obj| **obj),
 			)
-		})
+		}?)
 	}
 }
 

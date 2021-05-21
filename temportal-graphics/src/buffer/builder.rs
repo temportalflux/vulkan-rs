@@ -107,6 +107,6 @@ impl Builder {
 			.queue_family_indices(&self.queue_families[..])
 			.build();
 		let alloc_create_info = self.mem_info.clone().into();
-		utility::as_alloc_error(allocator.create_buffer(&buffer_info, &alloc_create_info))
+		Ok(allocator.create_buffer(&buffer_info, &alloc_create_info)?)
 	}
 }

@@ -138,11 +138,9 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
-		utility::as_alloc_error(
-			self.allocator
-				.destroy_buffer(**self, &self.allocation_handle),
-		)
-		.unwrap();
+		self.allocator
+			.destroy_buffer(**self, &self.allocation_handle)
+			.unwrap();
 	}
 }
 

@@ -46,9 +46,7 @@ impl Builder {
 		let create_info = backend::vk::DescriptorSetLayoutCreateInfo::builder()
 			.bindings(&self.bindings)
 			.build();
-		let internal = utility::as_vulkan_error(unsafe {
-			device.create_descriptor_set_layout(&create_info, None)
-		})?;
+		let internal = unsafe { device.create_descriptor_set_layout(&create_info, None) }?;
 		Ok(layout::SetLayout::from(device.clone(), internal))
 	}
 }

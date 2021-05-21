@@ -16,7 +16,7 @@ impl Semaphore {
 	pub fn new(device: &sync::Arc<logical::Device>) -> utility::Result<Semaphore> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::SemaphoreCreateInfo::builder().build();
-		let vk = utility::as_vulkan_error(unsafe { device.create_semaphore(&info, None) })?;
+		let vk = unsafe { device.create_semaphore(&info, None) }?;
 		Ok(Semaphore::from(device.clone(), vk))
 	}
 
@@ -51,7 +51,7 @@ impl Fence {
 	) -> utility::Result<Fence> {
 		use backend::version::DeviceV1_0;
 		let info = backend::vk::FenceCreateInfo::builder().flags(state).build();
-		let vk = utility::as_vulkan_error(unsafe { device.create_fence(&info, None) })?;
+		let vk = unsafe { device.create_fence(&info, None) }?;
 		Ok(Fence::from(device.clone(), vk))
 	}
 

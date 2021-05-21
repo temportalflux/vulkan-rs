@@ -29,10 +29,6 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-pub fn as_vulkan_error<T>(vk_result: backend::prelude::VkResult<T>) -> Result<T> {
-	Ok(vk_result?)
-}
-
 impl From<backend::vk::Result> for Error {
 	fn from(err: backend::vk::Result) -> Error {
 		match err {
@@ -48,8 +44,4 @@ impl From<vk_mem::Error> for Error {
 	fn from(err: vk_mem::Error) -> Error {
 		Error::AllocatorError(err)
 	}
-}
-
-pub fn as_alloc_error<T>(result: vk_mem::Result<T>) -> Result<T> {
-	Ok(result?)
 }

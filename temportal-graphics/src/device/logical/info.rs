@@ -121,9 +121,7 @@ impl Info {
 
 		info.p_enabled_features = &self.features as _;
 
-		let internal = utility::as_vulkan_error(unsafe {
-			instance.create_device(**physical_device, &info, None)
-		})?;
+		let internal = unsafe { instance.create_device(**physical_device, &info, None) }?;
 		Ok(logical::Device::from(&instance, internal))
 	}
 }

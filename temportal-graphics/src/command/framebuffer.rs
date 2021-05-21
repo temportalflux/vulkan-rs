@@ -37,7 +37,7 @@ impl Info {
 			.render_pass(**render_pass)
 			.attachments(&attachments[..])
 			.build();
-		let vk = utility::as_vulkan_error(unsafe { device.create_framebuffer(&info, None) })?;
+		let vk = unsafe { device.create_framebuffer(&info, None) }?;
 		Ok(Framebuffer::from(device.clone(), vk))
 	}
 }

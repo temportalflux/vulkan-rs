@@ -22,8 +22,7 @@ impl Pool {
 			.queue_family_index(queue_family_index as u32)
 			.flags(flags.unwrap_or_default())
 			.build();
-		let internal =
-			utility::as_vulkan_error(unsafe { device.create_command_pool(&info, None) })?;
+		let internal = unsafe { device.create_command_pool(&info, None) }?;
 		Ok(Pool {
 			device: device.clone(),
 			internal,
@@ -41,9 +40,7 @@ impl Pool {
 			.level(level)
 			.command_buffer_count(amount as u32)
 			.build();
-		let alloc_result =
-			utility::as_vulkan_error(unsafe { self.device.allocate_command_buffers(&info) });
-		Ok(alloc_result?
+		Ok(unsafe { self.device.allocate_command_buffers(&info) }?
 			.into_iter()
 			.map(|vk_buffer| command::Buffer::from(self.device.clone(), vk_buffer))
 			.collect::<Vec<_>>())

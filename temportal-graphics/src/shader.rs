@@ -40,8 +40,7 @@ impl Module {
 			.code(&decoded_bytes)
 			.build();
 
-		let internal =
-			utility::as_vulkan_error(unsafe { device.create_shader_module(&info, None) })?;
+		let internal = unsafe { device.create_shader_module(&info, None) }?;
 		Ok(Module {
 			device,
 			internal,

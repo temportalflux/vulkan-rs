@@ -110,7 +110,7 @@ impl Into<backend::vk::SamplerCreateInfo> for Builder {
 impl Builder {
 	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<sampler::Sampler> {
 		use backend::version::DeviceV1_0;
-		let vk = utility::as_vulkan_error(unsafe { device.create_sampler(&self.into(), None) })?;
+		let vk = unsafe { device.create_sampler(&self.into(), None) }?;
 		Ok(sampler::Sampler::from(device.clone(), vk))
 	}
 }

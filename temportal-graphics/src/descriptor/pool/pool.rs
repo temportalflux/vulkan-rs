@@ -34,9 +34,7 @@ impl Pool {
 			.descriptor_pool(**self)
 			.set_layouts(&set_layouts)
 			.build();
-		let raw_sets = utility::as_vulkan_error(unsafe {
-			self.device.allocate_descriptor_sets(&create_info)
-		})?;
+		let raw_sets = unsafe { self.device.allocate_descriptor_sets(&create_info) }?;
 		Ok(raw_sets
 			.into_iter()
 			.enumerate()

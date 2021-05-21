@@ -51,12 +51,12 @@ impl Buffer {
 		let info = backend::vk::CommandBufferBeginInfo::builder()
 			.flags(usage.unwrap_or(flags::CommandBufferUsage::empty()))
 			.inheritance_info(&inheritance_info);
-		utility::as_vulkan_error(unsafe { self.device.begin_command_buffer(self.internal, &info) })
+		Ok(unsafe { self.device.begin_command_buffer(self.internal, &info) }?)
 	}
 
 	pub fn end(&self) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		utility::as_vulkan_error(unsafe { self.device.end_command_buffer(self.internal) })
+		Ok(unsafe { self.device.end_command_buffer(self.internal) }?)
 	}
 
 	pub fn mark_pipeline_barrier(&self, barrier: command::PipelineBarrier) {

@@ -78,7 +78,7 @@ impl Builder {
 			.components(self.components)
 			.subresource_range(self.subresource_range.into())
 			.build();
-		let vk = utility::as_vulkan_error(unsafe { device.create_image_view(&info, None) })?;
+		let vk = unsafe { device.create_image_view(&info, None) }?;
 		Ok(View::from(device.clone(), image, vk))
 	}
 }

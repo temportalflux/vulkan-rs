@@ -26,7 +26,7 @@ impl Allocator {
 			heap_size_limits: None,
 		};
 		Ok(Allocator {
-			internal: utility::as_alloc_error(vk_mem::Allocator::new(&info))?,
+			internal: vk_mem::Allocator::new(&info)?,
 		})
 	}
 }
@@ -53,6 +53,6 @@ impl image::Owner for Allocator {
 		obj: &image::Image,
 		allocation: Option<&vk_mem::Allocation>,
 	) -> utility::Result<()> {
-		utility::as_alloc_error(self.internal.destroy_image(**obj, allocation.unwrap()))
+		Ok(self.internal.destroy_image(**obj, allocation.unwrap())?)
 	}
 }

@@ -35,21 +35,21 @@ impl Queue {
 			.iter()
 			.map(command::SubmitInfo::as_vk)
 			.collect::<Vec<_>>();
-		utility::as_vulkan_error(unsafe {
+		Ok(unsafe {
 			self.device.queue_submit(
 				self.internal,
 				&infos,
 				signal_fence_when_complete.map_or(backend::vk::Fence::null(), |obj| **obj),
 			)
-		})
+		}?)
 	}
 	/// returns true if the swapchain is suboptimal
 	pub fn present(&self, info: command::PresentInfo) -> utility::Result</*suboptimal*/ bool> {
-		utility::as_vulkan_error(unsafe {
+		Ok(unsafe {
 			self.device
 				.unwrap_swapchain()
 				.queue_present(self.internal, &info.as_vk())
-		})
+		}?)
 	}
 }
 

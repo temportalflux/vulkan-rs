@@ -38,11 +38,11 @@ impl Instance {
 						| backend::vk::DebugUtilsMessageTypeFlagsEXT::GENERAL,
 				)
 				.pfn_user_callback(Some(debug_callback));
-			instance.debug_messenger = Some(utility::as_vulkan_error(unsafe {
+			instance.debug_messenger = Some(unsafe {
 				instance
 					.debug_ext
 					.create_debug_utils_messenger(&messenger_info, None)
-			})?);
+			}?);
 		}
 
 		Ok(instance)
@@ -54,10 +54,12 @@ impl Instance {
 		instance: &sync::Arc<Self>,
 		handle: &impl raw_window_handle::HasRawWindowHandle,
 	) -> utility::Result<Surface> {
-		utility::as_vulkan_error(unsafe {
-			ash_window::create_surface(&context.loader, &instance.internal, handle, None)
-		})
-		.map(|ok| Surface::from(instance.clone(), ok))
+		Ok(
+			unsafe {
+				ash_window::create_surface(&context.loader, &instance.internal, handle, None)
+			}
+			.map(|ok| Surface::from(instance.clone(), ok))?,
+		)
 	}
 
 	#[doc(hidden)]

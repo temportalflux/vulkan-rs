@@ -33,18 +33,18 @@ impl Device {
 	pub fn wait_for(&self, fence: &command::Fence, timeout: u64) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		let fences = [**fence];
-		utility::as_vulkan_error(unsafe { self.internal.wait_for_fences(&fences, true, timeout) })
+		Ok(unsafe { self.internal.wait_for_fences(&fences, true, timeout) }?)
 	}
 
 	pub fn reset_fences(&self, fences: &[&command::Fence]) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		let fences = fences.iter().map(|f| ***f).collect::<Vec<_>>();
-		utility::as_vulkan_error(unsafe { self.internal.reset_fences(&fences[..]) })
+		Ok(unsafe { self.internal.reset_fences(&fences[..]) }?)
 	}
 
 	pub fn wait_until_idle(&self) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
-		utility::as_vulkan_error(unsafe { self.internal.device_wait_idle() })
+		Ok(unsafe { self.internal.device_wait_idle() }?)
 	}
 }
 
