@@ -1,5 +1,6 @@
 use crate::{
-	alloc, backend, buffer::Builder,
+	alloc, backend,
+	buffer::Builder,
 	flags::{BufferUsage, MemoryProperty, MemoryUsage, SharingMode},
 	utility::{self},
 };
@@ -7,9 +8,9 @@ use std::sync;
 
 /// A vulkan object created by the [`Allocator`](alloc::Allocator) which can store
 /// ✨data✨ on the CPU and/or GPU.
-/// 
+///
 /// Frequently used for writing things like vertices/indices and uniforms to shaders.
-/// 
+///
 /// When a `Buffer` object is dropped, the allocation on the GPU is also dropped, thereby destroying the buffer.
 pub struct Buffer {
 	/// The vulkan api buffer (which does not tend to follow rust semantics).
@@ -23,7 +24,6 @@ pub struct Buffer {
 }
 
 impl Buffer {
-
 	/// Helper method for creating a default buffer builder.
 	pub fn builder() -> Builder {
 		Builder::default()
@@ -119,7 +119,7 @@ impl Buffer {
 		}
 		Ok(())
 	}
-	
+
 	/// Maps the memory of the buffer for writing.
 	/// The buffer must be CPU visibile/mappable in order for this to succeed.
 	/// Returns the [`Memory`](alloc::Memory) mapping for writing,

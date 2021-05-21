@@ -5,7 +5,7 @@ use crate::{
 use std::{io::Write, sync};
 
 /// Trait for marking types which represent data which is allocated by an [`allocator`](alloc::Allocator).
-/// 
+///
 /// All allocated objects have a size, allocation info, allocation handle,
 /// and should retain a reference to their allocator to ensure proper memory dropping order.
 pub trait Object {
@@ -16,7 +16,7 @@ pub trait Object {
 }
 
 /// A chunk of memory that is writable on the CPU, and may be accessible on the GPU.
-/// 
+///
 /// Predominately used internally to handle writing to allocator [`objects`](Object).
 pub struct Memory {
 	ptr: *mut u8,
@@ -27,7 +27,6 @@ pub struct Memory {
 }
 
 impl Memory {
-
 	/// Starts a memory mapping to the memory for a given object.
 	/// Mapping will be unmapped when the memory wrapper is dropped.
 	pub fn new(obj: &impl Object) -> utility::Result<Memory> {
@@ -43,7 +42,7 @@ impl Memory {
 	/// Writes a slice of any type to the object's memory,
 	/// and results in a `false` if the slice would result in
 	/// an overflow beyond the size of an object.
-	/// 
+	///
 	/// Multiple items can be written in sequence,
 	/// so long as the total memory does not overflow the object's size.
 	pub fn write_slice<T: Sized>(&mut self, buf: &[T]) -> std::io::Result<bool> {
@@ -70,7 +69,7 @@ impl Memory {
 	/// Writes an object of any type to the object's memory,
 	/// and results in a `false` if the slice would result in
 	/// an overflow beyond the size of an object.
-	/// 
+	///
 	/// Multiple items can be written in sequence,
 	/// so long as the total memory does not overflow the object's size.
 	pub fn write_item<T: Sized>(&mut self, item: &T) -> std::io::Result<bool> {

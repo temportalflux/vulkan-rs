@@ -21,7 +21,6 @@ impl Default for Builder {
 }
 
 impl Builder {
-
 	/// Sets the intended usage of the memory (i.e. if the CPU and/or GPU can access the data).
 	pub fn with_usage(mut self, usage: MemoryUsage) -> Self {
 		self.mem_usage = usage;
@@ -37,7 +36,7 @@ impl Builder {
 
 	/// Inserts a flag indicating that a given memory property needs to be supported for the allocation.
 	/// This can be used to ensure that an object is local to the graphics device, or has i/o coherency for example.
-	/// 
+	///
 	/// See [`MemoryProperty`] for a full list of the valid property flags.
 	pub fn requires(mut self, property: MemoryProperty) -> Self {
 		self.required_properties |= property;
@@ -49,7 +48,7 @@ impl Builder {
 	/// This can be used to indicate to the allocator that it'd be nice if the allocation was
 	/// [`Lazily Allocated`](MemoryProperty::LAZILY_ALLOCATED),
 	/// for example, but need not be true to actually make the allocation.
-	/// 
+	///
 	/// See [`MemoryProperty`] for a full list of the valid property flags.
 	pub fn prefers(mut self, property: MemoryProperty) -> Self {
 		self.preferred_properties |= property;

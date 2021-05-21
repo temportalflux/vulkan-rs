@@ -7,6 +7,7 @@ use crate::{
 use std::sync;
 
 /// The builder for [`Buffer`] objects.
+#[derive(Clone)]
 pub struct Builder {
 	/// The allocation information/builder for allocating the buffer.
 	mem_info: alloc::Builder,
@@ -31,7 +32,6 @@ impl Default for Builder {
 }
 
 impl Builder {
-
 	/// Mutates the builder to include the memory allocation information.
 	pub fn with_alloc(mut self, mem_info: alloc::Builder) -> Self {
 		self.mem_info = mem_info;
@@ -82,7 +82,7 @@ impl Builder {
 		self.queue_families.push(family_index as u32);
 		self
 	}
-	
+
 	/// Creates an [`Buffer`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;

@@ -10,7 +10,6 @@ pub struct Allocator {
 }
 
 impl Allocator {
-
 	/// Creates an allocator for a given vulkan instance and device pair.
 	pub fn create(
 		instance: &instance::Instance,
