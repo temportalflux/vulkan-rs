@@ -10,7 +10,6 @@ pub trait Owner: Send + Sync {
 /// including any created by the [`Swapchain`](crate::device::swapchain::Swapchain).
 pub struct Image {
 	image_info: Option<image::Builder>,
-	allocation_info: Option<vk_mem::AllocationInfo>,
 	allocation_handle: Option<vk_mem::Allocation>,
 	internal: backend::vk::Image,
 	owner: Option<sync::Arc<dyn Owner>>, // empty for images created from the swapchain
@@ -22,7 +21,6 @@ impl Image {
 			owner: None,
 			internal,
 			allocation_handle: None,
-			allocation_info: None,
 			image_info: None,
 		}
 	}
@@ -35,14 +33,12 @@ impl Image {
 		owner: sync::Arc<dyn Owner>,
 		internal: backend::vk::Image,
 		allocation_handle: Option<vk_mem::Allocation>,
-		allocation_info: Option<vk_mem::AllocationInfo>,
 		image_info: Option<image::Builder>,
 	) -> Image {
 		Image {
 			owner: Some(owner),
 			internal,
 			allocation_handle,
-			allocation_info,
 			image_info,
 		}
 	}
@@ -90,9 +86,5 @@ impl Image {
 
 	pub fn format(&self) -> flags::Format {
 		self.image_info.as_ref().unwrap().format
-	}
-
-	pub fn memory_size(&self) -> usize {
-		self.allocation_info.as_ref().unwrap().get_size()
 	}
 }

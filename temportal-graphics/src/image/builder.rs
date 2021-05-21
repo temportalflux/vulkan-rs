@@ -101,14 +101,13 @@ impl Builder {
 	/// Creates an [`image::Image`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<image::Image> {
 		let alloc_create_info = self.mem_info.clone().into();
-		let (internal, alloc_handle, alloc_info) = utility::as_alloc_error(
+		let (internal, alloc_handle, _alloc_info) = utility::as_alloc_error(
 			allocator.create_image(&self.clone().into(), &alloc_create_info),
 		)?;
 		Ok(image::Image::new(
 			allocator.clone(),
 			internal,
 			Some(alloc_handle),
-			Some(alloc_info),
 			Some(self),
 		))
 	}

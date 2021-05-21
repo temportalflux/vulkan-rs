@@ -1,49 +1,41 @@
 use crate::{
-	alloc, backend, buffer,
+	alloc, backend, buffer::Builder,
 	flags::{BufferUsage, MemoryProperty, MemoryUsage, SharingMode},
 	utility::{self},
 };
 use std::sync;
 
+/// A vulkan object created by the [`Allocator`](alloc::Allocator) which can store
+/// ✨data✨ on the CPU and/or GPU.
+/// 
+/// Frequently used for writing things like vertices/indices and uniforms to shaders.
+/// 
+/// When a `Buffer` object is dropped, the allocation on the GPU is also dropped, thereby destroying the buffer.
 pub struct Buffer {
+	/// The vulkan api buffer (which does not tend to follow rust semantics).
+	/// If it is dropped, the buffer wont actually be destroyed
+	/// (which is why this object has a handle to the allocator and alloc info).
 	internal: backend::vk::Buffer,
 	allocation_handle: sync::Arc<vk_mem::Allocation>,
 	allocation_info: vk_mem::AllocationInfo,
 	allocator: sync::Arc<alloc::Allocator>,
-	builder: buffer::Builder,
+	builder: Builder,
 }
 
 impl Buffer {
-	pub fn builder() -> buffer::Builder {
-		buffer::Builder::default()
+
+	/// Helper method for creating a default buffer builder.
+	pub fn builder() -> Builder {
+		Builder::default()
 	}
 
-	pub fn create_gpu(
-		allocator: &sync::Arc<alloc::Allocator>,
-		usage: BufferUsage,
-		size: usize,
-	) -> utility::Result<sync::Arc<buffer::Buffer>> {
-		Ok(sync::Arc::new(
-			Self::builder()
-				.with_usage(usage)
-				.with_usage(BufferUsage::TRANSFER_DST)
-				.with_size(size)
-				.with_alloc(
-					alloc::Builder::default()
-						.with_usage(MemoryUsage::GpuOnly)
-						.requires(MemoryProperty::DEVICE_LOCAL),
-				)
-				.with_sharing(SharingMode::EXCLUSIVE)
-				.build(&allocator)?,
-		))
-	}
-
-	pub fn from(
+	/// Constructs the buffer object from a completed [`Builder`].
+	pub(crate) fn from(
 		allocator: sync::Arc<alloc::Allocator>,
 		internal: backend::vk::Buffer,
 		allocation_handle: vk_mem::Allocation,
 		allocation_info: vk_mem::AllocationInfo,
-		builder: buffer::Builder,
+		builder: Builder,
 	) -> Buffer {
 		Buffer {
 			allocator,
@@ -54,19 +46,40 @@ impl Buffer {
 		}
 	}
 
-	pub fn handle(&self) -> u64 {
-		use backend::vk::Handle;
-		self.allocation_info.get_device_memory().as_raw()
+	/// Creates an [`exclusive`](SharingMode::EXCLUSIVE) buffer,
+	/// on [`only the GPU`](MemoryUsage::GpuOnly),
+	/// with a given size, that can be [`transfered to`](BufferUsage::TRANSFER_DST).
+	pub fn create_gpu(
+		allocator: &sync::Arc<alloc::Allocator>,
+		usage: BufferUsage,
+		size: usize,
+	) -> utility::Result<sync::Arc<Self>> {
+		Ok(sync::Arc::new(
+			Self::builder()
+				.with_sharing(SharingMode::EXCLUSIVE)
+				.with_usage(usage)
+				.with_usage(BufferUsage::TRANSFER_DST)
+				.with_size(size)
+				.with_alloc(
+					alloc::Builder::default()
+						.with_usage(MemoryUsage::GpuOnly)
+						.requires(MemoryProperty::DEVICE_LOCAL),
+				)
+				.build(&allocator)?,
+		))
 	}
 
+	/// Creates an [`exclusive`](SharingMode::EXCLUSIVE) buffer,
+	/// which can be written from [`CPU to GPU`](MemoryUsage::CpuToGpu),
+	/// with a given size, that can be [`transfered from`](BufferUsage::TRANSFER_SRC).
 	pub fn create_staging(
-		size: usize,
 		allocator: &sync::Arc<alloc::Allocator>,
-	) -> utility::Result<Buffer> {
-		Buffer::builder()
-			.with_size(size)
-			.with_usage(BufferUsage::TRANSFER_SRC)
+		size: usize,
+	) -> utility::Result<Self> {
+		Self::builder()
 			.with_sharing(SharingMode::EXCLUSIVE)
+			.with_usage(BufferUsage::TRANSFER_SRC)
+			.with_size(size)
 			.with_alloc(
 				alloc::Builder::default()
 					.with_usage(MemoryUsage::CpuToGpu)
@@ -76,7 +89,9 @@ impl Buffer {
 			.build(allocator)
 	}
 
-	pub fn resize_allocation(&mut self, new_size: usize) -> bool {
+	/// Attempts to change the allocated memory to a new size.
+	/// Returns false if the resize failed.
+	fn resize_allocation(&mut self, new_size: usize) -> bool {
 		let success = self
 			.allocator
 			.resize_allocation(&self.allocation_handle, new_size)
@@ -87,6 +102,10 @@ impl Buffer {
 		success
 	}
 
+	/// Expands the buffer to hold a `required_capacity`.
+	/// If the size of the buffer can already support `required_capacity`, then no changes are made.
+	/// Otherwise, an allocation resize is attempted. If the allocation cannot be extended,
+	/// then a new buffer is allocated wih the desired capacity.
 	pub fn expand(&mut self, required_capacity: usize) -> utility::Result<()> {
 		use alloc::Object;
 		if self.size() < required_capacity {
@@ -99,6 +118,14 @@ impl Buffer {
 			}
 		}
 		Ok(())
+	}
+	
+	/// Maps the memory of the buffer for writing.
+	/// The buffer must be CPU visibile/mappable in order for this to succeed.
+	/// Returns the [`Memory`](alloc::Memory) mapping for writing,
+	/// which will become unmapped when the memory alloc object is dropped.
+	pub fn memory(&self) -> utility::Result<alloc::Memory> {
+		alloc::Memory::new(self)
 	}
 }
 
@@ -134,15 +161,5 @@ impl alloc::Object for Buffer {
 
 	fn allocator(&self) -> &sync::Arc<alloc::Allocator> {
 		&self.allocator
-	}
-}
-
-impl Buffer {
-	pub fn memory_size(&self) -> usize {
-		self.allocation_info.get_size()
-	}
-
-	pub fn memory(&self) -> utility::Result<alloc::Memory> {
-		alloc::Memory::new(self)
 	}
 }
