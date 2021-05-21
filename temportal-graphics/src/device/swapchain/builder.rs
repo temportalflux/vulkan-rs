@@ -9,12 +9,11 @@ use crate::{
 	structs::Extent2D,
 	utility,
 };
-
 use std::sync;
-use temportal_math::Vector;
 
 /// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
-pub struct Info {
+#[derive(Clone)]
+pub struct Builder {
 	image_count: u32,
 	pub(crate) image_format: Format,
 	image_color_space: ColorSpace,
@@ -28,9 +27,9 @@ pub struct Info {
 	is_clipped: bool,
 }
 
-impl Default for Info {
-	fn default() -> Info {
-		Info {
+impl Default for Builder {
+	fn default() -> Self {
+		Self {
 			image_count: 0,
 			image_format: Format::UNDEFINED,
 			image_color_space: ColorSpace::SRGB_NONLINEAR,
@@ -46,69 +45,70 @@ impl Default for Info {
 	}
 }
 
-impl Info {
-	pub fn set_image_count(mut self, count: u32) -> Self {
+impl Builder {
+	/// Mutates the builder to indicate the number of frame images to use.
+	pub fn with_image_count(mut self, count: u32) -> Self {
 		self.image_count = count;
 		self
 	}
 
-	pub fn set_image_format(mut self, format: Format) -> Self {
+	/// Mutates the builder to set the format of the frame images.
+	pub fn with_image_format(mut self, format: Format) -> Self {
 		self.image_format = format;
 		self
 	}
 
-	pub fn set_image_color_space(mut self, color_space: ColorSpace) -> Self {
+	/// Mutates the builder to set the color space of the frame images.
+	pub fn with_image_color_space(mut self, color_space: ColorSpace) -> Self {
 		self.image_color_space = color_space;
 		self
 	}
 
-	pub fn image_extent(&self) -> &Extent2D {
-		&self.image_extent
-	}
-
-	pub fn set_image_extent(mut self, extent: Extent2D) -> Self {
+	/// Mutates the builder to set the extent/size/dimensions of the frame images.
+	pub fn with_image_extent(mut self, extent: Extent2D) -> Self {
 		self.image_extent = extent;
 		self
 	}
 
-	pub fn set_image_extent_vec(self, extent: Vector<u32, 2>) -> Self {
-		self.set_image_extent(Extent2D {
-			width: extent.x(),
-			height: extent.y(),
-		})
+	/// Returns the extent/size/dimensions of the frame images.
+	pub fn image_extent(&self) -> &Extent2D {
+		&self.image_extent
 	}
 
-	pub fn set_image_array_layer_count(mut self, layer_count: u32) -> Self {
+	/// Mutates the build to specify the number of array layers in each frame image.
+	pub fn with_image_array_layer_count(mut self, layer_count: u32) -> Self {
 		self.image_array_layer_count = layer_count;
 		self
 	}
 
-	pub fn set_image_usage(mut self, usage: ImageUsageFlags) -> Self {
+	/// Mutates the build to specify the usage of the frame images.
+	pub fn with_image_usage(mut self, usage: ImageUsageFlags) -> Self {
 		self.image_usage = usage;
 		self
 	}
 
-	pub fn set_image_sharing_mode(mut self, mode: SharingMode) -> Self {
+	/// Mutates the build to specify the sharing mode of the frame images.
+	pub fn with_image_sharing_mode(mut self, mode: SharingMode) -> Self {
 		self.sharing_mode = mode;
 		self
 	}
 
-	pub fn set_pre_transform(mut self, transform: SurfaceTransform) -> Self {
+	pub fn with_pre_transform(mut self, transform: SurfaceTransform) -> Self {
 		self.pre_transform = transform;
 		self
 	}
 
-	pub fn set_composite_alpha(mut self, composite_alpha: CompositeAlpha) -> Self {
+	pub fn with_composite_alpha(mut self, composite_alpha: CompositeAlpha) -> Self {
 		self.composite_alpha = composite_alpha;
 		self
 	}
 
-	pub fn set_is_clipped(mut self, is_clipped: bool) -> Self {
+	pub fn with_is_clipped(mut self, is_clipped: bool) -> Self {
 		self.is_clipped = is_clipped;
 		self
 	}
 
-	pub fn set_present_mode(mut self, present_mode: PresentMode) -> Self {
+	pub fn with_present_mode(mut self, present_mode: PresentMode) -> Self {
 		self.present_mode = present_mode;
 		self
 	}
@@ -120,9 +120,9 @@ impl Info {
 		self.present_mode = physical.selected_present_mode;
 	}
 
-	/// Creates the [`Swapchain`](crate::device::swapchain::Swapchain) object.
-	pub fn create_object(
-		&self,
+	/// Creates a [`Swapchain`] object, thereby consuming the info.
+	pub fn build(
+		self,
 		device: &sync::Arc<logical::Device>,
 		surface: &Surface,
 		old: Option<&Swapchain>,

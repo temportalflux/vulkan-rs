@@ -1,7 +1,7 @@
-#[path = "swapchain.rs"]
-mod object;
-pub use object::Swapchain;
+#[path = "builder.rs"]
+mod builder;
+pub use builder::*;
 
-#[path = "info.rs"]
-mod info;
-pub use info::Info;
+#[path = "swapchain.rs"]
+mod swapchain;
+pub use swapchain::*;

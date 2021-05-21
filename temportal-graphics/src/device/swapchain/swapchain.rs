@@ -1,6 +1,6 @@
 use crate::{
 	backend, command,
-	device::{logical, swapchain},
+	device::{logical, swapchain::Builder},
 	flags,
 	image::Image,
 	structs, utility,
@@ -18,11 +18,16 @@ pub struct Swapchain {
 }
 
 impl Swapchain {
-	/// The internal constructor. Users should use [`create_object`](crate::device::swapchain::Info::create_object) to create a surface.
-	pub fn from(
+	/// Helper method for creating a default swapchain builder.
+	pub fn builder() -> Builder {
+		Builder::default()
+	}
+
+	/// Constructs the swapchain object from a completed [`Builder`].
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::SwapchainKHR,
-		builder: &swapchain::Info,
+		builder: Builder,
 	) -> Swapchain {
 		Swapchain {
 			device,
@@ -32,6 +37,7 @@ impl Swapchain {
 		}
 	}
 
+	/// Creates the swapchain images from the vulkan device.
 	pub fn get_images(&self) -> Result<Vec<Image>, utility::Error> {
 		Ok(utility::as_vulkan_error(unsafe {
 			self.device
@@ -44,7 +50,9 @@ impl Swapchain {
 		.collect())
 	}
 
-	/// returns (_, true) if the swapchain is suboptimal
+	/// Determines the image index of [`get_images`](Swapchain::get_images)
+	/// to render the next frame to.
+	/// Returns `(<index>, true)` if the swapchain is suboptimal.
 	pub fn acquire_next_image(
 		&self,
 		timeout: u64,
