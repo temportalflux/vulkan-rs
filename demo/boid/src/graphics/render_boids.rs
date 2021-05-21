@@ -117,7 +117,7 @@ impl RenderBoids {
 				.with_usage(flags::BufferUsage::UNIFORM_BUFFER)
 				.with_size(std::mem::size_of::<CameraViewProjection>())
 				.with_alloc(
-					graphics::alloc::Info::default()
+					graphics::alloc::Builder::default()
 						.with_usage(flags::MemoryUsage::CpuToGpu)
 						.requires(flags::MemoryProperty::HOST_VISIBLE)
 						.requires(flags::MemoryProperty::HOST_COHERENT),
@@ -226,7 +226,7 @@ impl RenderBoids {
 		let image = Arc::new(
 			graphics::image::Image::builder()
 				.with_alloc(
-					graphics::alloc::Info::default()
+					graphics::alloc::Builder::default()
 						.with_usage(flags::MemoryUsage::GpuOnly)
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
@@ -286,7 +286,7 @@ impl RenderBoids {
 			.with_usage(flags::BufferUsage::TRANSFER_DST)
 			.with_size_of(&vertices[..])
 			.with_alloc(
-				graphics::alloc::Info::default()
+				graphics::alloc::Builder::default()
 					.with_usage(flags::MemoryUsage::GpuOnly)
 					.requires(flags::MemoryProperty::DEVICE_LOCAL),
 			)
@@ -305,7 +305,7 @@ impl RenderBoids {
 			.with_usage(flags::BufferUsage::TRANSFER_DST)
 			.with_size_of(&indices[..])
 			.with_alloc(
-				graphics::alloc::Info::default()
+				graphics::alloc::Builder::default()
 					.with_usage(flags::MemoryUsage::GpuOnly)
 					.requires(flags::MemoryProperty::DEVICE_LOCAL),
 			)
@@ -331,7 +331,7 @@ impl RenderBoids {
 			.with_usage(flags::BufferUsage::TRANSFER_DST)
 			.with_size(std::mem::size_of::<Instance>() * instance_count)
 			.with_alloc(
-				graphics::alloc::Info::default()
+				graphics::alloc::Builder::default()
 					.with_usage(flags::MemoryUsage::GpuOnly)
 					.requires(flags::MemoryProperty::DEVICE_LOCAL),
 			)

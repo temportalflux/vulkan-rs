@@ -4,11 +4,14 @@ use crate::{
 	utility::{self},
 };
 
+/// A wrapper for the [`vulkan memory allocator`](vk_mem) for handling the allocation of [`graphics objects`](crate::alloc::Object).
 pub struct Allocator {
 	internal: vk_mem::Allocator,
 }
 
 impl Allocator {
+
+	/// Creates an allocator for a given vulkan instance and device pair.
 	pub fn create(
 		instance: &instance::Instance,
 		physical: &physical::Device,

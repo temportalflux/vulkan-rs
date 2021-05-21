@@ -54,7 +54,7 @@ impl Image {
 	) -> utility::Result<Self> {
 		Ok(Self::builder()
 			.with_alloc(
-				alloc::Info::default()
+				alloc::Builder::default()
 					.with_usage(flags::MemoryUsage::GpuOnly)
 					.requires(flags::MemoryProperty::DEVICE_LOCAL),
 			)

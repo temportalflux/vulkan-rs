@@ -10,7 +10,7 @@ use temportal_math::Vector;
 
 #[derive(Clone)]
 pub struct Builder {
-	pub mem_info: alloc::Info,
+	pub mem_info: alloc::Builder,
 	pub image_type: ImageType,
 	pub format: Format,
 	pub extent: Extent3D,
@@ -26,7 +26,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			mem_info: alloc::Info::default(),
+			mem_info: alloc::Builder::default(),
 			image_type: ImageType::TYPE_2D,
 			format: Format::UNDEFINED,
 			extent: Extent3D::default(),
@@ -50,7 +50,7 @@ impl Builder {
 		])
 	}
 
-	pub fn with_alloc(mut self, mem_info: alloc::Info) -> Self {
+	pub fn with_alloc(mut self, mem_info: alloc::Builder) -> Self {
 		self.mem_info = mem_info;
 		self
 	}

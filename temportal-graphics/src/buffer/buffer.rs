@@ -29,7 +29,7 @@ impl Buffer {
 				.with_usage(BufferUsage::TRANSFER_DST)
 				.with_size(size)
 				.with_alloc(
-					alloc::Info::default()
+					alloc::Builder::default()
 						.with_usage(MemoryUsage::GpuOnly)
 						.requires(MemoryProperty::DEVICE_LOCAL),
 				)
@@ -68,7 +68,7 @@ impl Buffer {
 			.with_usage(BufferUsage::TRANSFER_SRC)
 			.with_sharing(SharingMode::EXCLUSIVE)
 			.with_alloc(
-				alloc::Info::default()
+				alloc::Builder::default()
 					.with_usage(MemoryUsage::CpuToGpu)
 					.requires(MemoryProperty::HOST_VISIBLE)
 					.requires(MemoryProperty::HOST_COHERENT),

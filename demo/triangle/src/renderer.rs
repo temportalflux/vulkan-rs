@@ -120,7 +120,7 @@ impl graphics::RenderChainElement for Triangle {
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
 				.with_size_of(&self.vertices[..])
 				.with_alloc(
-					graphics::alloc::Info::default()
+					graphics::alloc::Builder::default()
 						.with_usage(flags::MemoryUsage::GpuOnly)
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
@@ -145,7 +145,7 @@ impl graphics::RenderChainElement for Triangle {
 				.with_usage(flags::BufferUsage::TRANSFER_DST)
 				.with_size_of(&self.indices[..])
 				.with_alloc(
-					graphics::alloc::Info::default()
+					graphics::alloc::Builder::default()
 						.with_usage(flags::MemoryUsage::GpuOnly)
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)

@@ -7,7 +7,7 @@ use crate::{
 use std::sync;
 
 pub struct Builder {
-	pub mem_info: alloc::Info,
+	pub mem_info: alloc::Builder,
 	pub size: usize,
 	pub usage: BufferUsage,
 	pub sharing_mode: SharingMode,
@@ -17,7 +17,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			mem_info: alloc::Info::default(),
+			mem_info: alloc::Builder::default(),
 			size: 0,
 			usage: BufferUsage::empty(),
 			sharing_mode: SharingMode::EXCLUSIVE,
@@ -27,7 +27,7 @@ impl Default for Builder {
 }
 
 impl Builder {
-	pub fn with_alloc(mut self, mem_info: alloc::Info) -> Self {
+	pub fn with_alloc(mut self, mem_info: alloc::Builder) -> Self {
 		self.mem_info = mem_info;
 		self
 	}
