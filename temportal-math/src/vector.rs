@@ -481,7 +481,10 @@ mod indexing {
 
 // #region Conversions
 
-impl<T, const N: usize> Vector<T, N> {
+impl<TInto, const N: usize> Vector<TInto, N>
+where
+	TInto: Default + Copy,
+{
 	/// Converts between vectors of different types with the same dimensional count.
 	/// This is the opposite of `partial` and `subvec`.
 	/// As long as `U` implements the trait `Into<T>`,
@@ -492,26 +495,59 @@ impl<T, const N: usize> Vector<T, N> {
 	/// ```
 	/// use temportal_math::Vector;
 	/// let input: Vector<u8, 5> = Vector::new([0, 1, 2, 3, 4]);
-	/// let calculated: Vector<f32, 5> = Vector::from(input);
+	/// let calculated: Vector<f32, 5> = Vector::try_from(input).unwrap();
 	/// let expected: Vector<f32, 5> = Vector::new([0.0, 1.0, 2.0, 3.0, 4.0]);
 	/// assert_eq!(calculated, expected);
 	/// ```
-	pub fn from<U>(other: Vector<U, N>) -> Self
+	pub fn try_from<TFrom>(from: Vector<TFrom, N>) -> Option<Self>
 	where
-		T: Default + Copy + From<U>,
-		U: Copy,
+		TInto: num::NumCast,
+		TFrom: num::ToPrimitive + Copy,
 	{
-		let mut vret: Vector<T, N> = Vector::filled(T::default());
+		let mut vret: Vector<TInto, N> = Vector::default();
 		for i in 0..N {
-			vret.data[i] = T::from(other.data[i]);
+			match <TInto as num::NumCast>::from::<TFrom>(from.data[i]) {
+				Some(v) => vret.data[i] = v,
+				None => return None,
+			}
 		}
-		vret
+		Some(vret)
+	}
+}
+
+impl<TFrom, const N: usize> Vector<TFrom, N>
+where
+	TFrom: Default + Copy + num::ToPrimitive,
+{
+	pub fn try_into<TInto>(self) -> Option<Vector<TInto, N>>
+	where
+		TInto: num::NumCast + Copy + Default,
+	{
+		Vector::try_from(self)
 	}
 }
 
 impl<T, const N: usize> From<[T; N]> for Vector<T, N> {
 	fn from(slice: [T; N]) -> Self {
 		Vector::new(slice)
+	}
+}
+
+impl<T> From<(T, T)> for Vector<T, 2> {
+	fn from(tuple: (T, T)) -> Self {
+		Vector::new([tuple.0, tuple.1])
+	}
+}
+
+impl<T> From<(T, T, T)> for Vector<T, 3> {
+	fn from(tuple: (T, T, T)) -> Self {
+		Vector::new([tuple.0, tuple.1, tuple.2])
+	}
+}
+
+impl<T> From<(T, T, T, T)> for Vector<T, 4> {
+	fn from(tuple: (T, T, T, T)) -> Self {
+		Vector::new([tuple.0, tuple.1, tuple.2, tuple.3])
 	}
 }
 
@@ -522,7 +558,7 @@ mod conversions {
 	#[test]
 	fn i32_to_f64_3() {
 		let input: Vector<i32, 3> = Vector::new([1, 2, 3]);
-		let calculated: Vector<f64, 3> = Vector::from(input);
+		let calculated: Vector<f64, 3> = Vector::try_from(input).unwrap();
 		let expected: Vector<f64, 3> = Vector::new([1.0, 2.0, 3.0]);
 		assert_eq!(calculated, expected);
 	}
@@ -530,7 +566,7 @@ mod conversions {
 	#[test]
 	fn i8_to_i32_2() {
 		let input: Vector<i8, 2> = Vector::new([1, 2]);
-		let calculated: Vector<i32, 2> = Vector::from(input);
+		let calculated: Vector<i32, 2> = Vector::try_from(input).unwrap();
 		let expected: Vector<i32, 2> = Vector::new([1, 2]);
 		assert_eq!(calculated, expected);
 	}
