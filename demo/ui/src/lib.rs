@@ -142,10 +142,10 @@ pub fn run() -> VoidResult {
 								source_rect: None,
 								scaling: ImageBoxImageScaling::Frame(ImageBoxFrame {
 									source: Rect {
-										top: 5.0 / 16.0,
-										right: 5.0 / 16.0,
-										bottom: 5.0 / 16.0,
-										left: 5.0 / 16.0,
+										top: 5.0,
+										right: 5.0,
+										bottom: 5.0,
+										left: 5.0,
 									},
 									destination: Rect {
 										top: 20.0,
