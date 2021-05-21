@@ -83,7 +83,7 @@ impl Builder {
 		self
 	}
 
-	/// Creates an [`Buffer`] object, thereby consuming the info.
+	/// Creates a [`Buffer`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
 		Ok(Buffer::from(

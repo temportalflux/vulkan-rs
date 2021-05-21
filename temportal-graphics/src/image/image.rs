@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	flags::{Format, ImageUsage, MemoryProperty, MemoryUsage},
 	image::Builder,
-	utility,
+	structs, utility,
 };
 use std::sync;
 use temportal_math::Vector;
@@ -16,7 +16,8 @@ pub(crate) trait Owner: Send + Sync {
 ///
 /// When an `Image` object is dropped, the allocation on the GPU is also dropped, thereby destroying the image.
 pub struct Image {
-	image_info: Option<Builder>,
+	dimensions: Vector<usize, 3>,
+	format: Format,
 	allocation_handle: Option<vk_mem::Allocation>,
 	internal: backend::vk::Image,
 	owner: Option<sync::Arc<dyn Owner>>, // empty for images created from the swapchain
@@ -24,12 +25,17 @@ pub struct Image {
 
 impl Image {
 	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::Swapchain).
-	pub(crate) fn from_swapchain(internal: backend::vk::Image) -> Image {
+	pub(crate) fn from_swapchain(
+		internal: backend::vk::Image,
+		format: Format,
+		dimensions: structs::Extent2D,
+	) -> Image {
 		Image {
 			owner: None,
 			internal,
 			allocation_handle: None,
-			image_info: None,
+			format: format,
+			dimensions: [dimensions.width as usize, dimensions.height as usize, 1].into(),
 		}
 	}
 
@@ -43,13 +49,14 @@ impl Image {
 		owner: sync::Arc<dyn Owner>,
 		internal: backend::vk::Image,
 		allocation_handle: Option<vk_mem::Allocation>,
-		image_info: Option<Builder>,
+		image_info: Builder,
 	) -> Image {
 		Image {
 			owner: Some(owner),
 			internal,
 			allocation_handle,
-			image_info,
+			dimensions: image_info.size(),
+			format: image_info.format(),
 		}
 	}
 
@@ -76,12 +83,12 @@ impl Image {
 
 	/// The dimensions of the image allocated.
 	pub fn image_size(&self) -> Vector<usize, 3> {
-		self.image_info.as_ref().unwrap().size()
+		self.dimensions
 	}
 
 	/// The format of the image allocated.
 	pub fn format(&self) -> Format {
-		self.image_info.as_ref().unwrap().format()
+		self.format
 	}
 }
 

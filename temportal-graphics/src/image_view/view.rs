@@ -1,22 +1,27 @@
-use crate::{backend, device::logical, image, image_view::Builder};
+use crate::{backend, device::logical, image::Image, image_view::Builder};
 
 use std::sync;
 
-/// A wrapper around [`Image View`](backend::vk::ImageView).
+/// A vulkan object used to own and view an [`Image`].
+/// When a `View` object is dropped, the underlying vulkan ImageView is also dropped.
+/// A view will own its [`Image`], so even if the user drops the image pointer,
+/// the view will keep the image around until the view is dropped.
 pub struct View {
 	internal: backend::vk::ImageView,
-	image: sync::Arc<image::Image>,
+	image: sync::Arc<Image>,
 	device: sync::Arc<logical::Device>,
 }
 
 impl View {
+	/// Helper method for creating a default buffer builder.
 	pub fn builder() -> Builder {
 		Builder::default()
 	}
 
-	pub fn from(
+	/// Constructs the buffer object from a completed [`Builder`].
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
-		image: sync::Arc<image::Image>,
+		image: sync::Arc<Image>,
 		internal: backend::vk::ImageView,
 	) -> View {
 		View {
@@ -26,7 +31,8 @@ impl View {
 		}
 	}
 
-	pub fn image(&self) -> &sync::Arc<image::Image> {
+	/// Returns the image that the view owns/is connected to.
+	pub fn image(&self) -> &sync::Arc<Image> {
 		&self.image
 	}
 }

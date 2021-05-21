@@ -252,7 +252,6 @@ impl RenderBoids {
 		image: Arc<image::Image>,
 	) -> Result<image_view::View, AnyError> {
 		Ok(image_view::View::builder()
-			.with_format(image.format())
 			.for_image(image.clone())
 			.with_view_type(flags::ImageViewType::TYPE_2D)
 			.with_range(

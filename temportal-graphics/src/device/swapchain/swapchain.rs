@@ -1,10 +1,18 @@
-use crate::{backend, command, device::logical, image::Image, utility};
+use crate::{
+	backend, command,
+	device::{logical, swapchain},
+	flags,
+	image::Image,
+	structs, utility,
+};
 
 use std::sync;
 
 /// A wrapper struct for [`backend::vk::SwapchainKHR`] to handle swapping out
 /// displayed images on the [`Surface`](crate::Surface).
 pub struct Swapchain {
+	image_format: flags::Format,
+	image_extent: structs::Extent2D,
 	internal: backend::vk::SwapchainKHR,
 	device: sync::Arc<logical::Device>,
 }
@@ -14,8 +22,14 @@ impl Swapchain {
 	pub fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::SwapchainKHR,
+		builder: &swapchain::Info,
 	) -> Swapchain {
-		Swapchain { device, internal }
+		Swapchain {
+			device,
+			internal,
+			image_format: builder.image_format,
+			image_extent: builder.image_extent,
+		}
 	}
 
 	pub fn get_images(&self) -> Result<Vec<Image>, utility::Error> {
@@ -26,7 +40,7 @@ impl Swapchain {
 		})?
 		.into_iter()
 		// no device reference is passed in because the images are a part of the swapchain
-		.map(|image| Image::from_swapchain(image))
+		.map(|image| Image::from_swapchain(image, self.image_format, self.image_extent))
 		.collect())
 	}
 

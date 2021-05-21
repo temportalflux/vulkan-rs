@@ -93,7 +93,7 @@ impl Builder {
 		self.usage |= usage;
 		self
 	}
-	
+
 	/// Creates an [`Image`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Image> {
 		let alloc_create_info = self.mem_info.clone().into();
@@ -104,7 +104,7 @@ impl Builder {
 			allocator.clone(),
 			internal,
 			Some(alloc_handle),
-			Some(self),
+			self,
 		))
 	}
 }

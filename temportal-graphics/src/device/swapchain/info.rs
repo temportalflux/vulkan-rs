@@ -16,9 +16,9 @@ use temportal_math::Vector;
 /// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
 pub struct Info {
 	image_count: u32,
-	image_format: Format,
+	pub(crate) image_format: Format,
 	image_color_space: ColorSpace,
-	image_extent: Extent2D,
+	pub(crate) image_extent: Extent2D,
 	image_array_layer_count: u32,
 	image_usage: ImageUsageFlags,
 	sharing_mode: SharingMode,
@@ -145,6 +145,6 @@ impl Info {
 		let vk = utility::as_vulkan_error(unsafe {
 			device.unwrap_swapchain().create_swapchain(&info, None)
 		})?;
-		Ok(Swapchain::from(device.clone(), vk))
+		Ok(Swapchain::from(device.clone(), vk, self))
 	}
 }
