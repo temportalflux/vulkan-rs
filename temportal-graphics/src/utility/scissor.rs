@@ -2,6 +2,7 @@ use crate::{backend, structs::Extent2D};
 use temportal_math::Vector;
 
 /// A 4-int struct representing a portion of a [`Viewport`](crate::utility::Viewport).
+#[derive(Debug)]
 pub struct Scissor {
 	offset: Vector<i32, 2>,
 	size: Vector<u32, 2>,
