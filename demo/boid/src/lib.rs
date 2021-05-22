@@ -100,7 +100,7 @@ pub fn run() -> VoidResult {
 	engine::ui::System::new(&chain)?
 		.with_engine_shaders()?
 		.with_all_fonts()?
-		.with_tree(engine::ui::widget! { (ui::boid_ui_root {}) })
+		.with_tree_root(engine::ui::make_widget!(crate::ui::root))
 		.attach_system(&mut engine, &chain)?;
 
 	engine.run(chain.clone());
