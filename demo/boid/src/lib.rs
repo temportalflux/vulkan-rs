@@ -13,7 +13,7 @@ pub mod graphics;
 #[path = "ecs/_.rs"]
 pub mod ecs;
 
-#[path = "ui.rs"]
+#[path = "ui/_.rs"]
 pub mod ui;
 
 pub struct BoidDemo();
@@ -97,16 +97,11 @@ pub fn run() -> VoidResult {
 	let ecs_context = Arc::new(RwLock::new(ecs_context));
 	engine.add_system(&ecs_context);
 
-	{
-		use engine::ui::*;
-		System::new(&chain)?
-			.with_engine_shaders()?
-			.with_tree(widget! {
-				(horizontal_box [])
-			})
-			.attach_system(&mut engine, &chain)?;
-	}
-
+	engine::ui::System::new(&chain)?
+		.with_engine_shaders()?
+		.with_tree(engine::ui::widget! { (ui::controls_info {}) })
+		.attach_system(&mut engine, &chain)?;
+	
 	engine.run(chain.clone());
 	Ok(())
 }
