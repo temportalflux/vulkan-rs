@@ -2,7 +2,7 @@ use crate::{
 	asset,
 	engine::{
 		self,
-		asset::{AnyBox, AssetGeneric, TypeId},
+		asset::{AnyBox, Generic, TypeId},
 		utility::AnyError,
 	},
 };
@@ -88,7 +88,7 @@ impl Manager {
 	}
 
 	fn read_asset_type(json_str: &str) -> Result<String, AnyError> {
-		let generic: AssetGeneric = serde_json::from_str(json_str)?;
+		let generic: Generic = serde_json::from_str(json_str)?;
 		return Ok(generic.asset_type);
 	}
 

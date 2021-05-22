@@ -1,4 +1,4 @@
-use engine::{ui, utility::VoidResult, Application, EngineApp};
+use engine::{ui, utility::VoidResult, Application};
 pub use temportal_engine as engine;
 
 pub struct UIDemo();
@@ -38,7 +38,7 @@ pub fn run() -> VoidResult {
 		use ui::*;
 		ui::System::new(&chain)?
 			.with_engine_shaders()?
-			.with_font(&EngineApp::get_asset_id("font/unispace/regular"))?
+			.with_all_fonts()?
 			.with_texture(&UIDemo::get_asset_id("textures/background"))?
 			.with_tree(widget! {
 				(horizontal_box [
