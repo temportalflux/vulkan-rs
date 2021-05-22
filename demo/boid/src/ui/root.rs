@@ -21,7 +21,7 @@ pub fn root(mut _context: WidgetContext) -> WidgetNode {
 				// And has a fixed size
 				.with_props(SizeBoxProps {
 					width: SizeBoxSizeValue::Exact(400.0),
-					height: SizeBoxSizeValue::Exact(300.0),
+					height: SizeBoxSizeValue::Exact(100.0),
 					..Default::default()
 				})
 				.named_slot(
@@ -43,10 +43,7 @@ pub fn root(mut _context: WidgetContext) -> WidgetNode {
 						}))
 						// The second is the actual controls informational display,
 						// which is clipped to the area of the size box (because the content box takes up the full size box).
-						.listed_slot(make_widget!(controls_info).with_props(ContentBoxProps {
-							clipping: true,
-							..Default::default()
-						})),
+						.listed_slot(make_widget!(controls_info)),
 				),
 		),
 	)
