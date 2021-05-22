@@ -13,6 +13,9 @@ pub mod graphics;
 #[path = "ecs/_.rs"]
 pub mod ecs;
 
+#[path = "ui.rs"]
+pub mod ui;
+
 pub struct BoidDemo();
 impl Application for BoidDemo {
 	fn name() -> &'static str {
@@ -57,7 +60,7 @@ pub fn run() -> VoidResult {
 		.with_application::<BoidDemo>()
 		.with_clear_color(Vector::new([0.0, 0.25, 0.5, 1.0]))
 		.build(&engine)?;
-	window.create_render_chain(engine::graphics::renderpass::Info::default())?;
+	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
 
 	ecs_context.add_system(ecs::systems::InstanceCollector::new(
 		graphics::RenderBoids::new(&window.render_chain(), camera_view_space)?,
@@ -94,7 +97,16 @@ pub fn run() -> VoidResult {
 	let ecs_context = Arc::new(RwLock::new(ecs_context));
 	engine.add_system(&ecs_context);
 
-	engine.run(window.render_chain().clone());
-	window.wait_until_idle().unwrap();
+	{
+		use engine::ui::*;
+		System::new(&chain)?
+			.with_engine_shaders()?
+			.with_tree(widget! {
+				(horizontal_box [])
+			})
+			.attach_system(&mut engine, &chain)?;
+	}
+
+	engine.run(chain.clone());
 	Ok(())
 }
