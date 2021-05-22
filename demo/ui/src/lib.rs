@@ -4,7 +4,7 @@ use engine::{
 	utility::VoidResult,
 	Application,
 };
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 pub use temportal_engine as engine;
 
 pub struct UIDemo();
@@ -39,12 +39,12 @@ pub fn run() -> VoidResult {
 
 	let chain = window.create_render_chain(engine::graphics::renderpass::Info::default())?;
 
+	// Create the UI system and widget tree
 	{
-		let ui_system = Arc::new(RwLock::new({
-			use ui::*;
-			let mut system = ui::System::new(&chain.read().unwrap())?;
-			system.initialize_engine_shaders()?;
-			system.add_font(
+		use ui::*;
+		ui::System::new(&chain)?
+			.with_engine_shaders()?
+			.with_font(
 				&UIDemo::get_asset_id("font/unispace"),
 				Arc::new(|font_size| -> Vector<f32, 2> {
 					match font_size {
@@ -52,10 +52,9 @@ pub fn run() -> VoidResult {
 						_ => vector![0.78, 0.08],
 					}
 				}),
-			)?;
-			system.add_texture(&UIDemo::get_asset_id("textures/background"))?;
-
-			system.apply_tree(widget! {
+			)?
+			.with_texture(&UIDemo::get_asset_id("textures/background"))?
+			.with_tree(widget! {
 				(horizontal_box [
 					(vertical_box [
 						(#{"hello_world"} text_box: { Props::new(TextBoxProps {
@@ -169,15 +168,8 @@ pub fn run() -> VoidResult {
 						}) })
 					])
 				])
-			});
-
-			system
-		}));
-		engine.add_system(&ui_system);
-		chain
-			.write()
-			.unwrap()
-			.add_render_chain_element(&ui_system)?;
+			})
+			.attach_system(&mut engine, &chain)?;
 	}
 
 	engine.run(chain.clone());
