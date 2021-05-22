@@ -1,4 +1,4 @@
-use engine::{ui, utility::VoidResult, Application, asset::statics};
+use engine::{asset::statics, ui, utility::VoidResult, Application};
 pub use temportal_engine as engine;
 
 pub struct UIDemo();
