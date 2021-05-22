@@ -41,6 +41,5 @@ pub fn run() -> VoidResult {
 	let _renderer = renderer::Triangle::new(&chain);
 
 	engine.run(chain);
-	window.wait_until_idle().unwrap();
 	Ok(())
 }
