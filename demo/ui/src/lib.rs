@@ -40,121 +40,118 @@ pub fn run() -> VoidResult {
 			.with_engine_shaders()?
 			.with_all_fonts()?
 			.with_texture(&UIDemo::get_asset_id("textures/background"))?
-			.with_tree(widget! {
-				(horizontal_box [
-					(vertical_box [
-						(#{"hello_world"} text_box: { Props::new(TextBoxProps {
-							text: "Hello World!".to_owned(),
-							color: utils::Color {
-								r: 0.0,
-								g: 1.0,
-								b: 1.0,
-								a: 1.0,
-							},
-							font: TextBoxFont {
-								name: statics::font::unispace::REGULAR.to_owned(),
-								size: 100.0,
-							},
-							.. Default::default()
-						}) })
-						(#{"item2"} text_box: { Props::new(TextBoxProps {
-							text: "item 2\nand another line".to_owned(),
-							color: utils::Color {
-								r: 1.0,
-								g: 0.0,
-								b: 0.0,
-								a: 1.0,
-							},
-							font: TextBoxFont {
-								name: statics::font::unispace::REGULAR.to_owned(),
-								size: 20.0,
-							},
-							.. Default::default()
-						}) })
-						(#{"item3"} text_box: { Props::new(TextBoxProps {
-							text: "fdsa".to_owned(),
-							color: utils::Color {
-								r: 1.0,
-								g: 1.0,
-								b: 1.0,
-								a: 1.0,
-							},
-							font: TextBoxFont {
-								name: statics::font::unispace::REGULAR.to_owned(),
-								size: 20.0,
-							},
-							.. Default::default()
-						}) })
-					])
-					(vertical_box [
-						(#{"row1column1"} text_box: { Props::new(TextBoxProps {
-							text: "C".to_owned(),
-							color: utils::Color {
-								r: 0.0,
-								g: 0.0,
-								b: 1.0,
-								a: 1.0,
-							},
-							font: TextBoxFont {
-								name: statics::font::unispace::REGULAR.to_owned(),
-								size: 30.0,
-							},
-							.. Default::default()
-						}) })
-						(#{"row2colum1"} image_box: { Props::new(ImageBoxProps {
-							width: ImageBoxSizeValue::Fill,
-							height: ImageBoxSizeValue::Fill,
-							content_keep_aspect_ratio: None,
-							material: ImageBoxMaterial::Color(ImageBoxColor {
-								color: Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 },
-								scaling: ImageBoxImageScaling::Stretch,
-							}),
-							transform: Transform {
-								pivot: Vec2 { x: 0.0, y: 0.0 },
-								align: Vec2 { x: 0.0, y: 0.0 },
-								translation: Vec2 { x: 0.0, y: 0.0 },
-								rotation: 0.0,
-								scale: Vec2 { x: 1.0, y: 1.0 },
-								skew: Vec2 { x: 0.0, y: 0.0 },
-							},
-						}) })
-						(#{"row3colum1"} image_box: { Props::new(ImageBoxProps {
-							width: ImageBoxSizeValue::Fill,
-							height: ImageBoxSizeValue::Fill,
-							content_keep_aspect_ratio: None,
-							material: ImageBoxMaterial::Image(ImageBoxImage {
-								id: "textures/background".to_owned(),
-								source_rect: None,
-								scaling: ImageBoxImageScaling::Frame(ImageBoxFrame {
-									source: Rect {
-										top: 5.0,
-										right: 5.0,
-										bottom: 5.0,
-										left: 5.0,
+			.with_tree(WidgetNode::Component(
+				make_widget!(horizontal_box)
+					.listed_slot(
+						make_widget!(vertical_box)
+							.listed_slot(make_widget!(text_box).key("hello_world").with_props(
+								TextBoxProps {
+									text: "Hello World!".to_owned(),
+									color: utils::Color {
+										r: 0.0,
+										g: 1.0,
+										b: 1.0,
+										a: 1.0,
 									},
-									destination: Rect {
-										top: 20.0,
-										right: 20.0,
-										bottom: 20.0,
-										left: 20.0,
+									font: TextBoxFont {
+										name: statics::font::unispace::REGULAR.to_owned(),
+										size: 100.0,
 									},
-									frame_only: false,
-									frame_keep_aspect_ratio: false,
-								}),
-								tint: Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-							}),
-							transform: Transform {
-								pivot: Vec2 { x: 0.0, y: 0.0 },
-								align: Vec2 { x: 0.0, y: 0.0 },
-								translation: Vec2 { x: 0.0, y: 0.0 },
-								rotation: 0.0,
-								scale: Vec2 { x: 1.0, y: 1.0 },
-								skew: Vec2 { x: 0.0, y: 0.0 },
-							},
-						}) })
-					])
-				])
-			})
+									..Default::default()
+								},
+							))
+							.listed_slot(make_widget!(text_box).key("item2").with_props(
+								TextBoxProps {
+									text: "item 2\nand another line".to_owned(),
+									color: utils::Color {
+										r: 1.0,
+										g: 0.0,
+										b: 0.0,
+										a: 1.0,
+									},
+									font: TextBoxFont {
+										name: statics::font::unispace::REGULAR.to_owned(),
+										size: 20.0,
+									},
+									..Default::default()
+								},
+							))
+							.listed_slot(make_widget!(text_box).key("item3").with_props(
+								TextBoxProps {
+									text: "fdsa".to_owned(),
+									color: utils::Color {
+										r: 1.0,
+										g: 1.0,
+										b: 1.0,
+										a: 1.0,
+									},
+									font: TextBoxFont {
+										name: statics::font::unispace::REGULAR.to_owned(),
+										size: 20.0,
+									},
+									..Default::default()
+								},
+							)),
+					)
+					.listed_slot(
+						make_widget!(vertical_box)
+							.listed_slot(make_widget!(text_box).key("row1column2").with_props(
+								TextBoxProps {
+									text: "C".to_owned(),
+									color: utils::Color {
+										r: 0.0,
+										g: 0.0,
+										b: 1.0,
+										a: 1.0,
+									},
+									font: TextBoxFont {
+										name: statics::font::unispace::REGULAR.to_owned(),
+										size: 30.0,
+									},
+									..Default::default()
+								},
+							))
+							.listed_slot(make_widget!(image_box).key("row2column2").with_props(
+								ImageBoxProps {
+									material: ImageBoxMaterial::Color(ImageBoxColor {
+										color: Color {
+											r: 1.0,
+											g: 0.0,
+											b: 1.0,
+											a: 1.0,
+										},
+										..Default::default()
+									}),
+									..Default::default()
+								},
+							))
+							.listed_slot(make_widget!(image_box).key("row3column2").with_props(
+								ImageBoxProps {
+									material: ImageBoxMaterial::Image(ImageBoxImage {
+										id: "textures/background".to_owned(),
+										scaling: ImageBoxImageScaling::Frame(ImageBoxFrame {
+											source: Rect {
+												top: 5.0,
+												right: 5.0,
+												bottom: 5.0,
+												left: 5.0,
+											},
+											destination: Rect {
+												top: 20.0,
+												right: 20.0,
+												bottom: 20.0,
+												left: 20.0,
+											},
+											frame_only: false,
+											frame_keep_aspect_ratio: false,
+										}),
+										..Default::default()
+									}),
+									..Default::default()
+								},
+							)),
+					),
+			))
 			.attach_system(&mut engine, &chain)?;
 	}
 
