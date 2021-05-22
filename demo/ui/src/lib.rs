@@ -1,4 +1,4 @@
-use engine::{ui, utility::VoidResult, Application};
+use engine::{ui, utility::VoidResult, Application, asset::statics};
 pub use temportal_engine as engine;
 
 pub struct UIDemo();
@@ -52,7 +52,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "font/unispace/regular".to_owned(),
+								name: statics::font::unispace::REGULAR.to_owned(),
 								size: 100.0,
 							},
 							.. Default::default()
@@ -66,7 +66,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "font/unispace/regular".to_owned(),
+								name: statics::font::unispace::REGULAR.to_owned(),
 								size: 20.0,
 							},
 							.. Default::default()
@@ -80,7 +80,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "font/unispace/regular".to_owned(),
+								name: statics::font::unispace::REGULAR.to_owned(),
 								size: 20.0,
 							},
 							.. Default::default()
@@ -96,7 +96,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "font/unispace/regular".to_owned(),
+								name: statics::font::unispace::REGULAR.to_owned(),
 								size: 30.0,
 							},
 							.. Default::default()
