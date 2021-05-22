@@ -101,7 +101,7 @@ pub fn run() -> VoidResult {
 		.with_engine_shaders()?
 		.with_tree(engine::ui::widget! { (ui::controls_info {}) })
 		.attach_system(&mut engine, &chain)?;
-	
+
 	engine.run(chain.clone());
 	Ok(())
 }

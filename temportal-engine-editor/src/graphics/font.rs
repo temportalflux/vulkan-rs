@@ -23,15 +23,9 @@ impl FontEditorMetadata {
 	pub fn boxed() -> Box<dyn TypeEditorMetadata> {
 		Box::new(FontEditorMetadata {})
 	}
-	fn font_path(&self, asset_path: &Path, is_bold: bool, is_italic: bool) -> PathBuf {
+	fn font_path(&self, asset_path: &Path) -> PathBuf {
 		let mut path = asset_path.parent().unwrap().to_path_buf();
 		path.push(asset_path.file_stem().unwrap());
-		path.push(match (is_bold, is_italic) {
-			(false, false) => "regular",
-			(true, false) => "bold",
-			(false, true) => "italic",
-			(true, true) => "bold-italic",
-		});
 		path.set_extension("ttf");
 		path
 	}
@@ -40,15 +34,8 @@ impl FontEditorMetadata {
 impl TypeEditorMetadata for FontEditorMetadata {
 	fn last_modified(&self, path: &Path) -> Result<SystemTime, AnyError> {
 		let mut max_last_modified_at = path.metadata()?.modified()?;
-		for path in [
-			self.font_path(&path, false, false),
-			self.font_path(&path, true, false),
-			self.font_path(&path, false, true),
-			self.font_path(&path, true, true),
-		]
-		.iter()
-		.filter(|path| path.exists())
-		{
+		let ttf_path = self.font_path(&path);
+		if ttf_path.exists() {
 			let last_modified_at = path.metadata()?.modified()?;
 			max_last_modified_at = max_last_modified_at.max(last_modified_at);
 		}
@@ -68,7 +55,7 @@ impl TypeEditorMetadata for FontEditorMetadata {
 		let font_library = Library::init()?;
 
 		let sdf = SDFBuilder::default()
-			.with_font_path(&self.font_path(json_path, false, false))
+			.with_font_path(&self.font_path(json_path))
 			.with_glyph_height(50)
 			.with_spread(10)
 			.with_padding(Vector::new([8; 4]))

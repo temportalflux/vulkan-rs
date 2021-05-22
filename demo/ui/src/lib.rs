@@ -1,10 +1,4 @@
-use engine::{
-	math::{vector, Vector},
-	ui,
-	utility::VoidResult,
-	Application,
-};
-use std::sync::Arc;
+use engine::{ui, utility::VoidResult, Application, EngineApp};
 pub use temportal_engine as engine;
 
 pub struct UIDemo();
@@ -44,15 +38,7 @@ pub fn run() -> VoidResult {
 		use ui::*;
 		ui::System::new(&chain)?
 			.with_engine_shaders()?
-			.with_font(
-				&UIDemo::get_asset_id("font/unispace"),
-				Arc::new(|font_size| -> Vector<f32, 2> {
-					match font_size {
-						f if f >= 100.0 => vector![0.8, 0.09],
-						_ => vector![0.78, 0.08],
-					}
-				}),
-			)?
+			.with_font(&EngineApp::get_asset_id("font/unispace/regular"))?
 			.with_texture(&UIDemo::get_asset_id("textures/background"))?
 			.with_tree(widget! {
 				(horizontal_box [
@@ -66,7 +52,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "unispace".to_owned(),
+								name: "font/unispace/regular".to_owned(),
 								size: 100.0,
 							},
 							.. Default::default()
@@ -80,7 +66,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "unispace".to_owned(),
+								name: "font/unispace/regular".to_owned(),
 								size: 20.0,
 							},
 							.. Default::default()
@@ -94,7 +80,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "unispace".to_owned(),
+								name: "font/unispace/regular".to_owned(),
 								size: 20.0,
 							},
 							.. Default::default()
@@ -110,7 +96,7 @@ pub fn run() -> VoidResult {
 								a: 1.0,
 							},
 							font: TextBoxFont {
-								name: "unispace".to_owned(),
+								name: "font/unispace/regular".to_owned(),
 								size: 30.0,
 							},
 							.. Default::default()
