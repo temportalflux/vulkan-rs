@@ -15,6 +15,7 @@ pub use backend::vk::ComponentSwizzle;
 pub use backend::vk::CompositeAlphaFlagsKHR as CompositeAlpha;
 pub use backend::vk::CullModeFlags as CullMode;
 pub use backend::vk::DescriptorType as DescriptorKind;
+pub use backend::vk::DynamicState;
 pub use backend::vk::FenceCreateFlags as FenceState;
 pub use backend::vk::Filter;
 pub use backend::vk::Format;

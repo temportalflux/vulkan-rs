@@ -14,7 +14,7 @@ pub fn controls_info(context: WidgetContext) -> WidgetNode {
 				},
 				font: TextBoxFont {
 					name: statics::font::unispace::REGULAR.to_owned(),
-					size: 30.0,
+					size: 80.0,
 				},
 				.. Default::default()
 			}) })

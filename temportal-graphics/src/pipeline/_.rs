@@ -1,6 +1,9 @@
 mod color_blend;
 pub use color_blend::*;
 
+mod dynamic_state;
+pub use dynamic_state::*;
+
 mod info;
 pub use info::*;
 

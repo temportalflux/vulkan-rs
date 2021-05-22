@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, pipeline, renderpass, shader, utility};
+use crate::{backend, device::logical, flags, pipeline, renderpass, shader, utility};
 
 use std::sync;
 
@@ -11,24 +11,26 @@ pub struct Info {
 	rasterization_state: pipeline::RasterizationState,
 	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
 	color_blending: pipeline::ColorBlendState,
+	dynamic_state: pipeline::DynamicState,
 }
 
 impl Default for Info {
 	fn default() -> Info {
 		Info {
 			shaders: Vec::new(),
-			vertex_input: pipeline::vertex::Layout::default(),
+			vertex_input: Default::default(),
 			input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo::builder()
 				.topology(backend::vk::PrimitiveTopology::TRIANGLE_LIST)
 				.primitive_restart_enable(false)
 				.build(),
-			viewport_state: pipeline::ViewportState::default(),
-			rasterization_state: pipeline::RasterizationState::default(),
+			viewport_state: Default::default(),
+			rasterization_state: Default::default(),
 			multisampling: backend::vk::PipelineMultisampleStateCreateInfo::builder()
 				.sample_shading_enable(false)
 				.rasterization_samples(crate::flags::SampleCount::TYPE_1)
 				.build(),
-			color_blending: pipeline::ColorBlendState::default(),
+			color_blending: Default::default(),
+			dynamic_state: Default::default(),
 		}
 	}
 }
@@ -56,6 +58,16 @@ impl Info {
 
 	pub fn set_color_blending(mut self, info: pipeline::ColorBlendState) -> Self {
 		self.color_blending = info;
+		self
+	}
+
+	pub fn with_dynamic_info(mut self, dynamic_state: pipeline::DynamicState) -> Self {
+		self.dynamic_state = dynamic_state;
+		self
+	}
+
+	pub fn with_dynamic_state(mut self, state: flags::DynamicState) -> Self {
+		self.dynamic_state = self.dynamic_state.with(state);
 		self
 	}
 }
@@ -88,6 +100,7 @@ impl Info {
 		let vertex_input = self.vertex_input.as_vk();
 		let viewport_state = self.viewport_state.as_vk();
 		let rasterizer = self.rasterization_state.clone().into();
+		let dynamic_state = self.dynamic_state.as_vk();
 
 		let color_blending = backend::vk::PipelineColorBlendStateCreateInfo::builder()
 			.logic_op_enable(false)
@@ -102,6 +115,7 @@ impl Info {
 			.rasterization_state(&rasterizer)
 			.multisample_state(&self.multisampling)
 			.color_blend_state(&color_blending)
+			.dynamic_state(&dynamic_state)
 			.layout(**layout)
 			.render_pass(**render_pass)
 			.subpass(0)

@@ -258,6 +258,15 @@ impl Buffer {
 		};
 	}
 
+	pub fn set_dynamic_scissors(&self, scissors: Vec<utility::Scissor>) {
+		use backend::version::DeviceV1_0;
+		let scissors = scissors
+			.into_iter()
+			.map(|scissor| scissor.into())
+			.collect::<Vec<_>>();
+		unsafe { self.device.cmd_set_scissor(self.internal, 0, &scissors[..]) };
+	}
+
 	pub fn draw_vertices(&self, vertex_count: u32) {
 		use backend::version::DeviceV1_0;
 		unsafe {
