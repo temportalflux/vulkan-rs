@@ -99,6 +99,7 @@ pub fn run() -> VoidResult {
 
 	engine::ui::System::new(&chain)?
 		.with_engine_shaders()?
+		.with_all_fonts()?
 		.with_tree(engine::ui::widget! { (ui::controls_info {}) })
 		.attach_system(&mut engine, &chain)?;
 
