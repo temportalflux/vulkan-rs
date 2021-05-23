@@ -1,8 +1,7 @@
 use engine::{
-	ecs::{Builder, WorldExt},
-	math::{vector, Quaternion, Vector},
+	math::{vector, Vector},
 	utility::VoidResult,
-	world, Application,
+	Application,
 };
 use std::sync::{Arc, RwLock};
 pub use temportal_engine as engine;
@@ -70,32 +69,6 @@ pub fn run() -> VoidResult {
 	));
 
 	ecs_context.setup();
-
-	for y in -5..5 {
-		for x in -5..5 {
-			let frag = ((((y + 5) * 11) + (x + 5)) as f32) / (11.0 * 11.0);
-			ecs_context
-				.world()
-				.create_entity()
-				.with(ecs::components::Position2D(vector![
-					x as f32 * 3.0,
-					y as f32 * 3.0 + 1.0
-				]))
-				.with(ecs::components::Orientation(Quaternion::from_axis_angle(
-					-world::global_forward(),
-					360.0_f32.to_radians() * frag,
-				)))
-				.with(ecs::components::Velocity2D(vector![2.0, 2.0]))
-				.with(ecs::components::BoidRender::new(vector![
-					((x + 5) as f32) / 11.0,
-					0.0,
-					((y + 5) as f32) / 11.0,
-					1.0
-				]))
-				.build();
-		}
-	}
-
 	let ecs_context = Arc::new(RwLock::new(ecs_context));
 	engine.add_system(&ecs_context);
 

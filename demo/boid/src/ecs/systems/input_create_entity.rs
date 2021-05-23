@@ -7,6 +7,7 @@ use crate::{
 	engine::{
 		input,
 		math::{vector, Quaternion},
+		rand::{self, Rng},
 		world,
 	},
 };
@@ -37,28 +38,35 @@ impl<'a> ecs::System<'a> for InputCreateEntity {
 		&mut self,
 		(entities, mut pos, mut velocity, mut orientation, mut boid_render): Self::SystemData,
 	) {
+		static SPAWN_COUNT: usize = 10;
+		static MAX_POS_ABS: f32 = 13.0;
+		static SPAWN_VELOCITY: f32 = 2.0;
 		if input::System::read()
 			.is_key_pressed(input::KeyCode::Equals, std::time::Duration::from_millis(1))
 		{
-			entities
-				.build_entity()
-				.with(ecs::components::Position2D(vector![0.0, 0.0]), &mut pos)
-				.with(
-					ecs::components::Orientation(Quaternion::from_axis_angle(
-						-world::global_forward(),
-						360.0_f32.to_radians(),
-					)),
-					&mut orientation,
+			let mut rng = rand::thread_rng();
+			for entity_props in (0..SPAWN_COUNT).map(|_| {
+				let angle = rng.gen_range(0.0..360.0_f32).to_radians();
+				(
+					vector![
+						rng.gen_range(-MAX_POS_ABS..MAX_POS_ABS),
+						rng.gen_range(-MAX_POS_ABS..MAX_POS_ABS)
+					],
+					Quaternion::from_axis_angle(-world::global_forward(), angle),
+					Quaternion::from_axis_angle(-world::global_forward(), angle)
+						.rotate(&world::global_up())
+						.subvec::<2>(None) * -SPAWN_VELOCITY,
+					vector![0.5, 0.0, 1.0, 1.0],
 				)
-				.with(
-					ecs::components::Velocity2D(vector![-2.0, 2.0]),
-					&mut velocity,
-				)
-				.with(
-					ecs::components::BoidRender::new(vector![1.0, 1.0, 1.0, 1.0]),
-					&mut boid_render,
-				)
-				.build();
+			}) {
+				entities
+					.build_entity()
+					.with(Position2D(entity_props.0), &mut pos)
+					.with(Orientation(entity_props.1), &mut orientation)
+					.with(Velocity2D(entity_props.2), &mut velocity)
+					.with(BoidRender::new(entity_props.3), &mut boid_render)
+					.build();
+			}
 		}
 	}
 }

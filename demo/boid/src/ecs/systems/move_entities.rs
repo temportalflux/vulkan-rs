@@ -43,10 +43,10 @@ impl<'a> ecs::System<'a> for MoveEntities {
 			(&mut position_store, &velocity_store, &mut orientation_store).join()
 		{
 			*position.deref_mut() += velocity.get() * dt;
-			orientation.rotate(Quaternion::from_axis_angle(
-				-world::global_forward(),
-				angle * dt,
-			));
+			//orientation.rotate(Quaternion::from_axis_angle(
+			//	-world::global_forward(),
+			//	angle * dt,
+			//));
 		}
 	}
 }

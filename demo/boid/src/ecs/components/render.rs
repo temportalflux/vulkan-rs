@@ -14,7 +14,7 @@ impl Component for BoidRender {
 }
 
 impl BoidRender {
-	pub fn new(color: Vector<f32, 4>) -> BoidRender {
-		BoidRender { color }
+	pub fn new(color: Vector<f32, 4>) -> Self {
+		Self { color }
 	}
 }
