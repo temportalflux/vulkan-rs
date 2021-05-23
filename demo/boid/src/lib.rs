@@ -53,8 +53,7 @@ pub fn run() -> VoidResult {
 				.with_bounds(wrapping_world_bounds_min, wrapping_world_bounds_max),
 		)
 		.with_system(ecs::systems::InputCreateEntity::default())
-		.with_system(ecs::systems::InputDestroyEntity::default())
-		;
+		.with_system(ecs::systems::InputDestroyEntity::default());
 
 	let mut window = engine::window::Window::builder()
 		.with_title(BoidDemo::display_name())
