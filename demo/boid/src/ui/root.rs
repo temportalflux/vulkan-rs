@@ -21,7 +21,7 @@ pub fn root(mut _context: WidgetContext) -> WidgetNode {
 				// And has a fixed size
 				.with_props(SizeBoxProps {
 					width: SizeBoxSizeValue::Exact(400.0),
-					height: SizeBoxSizeValue::Exact(100.0),
+					height: SizeBoxSizeValue::Exact(150.0),
 					..Default::default()
 				})
 				.named_slot(
