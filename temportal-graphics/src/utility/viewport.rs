@@ -1,27 +1,28 @@
-use crate::{backend, structs::Extent2D};
-use temportal_math::Vector;
+use crate::{
+	backend,
+	structs::{Extent2D, Offset2D},
+};
 
 /// A 6-float struct representing the viewport of a window.
 pub struct Viewport {
-	pos: Vector<f32, 2>,
-	size: Vector<f32, 2>,
-	depth_range: Vector<f32, 2>,
+	pos: Offset2D,
+	size: Extent2D,
+	depth_range: Offset2D,
 }
 
 impl Default for Viewport {
 	fn default() -> Viewport {
 		Viewport {
-			pos: Vector::filled(0.0),
-			size: Vector::filled(0.0),
-			depth_range: Vector::new([0.0, 1.0]),
+			pos: Default::default(),
+			size: Default::default(),
+			depth_range: Offset2D { x: 0, y: 1 },
 		}
 	}
 }
 
 impl Viewport {
 	pub fn set_size(mut self, extent: Extent2D) -> Self {
-		*self.size.x_mut() = extent.width as f32;
-		*self.size.y_mut() = extent.height as f32;
+		self.size = extent;
 		self
 	}
 }
@@ -29,12 +30,12 @@ impl Viewport {
 impl Into<backend::vk::Viewport> for Viewport {
 	fn into(self) -> backend::vk::Viewport {
 		backend::vk::Viewport::builder()
-			.x(self.pos.x())
-			.y(self.pos.y())
-			.width(self.size.x())
-			.height(self.size.y())
-			.min_depth(self.depth_range.x())
-			.max_depth(self.depth_range.y())
+			.x(self.pos.x as f32)
+			.y(self.pos.y as f32)
+			.width(self.size.width as f32)
+			.height(self.size.height as f32)
+			.min_depth(self.depth_range.x as f32)
+			.max_depth(self.depth_range.y as f32)
 			.build()
 	}
 }

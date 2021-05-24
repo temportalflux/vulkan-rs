@@ -6,7 +6,6 @@ use crate::{
 	utility,
 };
 use std::sync;
-use temportal_math::Vector;
 
 /// The builder for [`Image`] objects.
 #[derive(Clone)]
@@ -51,22 +50,14 @@ impl Builder {
 	}
 
 	/// Mutates the builder to include an explicit dimensions/size of the image object.
-	pub fn with_size(mut self, size: Vector<usize, 3>) -> Self {
-		self.extent = Extent3D {
-			width: size.x() as u32,
-			height: size.y() as u32,
-			depth: size.z() as u32,
-		};
+	pub fn with_size(mut self, size: Extent3D) -> Self {
+		self.extent = size;
 		self
 	}
 
 	/// Returns the size of the image to be allocated.
-	pub(crate) fn size(&self) -> Vector<usize, 3> {
-		Vector::new([
-			self.extent.width as usize,
-			self.extent.height as usize,
-			self.extent.depth as usize,
-		])
+	pub(crate) fn size(&self) -> Extent3D {
+		self.extent
 	}
 
 	/// Mutates the builder to use a specific format when creating the image.

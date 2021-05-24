@@ -2,10 +2,10 @@ use crate::{
 	alloc, backend,
 	flags::{Format, ImageUsage, MemoryProperty, MemoryUsage},
 	image::Builder,
-	structs, utility,
+	structs::{Extent2D, Extent3D},
+	utility,
 };
 use std::sync;
-use temportal_math::Vector;
 
 pub(crate) trait Owner: Send + Sync {
 	fn destroy(&self, obj: &Image, allocation: Option<&vk_mem::Allocation>) -> utility::Result<()>;
@@ -16,7 +16,7 @@ pub(crate) trait Owner: Send + Sync {
 ///
 /// When an `Image` object is dropped, the allocation on the GPU is also dropped, thereby destroying the image.
 pub struct Image {
-	dimensions: Vector<usize, 3>,
+	dimensions: Extent3D,
 	format: Format,
 	allocation_handle: Option<vk_mem::Allocation>,
 	internal: backend::vk::Image,
@@ -28,14 +28,18 @@ impl Image {
 	pub(crate) fn from_swapchain(
 		internal: backend::vk::Image,
 		format: Format,
-		dimensions: structs::Extent2D,
+		dimensions: Extent2D,
 	) -> Image {
 		Image {
 			owner: None,
 			internal,
 			allocation_handle: None,
 			format: format,
-			dimensions: [dimensions.width as usize, dimensions.height as usize, 1].into(),
+			dimensions: Extent3D {
+				width: dimensions.width,
+				height: dimensions.height,
+				depth: 1,
+			},
 		}
 	}
 
@@ -66,7 +70,7 @@ impl Image {
 	pub fn create_gpu(
 		allocator: &sync::Arc<alloc::Allocator>,
 		format: Format,
-		size: Vector<usize, 3>,
+		size: Extent3D,
 	) -> utility::Result<Self> {
 		Ok(Self::builder()
 			.with_alloc(
@@ -82,7 +86,7 @@ impl Image {
 	}
 
 	/// The dimensions of the image allocated.
-	pub fn image_size(&self) -> Vector<usize, 3> {
+	pub fn image_size(&self) -> Extent3D {
 		self.dimensions
 	}
 

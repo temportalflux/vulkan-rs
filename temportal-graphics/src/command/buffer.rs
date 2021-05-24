@@ -1,6 +1,6 @@
 use crate::{
 	backend, buffer, command, descriptor, device::logical, flags, image, pipeline, renderpass,
-	structs, utility,
+	utility,
 };
 use std::sync;
 
@@ -106,16 +106,8 @@ impl Buffer {
 					.buffer_row_length(0)
 					.buffer_image_height(0)
 					.image_subresource(region.layers.into())
-					.image_offset(structs::Offset3D {
-						x: region.offset.x(),
-						y: region.offset.y(),
-						z: region.offset.z(),
-					})
-					.image_extent(structs::Extent3D {
-						width: region.size.x() as u32,
-						height: region.size.y() as u32,
-						depth: region.size.z() as u32,
-					})
+					.image_offset(region.offset)
+					.image_extent(region.size)
 					.build()
 			})
 			.collect::<Vec<_>>();

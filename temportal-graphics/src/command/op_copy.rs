@@ -1,11 +1,10 @@
-use crate::structs::subresource;
-use temportal_math::Vector;
+use crate::structs::{subresource, Extent3D, Offset3D};
 
 pub struct CopyBufferToImage {
 	pub buffer_offset: usize,
 	pub layers: subresource::Layers,
-	pub offset: Vector<i32, 3>,
-	pub size: Vector<usize, 3>,
+	pub offset: Offset3D,
+	pub size: Extent3D,
 }
 
 pub struct CopyBufferRange {

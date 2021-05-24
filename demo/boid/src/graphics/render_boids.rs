@@ -231,7 +231,11 @@ impl RenderBoids {
 						.requires(flags::MemoryProperty::DEVICE_LOCAL),
 				)
 				.with_format(flags::Format::R8G8B8A8_SRGB)
-				.with_size(texture.size().subvec::<3>(None).with_z(1))
+				.with_size(structs::Extent3D {
+					width: texture.size().x() as u32,
+					height: texture.size().y() as u32,
+					depth: 1,
+				})
 				.with_usage(flags::ImageUsage::TRANSFER_DST)
 				.with_usage(flags::ImageUsage::SAMPLED)
 				.build(&render_chain.allocator())?,
