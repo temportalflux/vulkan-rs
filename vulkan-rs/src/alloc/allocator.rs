@@ -32,7 +32,7 @@ impl Allocator {
 }
 
 /// A trait exposing the internal value for the wrapped [`vk_mem::Allocator`].
-/// Crates using `temportal_graphics` should NOT use this.
+/// Crates using `vulkan_rs` should NOT use this.
 impl std::ops::Deref for Allocator {
 	type Target = vk_mem::Allocator;
 	fn deref(&self) -> &Self::Target {

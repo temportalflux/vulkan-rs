@@ -8,7 +8,6 @@ edition = "2018"
 
 [dependencies]
 temportal-engine = { path = "../temportal-engine" }
-temportal-graphics = { path = "../temportal-graphics" }
 log = { version = "0.4", features = ["std"] }
 sdl2 = "0.34"
 serde = { version = "1.0", features = ["derive"] }

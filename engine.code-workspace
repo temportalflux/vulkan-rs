@@ -45,8 +45,8 @@
 			"path": "temportal-engine-editor"
 		},
 		{
-			"name": "Temportal (Graphics)",
-			"path": "temportal-graphics"
+			"name": "Vulkan",
+			"path": "vulkan-rs"
 		},
 		{
 			"name": "Temportal (Math)",
