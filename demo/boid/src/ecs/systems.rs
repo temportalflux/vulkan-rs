@@ -1,3 +1,4 @@
+pub use crate::engine::ecs::systems::*;
 mod instance_collector;
 pub use instance_collector::*;
 mod move_entities;

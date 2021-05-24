@@ -1,11 +1,8 @@
-use crate::{
-	ecs::{
-		self,
-		components::{Orientation, Position2D, Velocity2D},
-		resources::DeltaTime,
-		NamedSystem,
-	},
-	engine::{math::Quaternion, world},
+use crate::ecs::{
+	self,
+	components::{Orientation, Position2D, Velocity2D},
+	resources::DeltaTime,
+	NamedSystem,
 };
 
 pub struct MoveEntities {}
@@ -37,16 +34,11 @@ impl<'a> ecs::System<'a> for MoveEntities {
 		use ecs::Join;
 		use std::ops::DerefMut;
 
-		let angle = 90.0_f32.to_radians();
 		let dt = delta_time.get().as_secs_f32();
-		for (position, velocity, orientation) in
+		for (position, velocity, _) in
 			(&mut position_store, &velocity_store, &mut orientation_store).join()
 		{
 			*position.deref_mut() += velocity.get() * dt;
-			//orientation.rotate(Quaternion::from_axis_angle(
-			//	-world::global_forward(),
-			//	angle * dt,
-			//));
 		}
 	}
 }

@@ -1,6 +1,9 @@
 use crate::{
 	ecs::{self, NamedSystem},
-	engine::{input, rand::{self, Rng}},
+	engine::{
+		input,
+		rand::{self, Rng},
+	},
 };
 
 pub struct InputDestroyEntity {}
@@ -31,9 +34,7 @@ impl<'a> ecs::System<'a> for InputDestroyEntity {
 			let mut ent_indices = Vec::new();
 			if ent_count <= DESTROY_COUNT {
 				ent_indices = (0..ent_count).collect();
-			}
-			else
-			{
+			} else {
 				while ent_indices.len() < DESTROY_COUNT {
 					let next_index = rng.gen_range(0..ent_count);
 					if !ent_indices.contains(&next_index) {
@@ -41,9 +42,9 @@ impl<'a> ecs::System<'a> for InputDestroyEntity {
 					}
 				}
 			}
-			
+
 			ent_indices.sort();
-			
+
 			let mut consumed_sized = 0;
 			let mut ent_iter = entities.join();
 			for ent_index in ent_indices {
@@ -53,7 +54,6 @@ impl<'a> ecs::System<'a> for InputDestroyEntity {
 					entities.delete(entity).unwrap();
 				}
 			}
-			
 		}
 	}
 }

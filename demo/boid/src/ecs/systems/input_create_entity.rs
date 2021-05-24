@@ -1,7 +1,7 @@
 use crate::{
 	ecs::{
 		self,
-		components::{BoidRender, Orientation, Position2D, Velocity2D},
+		components::{ai::Wander2D, BoidRender, Orientation, Position2D, Velocity2D},
 		NamedSystem,
 	},
 	engine::{
@@ -33,10 +33,18 @@ impl<'a> ecs::System<'a> for InputCreateEntity {
 		ecs::WriteStorage<'a, Velocity2D>,
 		ecs::WriteStorage<'a, Orientation>,
 		ecs::WriteStorage<'a, BoidRender>,
+		ecs::WriteStorage<'a, Wander2D>,
 	);
 	fn run(
 		&mut self,
-		(entities, mut pos, mut velocity, mut orientation, mut boid_render): Self::SystemData,
+		(
+			entities,
+			mut store_position,
+			mut store_velocity,
+			mut store_orientation,
+			mut store_boid_render,
+			mut store_wander,
+		): Self::SystemData,
 	) {
 		static SPAWN_COUNT: usize = 10;
 		static MAX_POS_ABS: f32 = 13.0;
@@ -61,10 +69,11 @@ impl<'a> ecs::System<'a> for InputCreateEntity {
 			}) {
 				entities
 					.build_entity()
-					.with(Position2D(entity_props.0), &mut pos)
-					.with(Orientation(entity_props.1), &mut orientation)
-					.with(Velocity2D(entity_props.2), &mut velocity)
-					.with(BoidRender::new(entity_props.3), &mut boid_render)
+					.with(Position2D(entity_props.0), &mut store_position)
+					.with(Orientation(entity_props.1), &mut store_orientation)
+					.with(Velocity2D(entity_props.2), &mut store_velocity)
+					.with(BoidRender::new(entity_props.3), &mut store_boid_render)
+					.with(Wander2D::default().with_speed(2.0), &mut store_wander)
 					.build();
 			}
 		}

@@ -46,6 +46,8 @@ pub fn run() -> VoidResult {
 		.with_component::<ecs::components::Position2D>()
 		.with_component::<ecs::components::Velocity2D>()
 		.with_component::<ecs::components::Orientation>()
+		.with_component::<ecs::components::ai::Wander2D>()
+		.with_system(ecs::systems::ai::WanderIn2D::default())
 		.with_system(ecs::systems::MoveEntities::default())
 		.with_system(
 			ecs::systems::WorldBounds::default()
