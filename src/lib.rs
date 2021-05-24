@@ -1,8 +1,8 @@
-//! # Temportal Graphics
+//! # Vulkan-rs
 //!
-//! A high-level application library for providing a Rust-safe interface
-//! for handling Vulkan structures and sending commands to / rendering on the GPU.
-//! Uses [`ash`] and [`vk_mem`] under the hood to handle the actual interfacing with Vulkan.
+//! A rust-safe interface for handling Vulkan structures and sending commands to / rendering on the GPU.
+//! Uses [`ash`] and [`vk_mem`] under the hood to handle the actual interfacing with the
+//! [C/C++ Vulkan Headers Library](https://github.com/KhronosGroup/Vulkan-Headers).
 
 extern crate memoffset;
 extern crate vk_mem;
