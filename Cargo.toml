@@ -1,19 +1,17 @@
+[package]
+name = "vulkan-rs"
+version = "0.1.0"
+authors = ["Dustin Yost <dustin.yost.t@gmail.com>"]
+edition = "2018"
 
-[workspace]
-members = [
-	"extern-reader", "install-externs",
-	"temportal-math",
-	"vulkan-rs",
-	"temportal-engine", "temportal-engine-editor",
-	"demo/triangle", "demo/triangle-editor",
-	"demo/ui", "demo/ui-editor",
-	"demo/boid", "demo/boid-editor",
-	"crystal-sphinx", "crystal-sphinx-editor",
-]
-default-members = [
-	"temportal-math", "vulkan-rs",
-	"demo/triangle", "demo/triangle-editor",
-	"demo/ui", "demo/ui-editor",
-	"demo/boid", "demo/boid-editor",
-	"crystal-sphinx", "crystal-sphinx-editor",
-]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.14"
+ash = "0.32.0"
+ash-window = "0.6.0"
+raw-window-handle = "0.3.3"
+vk-mem = "0.2.0"
+shaderc = "0.7.2"
+serde = { version = "1.0", features = ["derive"] }
+memoffset = "0.6.3"
