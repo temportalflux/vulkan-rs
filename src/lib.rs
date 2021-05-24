@@ -10,7 +10,7 @@ extern crate vk_mem;
 pub use ash as backend;
 
 /// The log category for the graphics library.
-pub static LOG: &'static str = "graphics";
+pub static LOG: &'static str = "vulkan";
 
 /// Allocation management structures for handling the creation graphics objects
 /// with memory on the CPU and/or GPU (like [`buffers`](buffer::Buffer) and [`images`](image::Image)).
