@@ -91,15 +91,18 @@ impl Buffer {
 
 	/// Attempts to change the allocated memory to a new size.
 	/// Returns false if the resize failed.
-	fn resize_allocation(&mut self, new_size: usize) -> bool {
-		let success = self
-			.allocator
-			.resize_allocation(&self.allocation_handle, new_size)
-			.is_ok();
-		if success {
-			self.builder.set_size(new_size);
-		}
-		success
+	fn resize_allocation(&mut self, _new_size: usize) -> bool {
+		// TODO: Can produce an error if resize is successful
+		// where the internal backend buffer still believes its the old size.
+		false
+		//let success = self
+		//	.allocator
+		//	.resize_allocation(&self.allocation_handle, new_size)
+		//	.is_ok();
+		//if success {
+		//	self.builder.set_size(new_size);
+		//}
+		//success
 	}
 
 	/// Expands the buffer to hold a `required_capacity`.
