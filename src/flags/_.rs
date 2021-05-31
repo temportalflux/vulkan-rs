@@ -32,6 +32,7 @@ pub use backend::vk::PipelineBindPoint;
 pub use backend::vk::PipelineStageFlags as PipelineStage;
 pub use backend::vk::PolygonMode;
 pub use backend::vk::PresentModeKHR as PresentMode;
+pub use backend::vk::PrimitiveTopology;
 pub use backend::vk::QueueFlags;
 pub use backend::vk::SampleCountFlags as SampleCount;
 pub use backend::vk::SamplerAddressMode;

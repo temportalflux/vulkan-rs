@@ -6,7 +6,7 @@ use std::sync;
 pub struct Info {
 	shaders: Vec<sync::Weak<shader::Module>>,
 	vertex_input: pipeline::vertex::Layout,
-	input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo,
+	topology: pipeline::Topology,
 	viewport_state: pipeline::ViewportState,
 	rasterization_state: pipeline::RasterizationState,
 	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
@@ -19,10 +19,7 @@ impl Default for Info {
 		Info {
 			shaders: Vec::new(),
 			vertex_input: Default::default(),
-			input_assembly: backend::vk::PipelineInputAssemblyStateCreateInfo::builder()
-				.topology(backend::vk::PrimitiveTopology::TRIANGLE_LIST)
-				.primitive_restart_enable(false)
-				.build(),
+			topology: pipeline::Topology::default(),
 			viewport_state: Default::default(),
 			rasterization_state: Default::default(),
 			multisampling: backend::vk::PipelineMultisampleStateCreateInfo::builder()
@@ -43,6 +40,11 @@ impl Info {
 
 	pub fn with_vertex_layout(mut self, layout: pipeline::vertex::Layout) -> Self {
 		self.vertex_input = layout;
+		self
+	}
+
+	pub fn with_topology(mut self, topology: pipeline::Topology) -> Self {
+		self.topology = topology;
 		self
 	}
 
@@ -98,6 +100,7 @@ impl Info {
 			})
 			.collect::<Vec<_>>();
 		let vertex_input = self.vertex_input.as_vk();
+		let input_assembly = self.topology.as_vk();
 		let viewport_state = self.viewport_state.as_vk();
 		let rasterizer = self.rasterization_state.clone().into();
 		let dynamic_state = self.dynamic_state.as_vk();
@@ -110,7 +113,7 @@ impl Info {
 		let info = backend::vk::GraphicsPipelineCreateInfo::builder()
 			.stages(&shader_stages)
 			.vertex_input_state(&vertex_input)
-			.input_assembly_state(&self.input_assembly)
+			.input_assembly_state(&input_assembly)
 			.viewport_state(&viewport_state)
 			.rasterization_state(&rasterizer)
 			.multisample_state(&self.multisampling)
