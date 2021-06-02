@@ -179,6 +179,20 @@ impl Buffer {
 		self.recording_framebuffer = Some(**frame_buffer);
 	}
 
+	pub fn next_subpass(&mut self, uses_secondary_buffers: bool) {
+		use backend::version::DeviceV1_0;
+		unsafe {
+			self.device.cmd_next_subpass(
+				self.internal,
+				if uses_secondary_buffers {
+					backend::vk::SubpassContents::SECONDARY_COMMAND_BUFFERS
+				} else {
+					backend::vk::SubpassContents::INLINE
+				},
+			)
+		};
+	}
+
 	pub fn stop_render_pass(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.cmd_end_render_pass(self.internal) };

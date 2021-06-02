@@ -66,6 +66,13 @@ impl Info {
 	pub fn add_subpass(&mut self, subpass: renderpass::Subpass) {
 		self.subpass_order.push(subpass);
 	}
+
+	pub fn subpass_order(&self) -> Vec<String> {
+		self.subpass_order
+			.iter()
+			.map(|subpass| subpass.id().clone())
+			.collect()
+	}
 }
 
 /// Information about a [`Subpass`](renderpass::Subpass) that is dependent on
