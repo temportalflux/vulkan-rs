@@ -2,6 +2,7 @@ use crate::{
 	backend,
 	flags::{blend, ColorComponent},
 };
+use enumset::EnumSet;
 
 /// Struct containing information about how a [`Pipeline`](crate::pipeline::Pipeline)
 /// blends the color of its [`attachments`](crate::renderpass::Attachment).
@@ -20,14 +21,14 @@ impl Default for ColorBlendState {
 /// The properties of a specific attachment in the pipeline and its color blending.
 #[derive(Clone, Copy)]
 pub struct ColorBlendAttachment {
-	pub color_flags: ColorComponent,
+	pub color_flags: EnumSet<ColorComponent>,
 	pub blend: Option<Blend>,
 }
 
 impl Default for ColorBlendAttachment {
 	fn default() -> Self {
 		Self {
-			color_flags: ColorComponent::all(),
+			color_flags: EnumSet::all(),
 			blend: Some(Blend::alpha_blend()),
 		}
 	}
@@ -53,7 +54,7 @@ impl ColorBlendState {
 	pub fn add_attachment(mut self, attachment: ColorBlendAttachment) -> Self {
 		self.attachments.push(
 			backend::vk::PipelineColorBlendAttachmentState::builder()
-				.color_write_mask(attachment.color_flags)
+				.color_write_mask(ColorComponent::fold(&attachment.color_flags))
 				.blend_enable(attachment.blend.is_some())
 				.src_color_blend_factor(
 					attachment

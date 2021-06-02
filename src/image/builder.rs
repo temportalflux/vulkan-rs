@@ -1,6 +1,8 @@
 use crate::{
 	alloc, backend,
-	flags::{Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode},
+	flags::{
+		format::Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode,
+	},
 	image::Image,
 	structs::Extent3D,
 	utility,
@@ -33,11 +35,11 @@ impl Default for Builder {
 			extent: Extent3D::default(),
 			mip_levels: 1,
 			array_layers: 1,
-			samples: SampleCount::TYPE_1,
+			samples: SampleCount::default(),
 			tiling: ImageTiling::OPTIMAL,
 			usage: ImageUsage::default(),
 			sharing_mode: SharingMode::EXCLUSIVE,
-			initial_layout: ImageLayout::UNDEFINED,
+			initial_layout: ImageLayout::default(),
 		}
 	}
 }
@@ -107,11 +109,11 @@ impl Into<backend::vk::ImageCreateInfo> for Builder {
 			.extent(self.extent)
 			.mip_levels(self.mip_levels)
 			.array_layers(self.array_layers)
-			.samples(self.samples)
+			.samples(self.samples.into())
 			.tiling(self.tiling)
 			.usage(self.usage)
 			.sharing_mode(self.sharing_mode)
-			.initial_layout(self.initial_layout)
+			.initial_layout(self.initial_layout.into())
 			.build()
 	}
 }

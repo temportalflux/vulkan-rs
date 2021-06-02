@@ -4,6 +4,7 @@ use crate::{
 	image,
 	structs::subresource,
 };
+use enumset::EnumSet;
 use std::sync;
 
 pub struct PipelineBarrier {
@@ -19,15 +20,15 @@ pub enum BarrierKind {
 }
 
 pub struct MemoryBarrier {
-	src_access: Access,
-	dst_access: Access,
+	src_access: EnumSet<Access>,
+	dst_access: EnumSet<Access>,
 }
 
 impl Default for MemoryBarrier {
 	fn default() -> MemoryBarrier {
 		MemoryBarrier {
-			src_access: Access::empty(),
-			dst_access: Access::empty(),
+			src_access: EnumSet::empty(),
+			dst_access: EnumSet::empty(),
 		}
 	}
 }
@@ -35,17 +36,17 @@ impl Default for MemoryBarrier {
 impl Into<backend::vk::MemoryBarrier> for MemoryBarrier {
 	fn into(self) -> backend::vk::MemoryBarrier {
 		backend::vk::MemoryBarrier::builder()
-			.src_access_mask(self.src_access)
-			.dst_access_mask(self.dst_access)
+			.src_access_mask(Access::fold(&self.src_access))
+			.dst_access_mask(Access::fold(&self.dst_access))
 			.build()
 	}
 }
 
 pub struct BufferBarrier {
-	src_access: Access,
+	src_access: EnumSet<Access>,
 	src_queue_family: u32,
 
-	dst_access: Access,
+	dst_access: EnumSet<Access>,
 	dst_queue_family: u32,
 
 	buffer: sync::Weak<buffer::Buffer>,
@@ -56,9 +57,9 @@ pub struct BufferBarrier {
 impl Default for BufferBarrier {
 	fn default() -> BufferBarrier {
 		BufferBarrier {
-			src_access: Access::empty(),
+			src_access: EnumSet::empty(),
 			src_queue_family: u32::MAX, // queue is ignored
-			dst_access: Access::empty(),
+			dst_access: EnumSet::empty(),
 			dst_queue_family: u32::MAX, // queue is ignored
 			buffer: sync::Weak::new(),
 			offset: 0,
@@ -70,9 +71,9 @@ impl Default for BufferBarrier {
 impl BufferBarrier {
 	pub(crate) fn as_vk(&self) -> backend::vk::BufferMemoryBarrier {
 		backend::vk::BufferMemoryBarrier::builder()
-			.src_access_mask(self.src_access)
+			.src_access_mask(Access::fold(&self.src_access))
 			.src_queue_family_index(self.src_queue_family)
-			.dst_access_mask(self.dst_access)
+			.dst_access_mask(Access::fold(&self.dst_access))
 			.dst_queue_family_index(self.dst_queue_family)
 			.buffer(**self.buffer.upgrade().unwrap())
 			.offset(self.offset as u64)
@@ -82,10 +83,10 @@ impl BufferBarrier {
 }
 
 pub struct ImageBarrier {
-	src_access: Access,
+	src_access: EnumSet<Access>,
 	src_queue_family: u32,
 
-	dst_access: Access,
+	dst_access: EnumSet<Access>,
 	dst_queue_family: u32,
 
 	image: sync::Weak<image::Image>,
@@ -97,15 +98,15 @@ pub struct ImageBarrier {
 impl Default for ImageBarrier {
 	fn default() -> ImageBarrier {
 		ImageBarrier {
-			src_access: Access::empty(),
+			src_access: EnumSet::empty(),
 			src_queue_family: u32::MAX, // queue is ignored
 
-			dst_access: Access::empty(),
+			dst_access: EnumSet::empty(),
 			dst_queue_family: u32::MAX, // queue is ignored
 
 			image: sync::Weak::new(),
-			old_layout: ImageLayout::UNDEFINED,
-			new_layout: ImageLayout::UNDEFINED,
+			old_layout: ImageLayout::default(),
+			new_layout: ImageLayout::default(),
 			range: subresource::Range::default(),
 		}
 	}
@@ -140,13 +141,13 @@ impl ImageBarrier {
 
 	pub(crate) fn as_vk(&self) -> backend::vk::ImageMemoryBarrier {
 		backend::vk::ImageMemoryBarrier::builder()
-			.src_access_mask(self.src_access)
+			.src_access_mask(Access::fold(&self.src_access))
 			.src_queue_family_index(self.src_queue_family)
-			.dst_access_mask(self.dst_access)
+			.dst_access_mask(Access::fold(&self.dst_access))
 			.dst_queue_family_index(self.dst_queue_family)
 			.image(**self.image.upgrade().unwrap())
-			.old_layout(self.old_layout)
-			.new_layout(self.new_layout)
+			.old_layout(self.old_layout.into())
+			.new_layout(self.new_layout.into())
 			.subresource_range(self.range.into())
 			.build()
 	}

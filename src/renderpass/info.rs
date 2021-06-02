@@ -1,4 +1,5 @@
 use crate::{backend, device::logical, flags, renderpass, utility};
+use enumset::EnumSet;
 use std::sync;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
@@ -14,27 +15,27 @@ impl Default for Info {
 
 		let frame_attachment_index = rp_info.attach(
 			renderpass::Attachment::default()
-				.set_format(flags::Format::B8G8R8A8_SRGB)
-				.set_sample_count(flags::SampleCount::TYPE_1)
+				.set_format(flags::format::Format::B8G8R8A8_SRGB)
+				.set_sample_count(flags::SampleCount::default())
 				.set_general_ops(renderpass::AttachmentOps {
-					load: flags::AttachmentLoadOp::CLEAR,
-					store: flags::AttachmentStoreOp::STORE,
+					load: flags::LoadOp::Clear,
+					store: flags::StoreOp::Store,
 				})
-				.set_final_layout(flags::ImageLayout::PRESENT_SRC_KHR),
+				.set_final_layout(flags::ImageLayout::PresentSrc),
 		);
 
 		let main_pass_index =
 			rp_info.add_subpass(renderpass::Subpass::default().add_attachment_ref(
 				frame_attachment_index,
-				flags::ImageLayout::COLOR_ATTACHMENT_OPTIMAL,
+				flags::ImageLayout::ColorAttachmentOptimal,
 			));
 
 		rp_info.add_dependency(
 			renderpass::Dependency::new(None)
-				.set_stage(flags::PipelineStage::COLOR_ATTACHMENT_OUTPUT),
+				.with_stage(flags::PipelineStage::ColorAttachmentOutput),
 			renderpass::Dependency::new(Some(main_pass_index))
-				.set_stage(flags::PipelineStage::COLOR_ATTACHMENT_OUTPUT)
-				.set_access(flags::Access::COLOR_ATTACHMENT_WRITE),
+				.with_stage(flags::PipelineStage::ColorAttachmentOutput)
+				.with_access(flags::Access::ColorAttachmentWrite),
 		);
 
 		rp_info
@@ -72,26 +73,26 @@ impl Info {
 #[derive(Copy, Clone, Debug)]
 pub struct Dependency {
 	subpass_index: Option<usize>,
-	stage_mask: flags::PipelineStage,
-	access_mask: flags::Access,
+	stage_mask: EnumSet<flags::PipelineStage>,
+	access_mask: EnumSet<flags::Access>,
 }
 
 impl Dependency {
 	pub fn new(subpass_index: Option<usize>) -> Dependency {
 		Dependency {
 			subpass_index,
-			stage_mask: flags::PipelineStage::empty(),
-			access_mask: flags::Access::empty(),
+			stage_mask: EnumSet::empty(),
+			access_mask: EnumSet::empty(),
 		}
 	}
 
-	pub fn set_stage(mut self, stage: flags::PipelineStage) -> Self {
-		self.stage_mask = stage;
+	pub fn with_stage(mut self, stage: flags::PipelineStage) -> Self {
+		self.stage_mask |= stage;
 		self
 	}
 
-	pub fn set_access(mut self, access: flags::Access) -> Self {
-		self.access_mask = access;
+	pub fn with_access(mut self, access: flags::Access) -> Self {
+		self.access_mask |= access;
 		self
 	}
 }
@@ -129,14 +130,14 @@ impl Info {
 						src.subpass_index
 							.unwrap_or(backend::vk::SUBPASS_EXTERNAL as usize) as u32,
 					)
-					.src_stage_mask(src.stage_mask)
-					.src_access_mask(src.access_mask)
+					.src_stage_mask(flags::PipelineStage::fold(&src.stage_mask))
+					.src_access_mask(flags::Access::fold(&src.access_mask))
 					.dst_subpass(
 						dst.subpass_index
 							.unwrap_or(backend::vk::SUBPASS_EXTERNAL as usize) as u32,
 					)
-					.dst_stage_mask(dst.stage_mask)
-					.dst_access_mask(dst.access_mask)
+					.dst_stage_mask(flags::PipelineStage::fold(&dst.stage_mask))
+					.dst_access_mask(flags::Access::fold(&dst.access_mask))
 					.build()
 			})
 			.collect::<Vec<_>>();

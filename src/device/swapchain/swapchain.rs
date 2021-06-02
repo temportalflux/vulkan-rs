@@ -11,7 +11,7 @@ use std::sync;
 /// A wrapper struct for [`backend::vk::SwapchainKHR`] to handle swapping out
 /// displayed images on the [`Surface`](crate::Surface).
 pub struct Swapchain {
-	image_format: flags::Format,
+	image_format: flags::format::Format,
 	image_extent: structs::Extent2D,
 	internal: backend::vk::SwapchainKHR,
 	device: sync::Arc<logical::Device>,

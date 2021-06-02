@@ -24,7 +24,7 @@ impl Default for Info {
 			rasterization_state: Default::default(),
 			multisampling: backend::vk::PipelineMultisampleStateCreateInfo::builder()
 				.sample_shading_enable(false)
-				.rasterization_samples(crate::flags::SampleCount::TYPE_1)
+				.rasterization_samples(crate::flags::SampleCount::_1.into())
 				.build(),
 			color_blending: Default::default(),
 			dynamic_state: Default::default(),

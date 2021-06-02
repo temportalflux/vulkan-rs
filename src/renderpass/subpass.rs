@@ -25,7 +25,7 @@ impl Subpass {
 		self.attachment_refs.push(
 			backend::vk::AttachmentReference::builder()
 				.attachment(attachment_index as u32)
-				.layout(layout)
+				.layout(layout.into())
 				.build(),
 		);
 		self

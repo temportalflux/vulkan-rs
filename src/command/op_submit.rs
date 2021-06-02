@@ -6,7 +6,7 @@ use std::sync;
 /// as it stores unsafe Vulkan handles/pointers.
 pub struct SubmitInfo {
 	semaphores_to_wait_for: Vec<backend::vk::Semaphore>,
-	stages_waited_for: Vec<flags::PipelineStage>,
+	stages_waited_for: Vec<backend::vk::PipelineStageFlags>,
 	buffers: Vec<backend::vk::CommandBuffer>,
 	semaphors_to_signal_when_complete: Vec<backend::vk::Semaphore>,
 }
@@ -32,7 +32,7 @@ impl SubmitInfo {
 
 	pub fn wait_for(mut self, semaphore: &command::Semaphore, stage: flags::PipelineStage) -> Self {
 		self.semaphores_to_wait_for.push(**semaphore);
-		self.stages_waited_for.push(stage);
+		self.stages_waited_for.push(stage.into());
 		self
 	}
 
@@ -49,7 +49,7 @@ impl SubmitInfo {
 	pub(crate) fn as_vk(&self) -> backend::vk::SubmitInfo {
 		backend::vk::SubmitInfo::builder()
 			.wait_semaphores(&self.semaphores_to_wait_for)
-			.wait_dst_stage_mask(&self.stages_waited_for)
+			.wait_dst_stage_mask(&self.stages_waited_for[..])
 			.command_buffers(&self.buffers)
 			.signal_semaphores(&self.semaphors_to_signal_when_complete)
 			.build()

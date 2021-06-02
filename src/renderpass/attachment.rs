@@ -1,29 +1,21 @@
 use crate::{backend, flags};
+use serde::{Deserialize, Serialize};
 
 /// The load and store operations that can be performed on an image
 /// that is attached to a ['Render Pass'](crate::renderpass::Pass)
 /// and its ['Subpasses'](crate::renderpass::Subpass).
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct AttachmentOps {
-	pub load: flags::AttachmentLoadOp,
-	pub store: flags::AttachmentStoreOp,
-}
-
-impl Default for AttachmentOps {
-	fn default() -> AttachmentOps {
-		AttachmentOps {
-			load: flags::AttachmentLoadOp::DONT_CARE,
-			store: flags::AttachmentStoreOp::DONT_CARE,
-		}
-	}
+	pub load: flags::LoadOp,
+	pub store: flags::StoreOp,
 }
 
 /// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
 /// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
 /// images used for each frame that is shown.
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Attachment {
-	format: flags::Format,
+	format: flags::format::Format,
 	samples: flags::SampleCount,
 	general_ops: AttachmentOps,
 	stencil_ops: AttachmentOps,
@@ -31,21 +23,8 @@ pub struct Attachment {
 	final_layout: flags::ImageLayout,
 }
 
-impl Default for Attachment {
-	fn default() -> Attachment {
-		Attachment {
-			format: flags::Format::UNDEFINED,
-			samples: flags::SampleCount::TYPE_1,
-			general_ops: Default::default(),
-			stencil_ops: Default::default(),
-			initial_layout: flags::ImageLayout::UNDEFINED,
-			final_layout: flags::ImageLayout::UNDEFINED,
-		}
-	}
-}
-
 impl Attachment {
-	pub fn set_format(mut self, format: flags::Format) -> Self {
+	pub fn set_format(mut self, format: flags::format::Format) -> Self {
 		self.format = format;
 		self
 	}
@@ -80,13 +59,13 @@ impl Into<backend::vk::AttachmentDescription> for Attachment {
 	fn into(self) -> backend::vk::AttachmentDescription {
 		backend::vk::AttachmentDescription::builder()
 			.format(self.format)
-			.samples(self.samples)
-			.load_op(self.general_ops.load)
-			.store_op(self.general_ops.store)
-			.stencil_load_op(self.stencil_ops.load)
-			.stencil_store_op(self.stencil_ops.store)
-			.initial_layout(self.initial_layout)
-			.final_layout(self.final_layout)
+			.samples(self.samples.into())
+			.load_op(self.general_ops.load.into())
+			.store_op(self.general_ops.store.into())
+			.stencil_load_op(self.stencil_ops.load.into())
+			.stencil_store_op(self.stencil_ops.store.into())
+			.initial_layout(self.initial_layout.into())
+			.final_layout(self.final_layout.into())
 			.build()
 	}
 }

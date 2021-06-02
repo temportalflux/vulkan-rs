@@ -1,6 +1,6 @@
 use crate::{
 	alloc, backend,
-	flags::{Format, ImageUsage, MemoryProperty, MemoryUsage},
+	flags::{format::Format, ImageUsage, MemoryProperty, MemoryUsage},
 	image::Builder,
 	structs::{Extent2D, Extent3D},
 	utility,

@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::{logical, physical, swapchain::*},
 	flags::{
-		ColorSpace, CompositeAlpha, Format, ImageUsageFlags, PresentMode, SharingMode,
+		format::Format, ColorSpace, CompositeAlpha, ImageUsageFlags, PresentMode, SharingMode,
 		SurfaceTransform,
 	},
 	general::Surface,

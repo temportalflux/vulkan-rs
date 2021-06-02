@@ -80,8 +80,8 @@ impl Buffer {
 		unsafe {
 			self.device.cmd_pipeline_barrier(
 				self.internal,
-				barrier.src_stage,
-				barrier.dst_stage,
+				barrier.src_stage.into(),
+				barrier.dst_stage.into(),
 				backend::vk::DependencyFlags::empty(),
 				&memory_barriers[..],
 				&buffer_barriers[..],
@@ -116,7 +116,7 @@ impl Buffer {
 				self.internal,
 				**buffer,
 				**image,
-				layout,
+				layout.into(),
 				&regions[..],
 			);
 		}

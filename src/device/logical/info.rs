@@ -5,6 +5,7 @@ use crate::{
 	utility,
 };
 
+#[derive(Debug)]
 pub struct DeviceQueue {
 	pub queue_family_index: usize,
 	pub priorities: Vec<f32>,

@@ -49,7 +49,7 @@ impl Layout {
 
 pub struct Attribute {
 	pub offset: usize,
-	pub format: flags::Format,
+	pub format: flags::format::Format,
 }
 
 pub trait Object: Sized {

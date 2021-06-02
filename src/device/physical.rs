@@ -1,7 +1,7 @@
 use crate::{
 	backend,
 	device::physical,
-	flags::{ColorSpace, Format, PresentMode, QueueFlags, SurfaceTransform},
+	flags::{format::Format, ColorSpace, PresentMode, QueueFlags, SurfaceTransform},
 	instance::Instance,
 	structs::Extent2D,
 	utility, Surface,

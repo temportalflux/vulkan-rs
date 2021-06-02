@@ -85,7 +85,7 @@ impl SetUpdate {
 										backend::vk::DescriptorImageInfo::builder()
 											.sampler(**info.sampler)
 											.image_view(**info.view)
-											.image_layout(info.layout)
+											.image_layout(info.layout.into())
 											.build(),
 									);
 								}
