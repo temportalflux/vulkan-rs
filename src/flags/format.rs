@@ -43,6 +43,12 @@ pub struct Components {
 	data: DataType,
 }
 
+impl Components {
+	pub fn as_format(&self) -> Format {
+		format(&self.color, self.bits, self.data)
+	}
+}
+
 pub const fn format(comps: &[ColorComponent], bits: Bits, size: DataType) -> Format {
 	match (comps, bits, size) {
 		//R4G4_UNORM_PACK8

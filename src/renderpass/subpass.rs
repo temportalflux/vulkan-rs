@@ -1,40 +1,70 @@
-use crate::{backend, flags};
+use crate::flags;
 
 /// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
 /// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
+#[derive(Debug)]
 pub struct Subpass {
+	id: String,
 	bind_point: flags::PipelineBindPoint,
-	attachment_refs: Vec<backend::vk::AttachmentReference>,
+	attachments: SubpassAttachments,
 }
 
-impl Default for Subpass {
-	fn default() -> Subpass {
-		Subpass {
-			bind_point: flags::PipelineBindPoint::GRAPHICS,
-			attachment_refs: Vec::new(),
-		}
-	}
+#[derive(Debug, Clone)]
+pub(crate) struct SubpassAttachments {
+	pub input: Vec<(String, flags::ImageLayout)>,
+	pub color: Vec<(String, flags::ImageLayout)>,
+	pub depth_stencil: Option<(String, flags::ImageLayout)>,
 }
 
 impl Subpass {
-	pub fn add_attachment_ref(
+	pub fn new(id: String) -> Self {
+		Self {
+			id,
+			bind_point: flags::PipelineBindPoint::GRAPHICS,
+			attachments: SubpassAttachments {
+				color: Vec::new(),
+				input: Vec::new(),
+				depth_stencil: None,
+			},
+		}
+	}
+
+	pub fn add_input_attachment(
 		mut self,
-		attachment_index: usize,
+		attachment_id: String,
 		layout: flags::ImageLayout,
 	) -> Self {
-		self.attachment_refs.push(
-			backend::vk::AttachmentReference::builder()
-				.attachment(attachment_index as u32)
-				.layout(layout.into())
-				.build(),
-		);
+		self.attachments.input.push((attachment_id, layout));
 		self
 	}
 
-	pub(crate) fn as_vk(&self) -> backend::vk::SubpassDescription {
-		backend::vk::SubpassDescription::builder()
-			.pipeline_bind_point(self.bind_point)
-			.color_attachments(&self.attachment_refs)
-			.build()
+	pub fn add_color_attachment(
+		mut self,
+		attachment_id: String,
+		layout: flags::ImageLayout,
+	) -> Self {
+		self.attachments.color.push((attachment_id, layout));
+		self
+	}
+
+	pub fn with_depth_stencil_attachment(
+		mut self,
+		attachment_id: String,
+		layout: flags::ImageLayout,
+	) -> Self {
+		self.attachments.depth_stencil = Some((attachment_id, layout));
+		self
+	}
+
+	pub fn id(&self) -> &String {
+		&self.id
+	}
+
+	pub fn bind_point(&self) -> flags::PipelineBindPoint {
+		self.bind_point
+	}
+
+	pub(crate) fn attachments(&self) -> &SubpassAttachments {
+		&self.attachments
 	}
 }

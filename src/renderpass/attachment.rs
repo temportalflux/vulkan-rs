@@ -13,8 +13,9 @@ pub struct AttachmentOps {
 /// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
 /// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
 /// images used for each frame that is shown.
-#[derive(Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Attachment {
+	id: String,
 	format: flags::format::Format,
 	samples: flags::SampleCount,
 	general_ops: AttachmentOps,
@@ -24,32 +25,48 @@ pub struct Attachment {
 }
 
 impl Attachment {
-	pub fn set_format(mut self, format: flags::format::Format) -> Self {
+	pub fn new(id: String) -> Self {
+		Self {
+			id,
+			format: flags::format::default(),
+			samples: Default::default(),
+			general_ops: Default::default(),
+			stencil_ops: Default::default(),
+			initial_layout: Default::default(),
+			final_layout: Default::default(),
+		}
+	}
+
+	pub fn id(&self) -> &String {
+		&self.id
+	}
+
+	pub fn with_format(mut self, format: flags::format::Format) -> Self {
 		self.format = format;
 		self
 	}
 
-	pub fn set_sample_count(mut self, count: flags::SampleCount) -> Self {
+	pub fn with_sample_count(mut self, count: flags::SampleCount) -> Self {
 		self.samples = count;
 		self
 	}
 
-	pub fn set_general_ops(mut self, ops: AttachmentOps) -> Self {
+	pub fn with_general_ops(mut self, ops: AttachmentOps) -> Self {
 		self.general_ops = ops;
 		self
 	}
 
-	pub fn set_stencil_ops(mut self, ops: AttachmentOps) -> Self {
+	pub fn with_stencil_ops(mut self, ops: AttachmentOps) -> Self {
 		self.stencil_ops = ops;
 		self
 	}
 
-	pub fn set_initial_layout(mut self, layout: flags::ImageLayout) -> Self {
+	pub fn with_initial_layout(mut self, layout: flags::ImageLayout) -> Self {
 		self.initial_layout = layout;
 		self
 	}
 
-	pub fn set_final_layout(mut self, layout: flags::ImageLayout) -> Self {
+	pub fn with_final_layout(mut self, layout: flags::ImageLayout) -> Self {
 		self.final_layout = layout;
 		self
 	}
