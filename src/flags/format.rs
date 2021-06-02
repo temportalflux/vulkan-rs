@@ -165,44 +165,44 @@ pub const fn format(comps: &[ColorComponent], bits: Bits, size: DataType) -> For
 		([R, G, B, A], Bit16, SFloat) => Format::R16G16B16A16_SFLOAT,
 
 		// 32-bit: Red
-		([R], Bit32, UnsignedNorm) => Format::R32_UINT,
-		([R], Bit32, SignedNorm) => Format::R32_SINT,
-		([R], Bit32, UnsignedScaled) => Format::R32_SFLOAT,
+		([R], Bit32, UnsignedInt) => Format::R32_UINT,
+		([R], Bit32, SignedInt) => Format::R32_SINT,
+		([R], Bit32, SFloat) => Format::R32_SFLOAT,
 
 		// 32-bit: Red Green
-		([R, G], Bit32, UnsignedNorm) => Format::R32G32_UINT,
-		([R, G], Bit32, SignedNorm) => Format::R32G32_SINT,
-		([R, G], Bit32, UnsignedScaled) => Format::R32G32_SFLOAT,
+		([R, G], Bit32, UnsignedInt) => Format::R32G32_UINT,
+		([R, G], Bit32, SignedInt) => Format::R32G32_SINT,
+		([R, G], Bit32, SFloat) => Format::R32G32_SFLOAT,
 
 		// 32-bit: Red Green Blue
-		([R, G, B], Bit32, UnsignedNorm) => Format::R32G32B32_UINT,
-		([R, G, B], Bit32, SignedNorm) => Format::R32G32B32_SINT,
-		([R, G, B], Bit32, UnsignedScaled) => Format::R32G32B32_SFLOAT,
+		([R, G, B], Bit32, UnsignedInt) => Format::R32G32B32_UINT,
+		([R, G, B], Bit32, SignedInt) => Format::R32G32B32_SINT,
+		([R, G, B], Bit32, SFloat) => Format::R32G32B32_SFLOAT,
 
 		// 32-bit: Red Green Blue Alpha
-		([R, G, B, A], Bit32, UnsignedNorm) => Format::R32G32B32A32_UINT,
-		([R, G, B, A], Bit32, SignedNorm) => Format::R32G32B32A32_SINT,
-		([R, G, B, A], Bit32, UnsignedScaled) => Format::R32G32B32A32_SFLOAT,
+		([R, G, B, A], Bit32, UnsignedInt) => Format::R32G32B32A32_UINT,
+		([R, G, B, A], Bit32, SignedInt) => Format::R32G32B32A32_SINT,
+		([R, G, B, A], Bit32, SFloat) => Format::R32G32B32A32_SFLOAT,
 
 		// 64-bit: Red
-		([R], Bit64, UnsignedNorm) => Format::R64_UINT,
-		([R], Bit64, SignedNorm) => Format::R64_SINT,
-		([R], Bit64, UnsignedScaled) => Format::R64_SFLOAT,
+		([R], Bit64, UnsignedInt) => Format::R64_UINT,
+		([R], Bit64, SignedInt) => Format::R64_SINT,
+		([R], Bit64, SFloat) => Format::R64_SFLOAT,
 
 		// 64-bit: Red Green
-		([R, G], Bit64, UnsignedNorm) => Format::R64G64_UINT,
-		([R, G], Bit64, SignedNorm) => Format::R64G64_SINT,
-		([R, G], Bit64, UnsignedScaled) => Format::R64G64_SFLOAT,
+		([R, G], Bit64, UnsignedInt) => Format::R64G64_UINT,
+		([R, G], Bit64, SignedInt) => Format::R64G64_SINT,
+		([R, G], Bit64, SFloat) => Format::R64G64_SFLOAT,
 
 		// 64-bit: Red Green Blue
-		([R, G, B], Bit64, UnsignedNorm) => Format::R64G64B64_UINT,
-		([R, G, B], Bit64, SignedNorm) => Format::R64G64B64_SINT,
-		([R, G, B], Bit64, UnsignedScaled) => Format::R64G64B64_SFLOAT,
+		([R, G, B], Bit64, UnsignedInt) => Format::R64G64B64_UINT,
+		([R, G, B], Bit64, SignedInt) => Format::R64G64B64_SINT,
+		([R, G, B], Bit64, SFloat) => Format::R64G64B64_SFLOAT,
 
 		// 64-bit: Red Green Blue Alpha
-		([R, G, B, A], Bit64, UnsignedNorm) => Format::R64G64B64A64_UINT,
-		([R, G, B, A], Bit64, SignedNorm) => Format::R64G64B64A64_SINT,
-		([R, G, B, A], Bit64, UnsignedScaled) => Format::R64G64B64A64_SFLOAT,
+		([R, G, B, A], Bit64, UnsignedInt) => Format::R64G64B64A64_UINT,
+		([R, G, B, A], Bit64, SignedInt) => Format::R64G64B64A64_SINT,
+		([R, G, B, A], Bit64, SFloat) => Format::R64G64B64A64_SFLOAT,
 
 		//B10G11R11_UFLOAT_PACK32,
 		//E5B9G9R9_UFLOAT_PACK32,
