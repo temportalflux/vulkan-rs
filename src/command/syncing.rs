@@ -8,7 +8,7 @@ use crate::{
 use std::sync;
 
 /// A signal on the GPU that is signaled when a set of submitted commands have completed.
-/// 
+///
 /// Used for communicating only within the GPU about the order command buffers should be executed.
 pub struct Semaphore {
 	internal: backend::vk::Semaphore,
@@ -46,7 +46,7 @@ impl Drop for Semaphore {
 }
 
 /// A signal on the CPU that the GPU marks as signaled when a set of submitted commands have completed.
-/// 
+///
 /// Used for communicating from GPU to CPU.
 pub struct Fence {
 	internal: backend::vk::Fence,

@@ -1,4 +1,4 @@
-use crate::{backend, flags, pipeline::vertex};
+use crate::{backend, flags};
 
 pub struct Layout {
 	bindings: Vec<backend::vk::VertexInputBindingDescription>,
@@ -17,7 +17,7 @@ impl Default for Layout {
 impl Layout {
 	pub fn with_object<T>(mut self, binding_index: usize, rate: flags::VertexInputRate) -> Self
 	where
-		T: vertex::Object,
+		T: Object,
 	{
 		self.bindings.push(
 			backend::vk::VertexInputBindingDescription::builder()

@@ -300,7 +300,7 @@ impl Buffer {
 	pub fn bind_descriptors(
 		&self,
 		bind_point: flags::PipelineBindPoint,
-		layout: &pipeline::Layout,
+		layout: &pipeline::layout::Layout,
 		first_set_index: usize,
 		sets: Vec<&descriptor::Set>,
 	) {

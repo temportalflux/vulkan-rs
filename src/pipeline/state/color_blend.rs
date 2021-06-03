@@ -6,13 +6,13 @@ use enumset::EnumSet;
 
 /// Struct containing information about how a [`Pipeline`](crate::pipeline::Pipeline)
 /// blends the color of its [`attachments`](crate::renderpass::Attachment).
-pub struct ColorBlendState {
+pub struct ColorBlend {
 	pub attachments: Vec<backend::vk::PipelineColorBlendAttachmentState>,
 }
 
-impl Default for ColorBlendState {
-	fn default() -> ColorBlendState {
-		ColorBlendState {
+impl Default for ColorBlend {
+	fn default() -> Self {
+		Self {
 			attachments: Vec::new(),
 		}
 	}
@@ -20,12 +20,12 @@ impl Default for ColorBlendState {
 
 /// The properties of a specific attachment in the pipeline and its color blending.
 #[derive(Clone, Copy)]
-pub struct ColorBlendAttachment {
+pub struct Attachment {
 	pub color_flags: EnumSet<ColorComponent>,
 	pub blend: Option<Blend>,
 }
 
-impl Default for ColorBlendAttachment {
+impl Default for Attachment {
 	fn default() -> Self {
 		Self {
 			color_flags: EnumSet::all(),
@@ -50,8 +50,8 @@ impl Blend {
 	}
 }
 
-impl ColorBlendState {
-	pub fn add_attachment(mut self, attachment: ColorBlendAttachment) -> Self {
+impl ColorBlend {
+	pub fn add_attachment(mut self, attachment: Attachment) -> Self {
 		self.attachments.push(
 			backend::vk::PipelineColorBlendAttachmentState::builder()
 				.color_write_mask(ColorComponent::fold(&attachment.color_flags))

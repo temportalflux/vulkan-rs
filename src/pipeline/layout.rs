@@ -5,6 +5,7 @@ use crate::{
 };
 use std::sync;
 
+/// The builder for a pipeline [`Layout`].
 pub struct Builder {
 	descriptor_layouts: Vec<sync::Weak<descriptor::SetLayout>>,
 }
@@ -22,9 +23,7 @@ impl Builder {
 		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
 		self
 	}
-}
 
-impl Builder {
 	pub fn build(self, device: sync::Arc<logical::Device>) -> utility::Result<Layout> {
 		use backend::version::DeviceV1_0;
 
@@ -44,6 +43,11 @@ impl Builder {
 	}
 }
 
+/// A pipeline layout contains information about a pipeline's descriptor sets and push constants.
+/// These layouts can be empty if there are no descriptors or push constants,
+/// but more often than not you will have at least 1 [`descriptor set layout`](descriptor::SetLayout) that is bound.
+///
+/// Equivalent to [`VkPipelineLayout`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkPipelineLayout.html).
 pub struct Layout {
 	internal: backend::vk::PipelineLayout,
 	device: sync::Arc<logical::Device>,

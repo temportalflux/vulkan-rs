@@ -1,25 +1,31 @@
-use crate::{backend, device::logical, flags, pipeline, renderpass, shader, utility};
+use crate::{
+	backend,
+	device::logical,
+	flags,
+	pipeline::{layout, state, Pipeline},
+	renderpass, shader, utility,
+};
 
 use std::sync;
 
-/// Information used to construct a [`Pipeline`](pipeline::Pipeline).
-pub struct Info {
+/// Information used to construct a [`Pipeline`](Pipeline).
+pub struct Builder {
 	shaders: Vec<sync::Weak<shader::Module>>,
-	vertex_input: pipeline::vertex::Layout,
-	topology: pipeline::Topology,
-	viewport_state: pipeline::ViewportState,
-	rasterization_state: pipeline::RasterizationState,
+	vertex_input: state::vertex::Layout,
+	topology: state::Topology,
+	viewport_state: state::Viewport,
+	rasterization_state: state::Rasterization,
 	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
-	color_blending: pipeline::ColorBlendState,
-	dynamic_state: pipeline::DynamicState,
+	color_blending: state::color_blend::ColorBlend,
+	dynamic_state: state::Dynamic,
 }
 
-impl Default for Info {
-	fn default() -> Info {
-		Info {
+impl Default for Builder {
+	fn default() -> Self {
+		Self {
 			shaders: Vec::new(),
 			vertex_input: Default::default(),
-			topology: pipeline::Topology::default(),
+			topology: state::Topology::default(),
 			viewport_state: Default::default(),
 			rasterization_state: Default::default(),
 			multisampling: backend::vk::PipelineMultisampleStateCreateInfo::builder()
@@ -32,38 +38,38 @@ impl Default for Info {
 	}
 }
 
-impl Info {
+impl Builder {
 	pub fn add_shader(mut self, shader: sync::Weak<shader::Module>) -> Self {
 		self.shaders.push(shader);
 		self
 	}
 
-	pub fn with_vertex_layout(mut self, layout: pipeline::vertex::Layout) -> Self {
+	pub fn with_vertex_layout(mut self, layout: state::vertex::Layout) -> Self {
 		self.vertex_input = layout;
 		self
 	}
 
-	pub fn with_topology(mut self, topology: pipeline::Topology) -> Self {
+	pub fn with_topology(mut self, topology: state::Topology) -> Self {
 		self.topology = topology;
 		self
 	}
 
-	pub fn set_viewport_state(mut self, state: pipeline::ViewportState) -> Self {
+	pub fn set_viewport_state(mut self, state: state::Viewport) -> Self {
 		self.viewport_state = state;
 		self
 	}
 
-	pub fn set_rasterization_state(mut self, state: pipeline::RasterizationState) -> Self {
+	pub fn set_rasterization_state(mut self, state: state::Rasterization) -> Self {
 		self.rasterization_state = state;
 		self
 	}
 
-	pub fn set_color_blending(mut self, info: pipeline::ColorBlendState) -> Self {
+	pub fn set_color_blending(mut self, info: state::color_blend::ColorBlend) -> Self {
 		self.color_blending = info;
 		self
 	}
 
-	pub fn with_dynamic_info(mut self, dynamic_state: pipeline::DynamicState) -> Self {
+	pub fn with_dynamic_info(mut self, dynamic_state: state::Dynamic) -> Self {
 		self.dynamic_state = dynamic_state;
 		self
 	}
@@ -72,18 +78,16 @@ impl Info {
 		self.dynamic_state = self.dynamic_state.with(state);
 		self
 	}
-}
 
-impl Info {
-	/// Creates the actual [`Pipeline`](pipeline::Pipeline) object,
+	/// Creates the actual [`Pipeline`](Pipeline) object,
 	/// with respect to a specific [`Render Pass`](crate::renderpass::Pass).
-	pub fn create_object(
+	pub fn build(
 		self,
 		device: sync::Arc<logical::Device>,
-		layout: &pipeline::Layout,
+		layout: &layout::Layout,
 		render_pass: &renderpass::Pass,
 		subpass_id: &Option<String>,
-	) -> Result<pipeline::Pipeline, utility::Error> {
+	) -> Result<Pipeline, utility::Error> {
 		use backend::version::DeviceV1_0;
 
 		let shader_stages = self
@@ -134,6 +138,6 @@ impl Info {
 				_ => Err(utility::Error::VulkanError(vk_result)),
 			},
 		}?;
-		Ok(pipeline::Pipeline::from(device, pipelines[0]))
+		Ok(Pipeline::from(device, pipelines[0]))
 	}
 }

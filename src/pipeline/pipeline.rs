@@ -1,4 +1,4 @@
-use crate::{backend, device::logical};
+use crate::{backend, device::logical, pipeline::Builder};
 
 use std::sync;
 
@@ -10,6 +10,10 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
+	pub fn builder() -> Builder {
+		Builder::default()
+	}
+
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Pipeline,
