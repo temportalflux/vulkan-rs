@@ -39,6 +39,9 @@ impl Default for Builder {
 }
 
 impl Builder {
+
+	/// Adds a shader to the pipeline.
+	/// You should only add 1 shader of each [`kind`](flags::ShaderKind).
 	pub fn add_shader(mut self, shader: sync::Weak<shader::Module>) -> Self {
 		self.shaders.push(shader);
 		self
