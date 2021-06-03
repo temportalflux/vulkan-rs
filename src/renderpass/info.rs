@@ -218,6 +218,10 @@ impl Info {
 			.dependencies(&dependencies)
 			.build();
 		let vk = unsafe { device.create_render_pass(&vk_info, None) }?;
-		Ok(renderpass::Pass::from(device.clone(), vk))
+		Ok(renderpass::Pass::from(
+			device.clone(),
+			vk,
+			self.subpass_order(),
+		))
 	}
 }
