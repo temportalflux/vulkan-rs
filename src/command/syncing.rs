@@ -7,6 +7,9 @@ use crate::{
 
 use std::sync;
 
+/// A signal on the GPU that is signaled when a set of submitted commands have completed.
+/// 
+/// Used for communicating only within the GPU about the order command buffers should be executed.
 pub struct Semaphore {
 	internal: backend::vk::Semaphore,
 	device: sync::Arc<logical::Device>,
@@ -20,7 +23,10 @@ impl Semaphore {
 		Ok(Semaphore::from(device.clone(), vk))
 	}
 
-	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Semaphore) -> Semaphore {
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::Semaphore,
+	) -> Semaphore {
 		Semaphore { device, internal }
 	}
 }
@@ -39,6 +45,9 @@ impl Drop for Semaphore {
 	}
 }
 
+/// A signal on the CPU that the GPU marks as signaled when a set of submitted commands have completed.
+/// 
+/// Used for communicating from GPU to CPU.
 pub struct Fence {
 	internal: backend::vk::Fence,
 	device: sync::Arc<logical::Device>,
@@ -55,7 +64,7 @@ impl Fence {
 		Ok(Fence::from(device.clone(), vk))
 	}
 
-	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Fence) -> Fence {
+	pub(crate) fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Fence) -> Fence {
 		Fence { device, internal }
 	}
 }

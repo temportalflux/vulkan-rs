@@ -54,7 +54,7 @@ pub struct Device {
 
 impl Device {
 	/// The internal constructor. Users should use [`Instance.find_physical_device`](crate::instance::Instance::find_physical_device) to create a vulkan instance.
-	pub fn from(
+	pub(crate) fn from(
 		instance: &sync::Arc<Instance>,
 		vk: backend::vk::PhysicalDevice,
 		surface: &sync::Arc<Surface>,

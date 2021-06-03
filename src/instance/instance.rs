@@ -13,7 +13,7 @@ pub struct Instance {
 
 impl Instance {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
-	pub fn from(
+	pub(crate) fn from(
 		internal: backend::Instance,
 		ctx: &Context,
 		enable_validation: bool,

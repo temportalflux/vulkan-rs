@@ -2,27 +2,27 @@ use crate::{backend, device::logical, image_view, renderpass, structs::Extent2D,
 use std::sync;
 
 /// Information used to construct a [`Framebuffer`].
-pub struct Info {
+pub struct Builder {
 	extent: Extent2D,
 	layer_count: u32,
 }
 
-impl Default for Info {
-	fn default() -> Info {
-		Info {
+impl Default for Builder {
+	fn default() -> Self {
+		Self {
 			extent: Extent2D::default(),
 			layer_count: 1,
 		}
 	}
 }
 
-impl Info {
+impl Builder {
 	pub fn set_extent(mut self, extent: Extent2D) -> Self {
 		self.extent = extent;
 		self
 	}
 
-	pub fn create_object(
+	pub fn build(
 		&self,
 		swapchain_image_view: &image_view::View,
 		render_pass: &renderpass::Pass,
@@ -42,13 +42,21 @@ impl Info {
 	}
 }
 
+/// Framebuffers represent a collection of specific memory attachments that a render pass instance uses.
+/// This is something that needs to exist for rendering frames, but that has no data that you can use or access.
+///
+/// Equivalent to [`VkFramebuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkFramebuffer.html).
 pub struct Framebuffer {
 	internal: backend::vk::Framebuffer,
 	device: sync::Arc<logical::Device>,
 }
 
 impl Framebuffer {
-	pub fn from(
+	pub fn builder() -> Builder {
+		Builder::default()
+	}
+
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Framebuffer,
 	) -> Framebuffer {

@@ -6,12 +6,21 @@ use crate::{
 };
 use std::sync;
 
+/// Command pools are opaque objects that command buffer memory is allocated from,
+/// and which allow the implementation to amortize the cost of resource creation across multiple command buffers.
+///
+/// Command pools are externally synchronized, meaning that a command pool must not be used concurrently in multiple threads.
+/// That includes use via recording commands on any command buffers allocated from the pool, as well as operations that
+/// allocate, free, and reset command buffers or the pool itself.
+///
+/// Equivalent to [VkCommandPool](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkCommandPool.html).
 pub struct Pool {
 	internal: backend::vk::CommandPool,
 	device: sync::Arc<logical::Device>,
 }
 
 impl Pool {
+	/// Creates a command pool from a device, queue, and a flag indicating the kind of command pool it is.
 	pub fn create(
 		device: &sync::Arc<logical::Device>,
 		queue_family_index: usize,
@@ -29,6 +38,7 @@ impl Pool {
 		})
 	}
 
+	/// Creates some amount of [`command buffers`](command::Buffer) at a given level.
 	pub fn allocate_buffers(
 		&self,
 		amount: usize,
@@ -46,6 +56,10 @@ impl Pool {
 			.collect::<Vec<_>>())
 	}
 
+	/// Destroys buffers created by the pool.
+	///
+	/// Use with caution, as the buffers being destroyed will not longer be accessible
+	/// (which is why this function consumes ownership of the buffers).
 	pub fn free_buffers(&self, buffers: Vec<command::Buffer>) {
 		use backend::version::DeviceV1_0;
 		let vk_buffers = buffers.iter().map(|cmd_buf| **cmd_buf).collect::<Vec<_>>();

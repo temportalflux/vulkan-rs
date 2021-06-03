@@ -12,7 +12,7 @@ pub struct Pass {
 }
 
 impl Pass {
-	pub fn from(
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::RenderPass,
 		subpass_order: Vec<String>,

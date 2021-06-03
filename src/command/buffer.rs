@@ -4,6 +4,8 @@ use crate::{
 };
 use std::sync;
 
+/// A ordered set of commands that will be executed on the GPU when they are submitted.
+/// You can get a command buffer from [`command::Pool::allocate_buffers`](command::Pool::allocate_buffers).
 pub struct Buffer {
 	recording_framebuffer: Option<backend::vk::Framebuffer>,
 	recording_render_pass: Option<backend::vk::RenderPass>,
@@ -11,8 +13,9 @@ pub struct Buffer {
 	device: sync::Arc<logical::Device>,
 }
 
+/// Internal only
 impl Buffer {
-	pub fn from(
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::CommandBuffer,
 	) -> Buffer {
@@ -23,7 +26,15 @@ impl Buffer {
 			recording_framebuffer: None,
 		}
 	}
+}
 
+/// General operations used for every command buffer.
+impl Buffer {
+	/// Initializes the command buffer for writing commands.
+	///
+	/// Must be called before all other methods.
+	///
+	/// Equivalent to [`vkBeginCommandBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBeginCommandBuffer.html).
 	pub fn begin(
 		&self,
 		usage: Option<flags::CommandBufferUsage>,
@@ -54,25 +65,55 @@ impl Buffer {
 		Ok(unsafe { self.device.begin_command_buffer(self.internal, &info) }?)
 	}
 
+	/// Finalizes the commands in the buffer.
+	///
+	/// Can only be called after [`begin`](Buffer::begin).
+	///
+	/// Equivalent to [`vkEndCommandBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEndCommandBuffer.html).
 	pub fn end(&self) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		Ok(unsafe { self.device.end_command_buffer(self.internal) }?)
 	}
 
-	pub fn mark_pipeline_barrier(&self, barrier: command::PipelineBarrier) {
+	/// Executes the commands within secondary command buffers.
+	///
+	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdExecuteCommands`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdExecuteCommands.html).
+	pub fn execute(&self, secondary_buffers: Vec<&command::Buffer>) {
 		use backend::version::DeviceV1_0;
+		let unwraped = secondary_buffers
+			.iter()
+			.map(|cmd_buffer| ***cmd_buffer)
+			.collect::<Vec<_>>();
+		unsafe { self.device.cmd_execute_commands(self.internal, &unwraped) };
+	}
+}
+
+/// Copying data operations!
+impl Buffer {
+	/// Adds a pipeline barrier to the buffer.
+	/// See [`Pipeline Barrier`](command::barrier::Pipeline) for the kinds of barriers available.
+	/// This can be used, for example, to move an image from one layout to another layout.
+	///
+	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdPipelineBarrier`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPipelineBarrier.html).
+	pub fn mark_pipeline_barrier(&self, barrier: command::barrier::Pipeline) {
+		use backend::version::DeviceV1_0;
+		use command::barrier::Kind::*;
 		let mut memory_barriers: Vec<backend::vk::MemoryBarrier> = Vec::new();
 		let mut buffer_barriers: Vec<backend::vk::BufferMemoryBarrier> = Vec::new();
 		let mut image_barriers: Vec<backend::vk::ImageMemoryBarrier> = Vec::new();
 		for barrier_kind in barrier.kinds {
 			match barrier_kind {
-				command::BarrierKind::Memory(info) => {
+				Memory(info) => {
 					memory_barriers.push(info.into());
 				}
-				command::BarrierKind::Buffer(info) => {
+				Buffer(info) => {
 					buffer_barriers.push(info.as_vk());
 				}
-				command::BarrierKind::Image(info) => {
+				Image(info) => {
 					image_barriers.push(info.as_vk());
 				}
 			}
@@ -90,6 +131,11 @@ impl Buffer {
 		};
 	}
 
+	/// Copies data from some buffer to an image for a set region of the buffer.
+	///
+	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdCopyBufferToImage`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyBufferToImage.html).
 	pub fn copy_buffer_to_image(
 		&self,
 		buffer: &buffer::Buffer,
@@ -122,6 +168,11 @@ impl Buffer {
 		}
 	}
 
+	/// Copies some data from one buffer to another.
+	///
+	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdCopyBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyBuffer.html).
 	pub fn copy_buffer_to_buffer(
 		&self,
 		src: &buffer::Buffer,
@@ -144,7 +195,15 @@ impl Buffer {
 				.cmd_copy_buffer(self.internal, **src, **dst, &regions[..]);
 		}
 	}
+}
 
+/// Render Pass operations
+impl Buffer {
+	/// Starts the render pass for recording rendering instructions.
+	///
+	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdBeginRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderPass.html).
 	pub fn start_render_pass(
 		&mut self,
 		frame_buffer: &command::framebuffer::Framebuffer,
@@ -179,6 +238,11 @@ impl Buffer {
 		self.recording_framebuffer = Some(**frame_buffer);
 	}
 
+	/// Moves to the next subpass in the active render pass.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// Equivalent to [`vkCmdNextSubpass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdNextSubpass.html).
 	pub fn next_subpass(&mut self, uses_secondary_buffers: bool) {
 		use backend::version::DeviceV1_0;
 		unsafe {
@@ -193,13 +257,26 @@ impl Buffer {
 		};
 	}
 
+	/// Stops the render pass for recording rendering instructions.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`end`](Buffer::end).
+	///
+	/// Equivalent to [`vkCmdEndRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndRenderPass.html).
 	pub fn stop_render_pass(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.cmd_end_render_pass(self.internal) };
 		self.recording_render_pass = None;
 		self.recording_framebuffer = None;
 	}
+}
 
+/// Pipeline operations
+impl Buffer {
+	/// Binds a pipeline to the buffer. The pipeline will stay bound until another pipeline is bound.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// Equivalent to [`vkCmdBindPipeline`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindPipeline.html).
 	pub fn bind_pipeline(
 		&self,
 		pipeline: &pipeline::Pipeline,
@@ -212,6 +289,14 @@ impl Buffer {
 		};
 	}
 
+	/// Binds descriptors for a given pipeline layout.
+	/// The descriptors will stay bound until another pipeline is bound via [`bind_pipeline`](Buffer::bind_pipeline).
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
+	///
+	/// Equivalent to [`vkCmdBindDescriptorSets`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindDescriptorSets.html).
 	pub fn bind_descriptors(
 		&self,
 		bind_point: flags::PipelineBindPoint,
@@ -234,6 +319,30 @@ impl Buffer {
 		};
 	}
 
+	/// Sets the scissor that should be used for pipelines which use the [`DynamicState.SCISSOR`](flags::DynamicState::SCISSOR) flag.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// Equivalent to [`vkCmdSetScissor`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetScissor.html).
+	pub fn set_dynamic_scissors(&self, scissors: Vec<utility::Scissor>) {
+		use backend::version::DeviceV1_0;
+		let scissors = scissors
+			.into_iter()
+			.map(|scissor| scissor.into())
+			.collect::<Vec<_>>();
+		unsafe { self.device.cmd_set_scissor(self.internal, 0, &scissors[..]) };
+	}
+}
+
+// Data Buffer operations
+impl Buffer {
+	/// Binds buffers which contain vertex/instance data.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
+	///
+	/// Equivalent to [`vkCmdBindVertexBuffers`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindVertexBuffers.html).
 	pub fn bind_vertex_buffers(
 		&self,
 		binding_index: u32,
@@ -252,6 +361,13 @@ impl Buffer {
 		};
 	}
 
+	/// Binds buffers which contain index data for vertex buffers.
+	///
+	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
+	///
+	/// Equivalent to [`vkCmdBindIndexBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindIndexBuffer.html).
 	pub fn bind_index_buffer(&self, buffer: &buffer::Buffer, offset: u64) {
 		use backend::version::DeviceV1_0;
 		unsafe {
@@ -264,28 +380,17 @@ impl Buffer {
 		};
 	}
 
-	pub fn set_dynamic_scissors(&self, scissors: Vec<utility::Scissor>) {
-		use backend::version::DeviceV1_0;
-		let scissors = scissors
-			.into_iter()
-			.map(|scissor| scissor.into())
-			.collect::<Vec<_>>();
-		unsafe { self.device.cmd_set_scissor(self.internal, 0, &scissors[..]) };
-	}
-
-	pub fn draw_vertices(&self, vertex_count: u32) {
-		use backend::version::DeviceV1_0;
-		unsafe {
-			self.device.cmd_draw(
-				self.internal,
-				vertex_count,
-				/*instance count*/ 1,
-				/*fist_index*/ 0,
-				/*fist_instance*/ 0,
-			)
-		};
-	}
-
+	/// Draws data from the currently bound vertex and index buffers for the current pipeline + descriptors.
+	///
+	/// Should be called after:
+	/// - [`bind_pipeline`](Buffer::bind_pipeline)
+	/// - [`bind_descriptors`](Buffer::bind_descriptors)
+	/// - [`bind_vertex_buffers`](Buffer::bind_vertex_buffers)
+	/// - [`bind_index_buffer`](Buffer::bind_index_buffer)
+	///
+	/// Can only be called before [`stop_render_pass`](Buffer::stop_render_pass).
+	///
+	/// Equivalent to [`vkCmdDrawIndexed`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndexed.html).
 	pub fn draw(
 		&self,
 		index_count: usize,
@@ -305,15 +410,6 @@ impl Buffer {
 				first_instance as u32,
 			)
 		};
-	}
-
-	pub fn execute(&self, secondary_buffers: Vec<&command::Buffer>) {
-		use backend::version::DeviceV1_0;
-		let unwraped = secondary_buffers
-			.iter()
-			.map(|cmd_buffer| ***cmd_buffer)
-			.collect::<Vec<_>>();
-		unsafe { self.device.cmd_execute_commands(self.internal, &unwraped) };
 	}
 }
 

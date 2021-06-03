@@ -11,7 +11,7 @@ impl SetLayout {
 		Builder::default()
 	}
 
-	pub fn from(
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::DescriptorSetLayout,
 	) -> SetLayout {

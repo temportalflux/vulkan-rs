@@ -11,7 +11,7 @@ pub struct Surface {
 
 impl Surface {
 	/// The internal constructor. Users should use [`create_surface`](crate::instance::Instance::create_surface) to create a surface.
-	pub fn from(
+	pub(crate) fn from(
 		instance: sync::Arc<instance::Instance>,
 		internal: backend::vk::SurfaceKHR,
 	) -> Surface {

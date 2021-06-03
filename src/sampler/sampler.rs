@@ -11,7 +11,10 @@ impl Sampler {
 		Builder::default()
 	}
 
-	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Sampler) -> Sampler {
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::Sampler,
+	) -> Sampler {
 		Sampler { device, internal }
 	}
 }

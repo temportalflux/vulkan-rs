@@ -9,7 +9,7 @@ pub struct Queue {
 }
 
 impl Queue {
-	pub fn from(
+	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Queue,
 		queue_family_index: usize,

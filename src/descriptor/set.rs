@@ -7,7 +7,10 @@ pub struct Set {
 }
 
 impl Set {
-	pub fn from(layout: Arc<descriptor::SetLayout>, internal: backend::vk::DescriptorSet) -> Set {
+	pub(crate) fn from(
+		layout: Arc<descriptor::SetLayout>,
+		internal: backend::vk::DescriptorSet,
+	) -> Set {
 		Set {
 			_layout: layout,
 			internal,

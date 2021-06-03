@@ -16,7 +16,10 @@ impl Pool {
 		descriptor::pool::Builder::default()
 	}
 
-	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::DescriptorPool) -> Pool {
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::DescriptorPool,
+	) -> Pool {
 		Pool {
 			device,
 			internal,

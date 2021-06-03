@@ -1,5 +1,4 @@
-mod barrier;
-pub use barrier::*;
+pub mod barrier;
 
 mod buffer;
 pub use buffer::*;

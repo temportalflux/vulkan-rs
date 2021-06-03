@@ -10,7 +10,10 @@ pub struct Pipeline {
 }
 
 impl Pipeline {
-	pub fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Pipeline) -> Pipeline {
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::Pipeline,
+	) -> Pipeline {
 		Pipeline { device, internal }
 	}
 }

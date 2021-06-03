@@ -15,7 +15,7 @@ pub struct Device {
 
 impl Device {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
-	pub fn from(instance: &instance::Instance, internal: backend::Device) -> Device {
+	pub(crate) fn from(instance: &instance::Instance, internal: backend::Device) -> Device {
 		Device {
 			swapchain: backend::extensions::khr::Swapchain::new(&**instance, &internal),
 			internal,
