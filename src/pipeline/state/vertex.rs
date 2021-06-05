@@ -1,17 +1,9 @@
 use crate::{backend, flags};
 
+#[derive(Debug, Default)]
 pub struct Layout {
 	bindings: Vec<backend::vk::VertexInputBindingDescription>,
 	attributes: Vec<backend::vk::VertexInputAttributeDescription>,
-}
-
-impl Default for Layout {
-	fn default() -> Layout {
-		Layout {
-			bindings: Vec::new(),
-			attributes: Vec::new(),
-		}
-	}
 }
 
 impl Layout {
