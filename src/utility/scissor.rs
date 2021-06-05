@@ -19,6 +19,16 @@ impl Default for Scissor {
 	}
 }
 
+impl std::fmt::Display for Scissor {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(
+			f,
+			"<{}, {}, {}, {}>",
+			self.offset.x, self.offset.y, self.size.width, self.size.height
+		)
+	}
+}
+
 impl Scissor {
 	pub fn new(offset: Offset2D, size: Extent2D) -> Self {
 		Self { offset, size }
