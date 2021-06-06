@@ -69,7 +69,7 @@ enum VertexObjectKind {
 }
 
 /// Applies the `vertex::Object` trait to some struct.
-/// 
+///
 /// Example:
 /// ```
 /// // The macro assumes that the pipeline and flags mods have been brought into scope.
@@ -113,7 +113,7 @@ enum VertexObjectKind {
 /// 	}
 /// }
 /// ```
-/// 
+///
 /// You can also specify matrices using the `vertex_span` attribute:
 /// ```
 /// #[vertex_object]
@@ -152,7 +152,7 @@ enum VertexObjectKind {
 /// 	}
 /// }
 /// ```
-/// 
+///
 #[proc_macro_attribute]
 pub fn vertex_object(args: TokenStream, input: TokenStream) -> TokenStream {
 	// ensure the `#[vertex_object]` macro has no arguments
@@ -179,7 +179,7 @@ pub fn vertex_object(args: TokenStream, input: TokenStream) -> TokenStream {
 			.map(|name| VertexObjectKind::Named(name.clone()))
 			.unwrap_or(VertexObjectKind::Unnamed(field_idx));
 		let mut field_span = 1;
-		
+
 		// Find any `vertex_span` fields (which indicate how many attributes the field takes up)
 		if let Some(idx) = field
 			.attrs
