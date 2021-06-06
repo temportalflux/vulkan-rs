@@ -1,7 +1,7 @@
 use crate::{
 	alloc, backend,
 	buffer::Buffer,
-	flags::{BufferUsage, SharingMode},
+	flags::{BufferUsage, IndexType, SharingMode},
 	utility,
 };
 use std::sync;
@@ -17,6 +17,7 @@ pub struct Builder {
 	usage: BufferUsage,
 	sharing_mode: SharingMode,
 	queue_families: Vec<u32>,
+	index_type: Option<IndexType>,
 }
 
 impl Default for Builder {
@@ -27,6 +28,7 @@ impl Default for Builder {
 			usage: BufferUsage::empty(),
 			sharing_mode: SharingMode::EXCLUSIVE,
 			queue_families: Vec::new(),
+			index_type: None,
 		}
 	}
 }
@@ -69,6 +71,18 @@ impl Builder {
 		self
 	}
 
+	/// Sets the index type that the buffer contains.
+	/// Only used/valid if using an [`index buffer`](BufferUsage::INDEX_BUFFER).
+	pub fn with_index_type(mut self, kind: Option<IndexType>) -> Self {
+		self.index_type = kind;
+		self
+	}
+
+	/// Returns the index type if it was set by [`with_index_type`](Self::with_index_type).
+	pub fn index_type(&self) -> &Option<IndexType> {
+		&self.index_type
+	}
+
 	/// Mutates the builder to include a specific sharing mode.
 	/// The sharing mode is [`exclusive`](SharingMode::EXCLUSIVE) by default.
 	pub fn with_sharing(mut self, mode: SharingMode) -> Self {
@@ -100,6 +114,14 @@ impl Builder {
 		&self,
 		allocator: &alloc::Allocator,
 	) -> utility::Result<(ash::vk::Buffer, vk_mem::Allocation, vk_mem::AllocationInfo)> {
+		if self.usage.contains(BufferUsage::INDEX_BUFFER) != self.index_type.is_some() {
+			return Err(utility::Error::InvalidBufferFormat(
+				match self.usage.contains(BufferUsage::INDEX_BUFFER) {
+					true => "Index Buffers must have an index type",
+					false => "Non-Index Buffers cannot have an index type",
+				}.to_owned(),
+			));
+		}
 		let buffer_info = backend::vk::BufferCreateInfo::builder()
 			.size(self.size as u64)
 			.usage(self.usage)

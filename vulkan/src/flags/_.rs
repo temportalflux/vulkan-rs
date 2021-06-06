@@ -21,6 +21,7 @@ pub use backend::vk::ImageType;
 pub use backend::vk::ImageUsageFlags;
 pub use backend::vk::ImageUsageFlags as ImageUsage;
 pub use backend::vk::ImageViewType;
+pub use backend::vk::IndexType;
 pub use backend::vk::MemoryPropertyFlags as MemoryProperty;
 pub use backend::vk::PipelineBindPoint;
 pub use backend::vk::PolygonMode;

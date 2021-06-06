@@ -370,13 +370,11 @@ impl Buffer {
 	/// Equivalent to [`vkCmdBindIndexBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindIndexBuffer.html).
 	pub fn bind_index_buffer(&self, buffer: &buffer::Buffer, offset: u64) {
 		use backend::version::DeviceV1_0;
+		assert_ne!(*buffer.index_type(), None);
+		let index_type = buffer.index_type().unwrap();
 		unsafe {
-			self.device.cmd_bind_index_buffer(
-				self.internal,
-				**buffer,
-				offset,
-				backend::vk::IndexType::UINT32,
-			)
+			self.device
+				.cmd_bind_index_buffer(self.internal, **buffer, offset, index_type)
 		};
 	}
 

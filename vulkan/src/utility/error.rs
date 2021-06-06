@@ -8,6 +8,7 @@ pub enum Error {
 	AllocatorError(vk_mem::error::Error),
 	RequiresRenderChainUpdate(),
 	General(std::io::Error),
+	InvalidBufferFormat(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -23,6 +24,9 @@ impl std::fmt::Display for Error {
 			Error::AllocatorError(ref vk_mem_error) => vk_mem_error.fmt(f),
 			Error::RequiresRenderChainUpdate() => write!(f, "Render chain is out of date"),
 			Error::General(ref e) => e.fmt(f),
+			Error::InvalidBufferFormat(ref err) => {
+				write!(f, "Invalid buffer format: {}", err)
+			}
 		}
 	}
 }

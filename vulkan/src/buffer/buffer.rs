@@ -1,7 +1,7 @@
 use crate::{
 	alloc, backend,
 	buffer::Builder,
-	flags::{BufferUsage, MemoryProperty, MemoryUsage, SharingMode},
+	flags::{BufferUsage, IndexType, MemoryProperty, MemoryUsage, SharingMode},
 	utility::{self},
 };
 use std::sync;
@@ -53,12 +53,14 @@ impl Buffer {
 		allocator: &sync::Arc<alloc::Allocator>,
 		usage: BufferUsage,
 		size: usize,
+		index_type: Option<IndexType>,
 	) -> utility::Result<sync::Arc<Self>> {
 		Ok(sync::Arc::new(
 			Self::builder()
 				.with_sharing(SharingMode::EXCLUSIVE)
 				.with_usage(usage)
 				.with_usage(BufferUsage::TRANSFER_DST)
+				.with_index_type(index_type)
 				.with_size(size)
 				.with_alloc(
 					alloc::Builder::default()
@@ -129,6 +131,10 @@ impl Buffer {
 	/// which will become unmapped when the memory alloc object is dropped.
 	pub fn memory(&self) -> utility::Result<alloc::Memory> {
 		alloc::Memory::new(self)
+	}
+
+	pub fn index_type(&self) -> &Option<IndexType> {
+		self.builder.index_type()
 	}
 }
 
