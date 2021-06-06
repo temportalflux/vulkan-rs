@@ -119,7 +119,8 @@ impl Builder {
 				match self.usage.contains(BufferUsage::INDEX_BUFFER) {
 					true => "Index Buffers must have an index type",
 					false => "Non-Index Buffers cannot have an index type",
-				}.to_owned(),
+				}
+				.to_owned(),
 			));
 		}
 		let buffer_info = backend::vk::BufferCreateInfo::builder()
