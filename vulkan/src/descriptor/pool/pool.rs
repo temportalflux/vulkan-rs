@@ -1,10 +1,18 @@
 use crate::{
-	backend, descriptor,
+	backend,
+	descriptor::{self, layout::SetLayout, pool::Builder},
 	device::logical,
-	utility::{self},
+	utility,
 };
 use std::sync;
 
+/// A descriptor pool is what creates [`Sets`](descriptor::Set) based on [`Layouts`](SetLayout).
+/// 
+/// They need to be allocated up-front with the total number of descriptor sets
+/// and total number of individual kinds of descriptors.
+/// 
+/// If a pool is destroyed/dropped, all sets it created are also invalid
+/// (and dropped if the user does not have shared ownership of the set).
 pub struct Pool {
 	owned_sets: Vec<sync::Arc<descriptor::Set>>,
 	internal: backend::vk::DescriptorPool,
@@ -12,8 +20,8 @@ pub struct Pool {
 }
 
 impl Pool {
-	pub fn builder() -> descriptor::pool::Builder {
-		descriptor::pool::Builder::default()
+	pub fn builder() -> Builder {
+		Builder::default()
 	}
 
 	pub(crate) fn from(
@@ -27,9 +35,16 @@ impl Pool {
 		}
 	}
 
+	/// Allocates a set of descriptors based on a provided layout.
+	/// 
+	/// The returned vector of weak-reference-counted sets should not be upgraded
+	/// into strong references until they need to be used.
+	/// Since the pool owns these references, if the pool is dropped,
+	/// the weak references will be invalidated unless something else is
+	/// holding onto the reference for too long.
 	pub fn allocate_descriptor_sets(
 		&mut self,
-		layouts: &Vec<sync::Arc<descriptor::SetLayout>>,
+		layouts: &Vec<sync::Arc<SetLayout>>,
 	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
 		use ash::version::DeviceV1_0;
 		let set_layouts = layouts.iter().map(|layout| ***layout).collect::<Vec<_>>();

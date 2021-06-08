@@ -1,6 +1,7 @@
 use crate::{backend, descriptor::layout::Builder, device::logical};
 use std::sync;
 
+/// Defines the format that descriptor sets are created in.
 pub struct SetLayout {
 	internal: backend::vk::DescriptorSetLayout,
 	device: sync::Arc<logical::Device>,

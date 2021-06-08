@@ -1,3 +1,5 @@
+//! Attaching data to descriptors.
+
 use crate::{backend, buffer, descriptor, device::logical, flags, image_view, sampler};
 use std::sync;
 

@@ -7,6 +7,7 @@ use crate::{
 };
 use std::sync;
 
+/// Prepares the declarations for how descriptor sets will be created, via a [`layout`](layout::SetLayout).
 pub struct Builder {
 	bindings: Vec<backend::vk::DescriptorSetLayoutBinding>,
 }

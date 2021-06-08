@@ -10,7 +10,7 @@ extern crate vk_mem;
 pub use ash as backend;
 
 /// The log category for the graphics library.
-pub static LOG: &'static str = "vulkan";
+pub(crate) static LOG: &'static str = "vulkan";
 
 /// Applies the [`Object`](`pipeline::state::vertex::Object`) trait to some struct.
 #[cfg(feature = "derive")]
@@ -33,8 +33,6 @@ pub use context::Context;
 #[path = "command/_.rs"]
 pub mod command;
 
-/// Structures related to describing data that gets sent to the GPU via buffers and pipelines.
-#[path = "descriptor/_.rs"]
 pub mod descriptor;
 
 /// Physical (GPU) and Logical device related structs.

@@ -1,5 +1,6 @@
 use crate::{
-	backend, descriptor,
+	backend,
+	descriptor::layout::SetLayout,
 	device::logical,
 	utility::{self},
 };
@@ -7,7 +8,7 @@ use std::sync;
 
 /// The builder for a pipeline [`Layout`].
 pub struct Builder {
-	descriptor_layouts: Vec<sync::Weak<descriptor::SetLayout>>,
+	descriptor_layouts: Vec<sync::Weak<SetLayout>>,
 }
 
 impl Default for Builder {
@@ -19,7 +20,7 @@ impl Default for Builder {
 }
 
 impl Builder {
-	pub fn with_descriptors(mut self, layout: &sync::Arc<descriptor::SetLayout>) -> Self {
+	pub fn with_descriptors(mut self, layout: &sync::Arc<SetLayout>) -> Self {
 		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
 		self
 	}
@@ -45,7 +46,7 @@ impl Builder {
 
 /// A pipeline layout contains information about a pipeline's descriptor sets and push constants.
 /// These layouts can be empty if there are no descriptors or push constants,
-/// but more often than not you will have at least 1 [`descriptor set layout`](descriptor::SetLayout) that is bound.
+/// but more often than not you will have at least 1 [`descriptor set layout`](SetLayout) that is bound.
 ///
 /// Equivalent to [`VkPipelineLayout`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkPipelineLayout.html).
 pub struct Layout {
