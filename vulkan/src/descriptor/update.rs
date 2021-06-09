@@ -3,64 +3,88 @@
 use crate::{backend, buffer, descriptor, device::logical, flags, image_view, sampler};
 use std::sync;
 
-pub struct SetUpdate {
-	operations: Vec<UpdateOperation>,
+/// A collection of operations to perform on a descriptor set.
+#[derive(Default, Clone)]
+pub struct Queue {
+	operations: Vec<Operation>,
 }
 
-impl Default for SetUpdate {
-	fn default() -> SetUpdate {
-		SetUpdate {
-			operations: Vec::new(),
-		}
-	}
-}
-
-pub enum UpdateOperation {
+/// A single operation to perform on a descriptor set.
+#[derive(Clone)]
+pub enum Operation { 
+	/// An operation which writes binding data to a descriptor.
+	/// Equivalent to [`VkWriteDescriptorSet`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkWriteDescriptorSet.html).
 	Write(WriteOp),
+	/// An operation which copies binding data from one descriptor to another.
 	Copy(CopyOp),
 }
 
-pub struct UpdateOperationSet {
+/// The descriptor that will be updated in a given set.
+#[derive(Clone)]
+pub struct Descriptor {
 	pub set: sync::Weak<descriptor::Set>,
 	pub binding_index: u32,
 	pub array_element: u32,
 }
 
+/// The body of the [`Write`](Operation::Write) operation.
+#[derive(Clone)]
 pub struct WriteOp {
-	pub destination: UpdateOperationSet,
+	pub destination: Descriptor,
 	pub kind: flags::DescriptorKind,
 	pub object: ObjectKind,
 }
 
+/// The kind of object that can be bound to a descriptor.
+/// [`VkWriteDescriptorSet`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkWriteDescriptorSet.html)
+/// allows for multiple descriptor writes in the same operation, which is why each enum value is an array of bound objects.
+#[derive(Clone)]
 pub enum ObjectKind {
+	/// The descriptor will be bound to an [`Image View`](image_view::View).
 	Image(Vec<ImageKind>),
+	/// The descriptor will be bound to a [`Buffer`](buffer::Buffer).
 	Buffer(Vec<BufferKind>),
 }
 
+/// Body for attaching an [`Image View`](image_view::View) & [`Sampler`](sampler::Sampler) to a descriptor binding.
+#[derive(Clone)]
 pub struct ImageKind {
 	pub sampler: sync::Arc<sampler::Sampler>,
 	pub view: sync::Arc<image_view::View>,
 	pub layout: flags::ImageLayout,
 }
 
+/// Body for attaching a [`Buffer`](buffer::Buffer) to a descriptor binding.
+#[derive(Clone)]
 pub struct BufferKind {
 	pub buffer: sync::Arc<buffer::Buffer>,
+	/// The number of bytes from the start of the buffer that the descriptor should start reading at.
 	pub offset: usize,
+	/// The number of bytes starting at `offset` that the descriptor can read from.
 	pub range: usize,
 }
 
+/// The body of the [`Copy`](Operation::Copy) operation.
+#[derive(Clone)]
 pub struct CopyOp {
-	pub source: UpdateOperationSet,
-	pub destination: UpdateOperationSet,
+	pub source: Descriptor,
+	pub destination: Descriptor,
 	pub descriptor_count: u32,
 }
 
-impl SetUpdate {
-	pub fn with(mut self, operation: UpdateOperation) -> Self {
+impl Queue {
+
+	/// Enqueues an operation to the list to be executed when `apply` is called.
+	pub fn with(mut self, operation: Operation) -> Self {
 		self.operations.push(operation);
 		self
 	}
 
+	/// Applies all enqueued operations, thereby consuming the queue.
+	/// 
+	/// While it is technically safe to copy or move the queue around between construction, enqueuing operations, and calling `apply`,
+	/// it is recommended that it all be done in the same stack so that the bound objects aren't kept around longer than needed
+	/// (because operations hold strong reference counted pointers to the objects it will bind).
 	pub fn apply(self, device: &logical::Device) {
 		use backend::version::DeviceV1_0;
 		let mut write_images_per_operation: Vec<Vec<backend::vk::DescriptorImageInfo>> =
@@ -71,7 +95,7 @@ impl SetUpdate {
 		let mut copies = Vec::new();
 		for (idx, operation) in self.operations.iter().enumerate() {
 			match operation {
-				UpdateOperation::Write(op) => {
+				Operation::Write(op) => {
 					if let Some(set_rc) = op.destination.set.upgrade() {
 						let mut builder = backend::vk::WriteDescriptorSet::builder()
 							.dst_set(**set_rc)
@@ -115,7 +139,7 @@ impl SetUpdate {
 						log::error!("Encounted invalid descriptor set for write operate, will skip operation {}", idx);
 					}
 				}
-				UpdateOperation::Copy(op) => {
+				Operation::Copy(op) => {
 					match (op.source.set.upgrade(), op.destination.set.upgrade()) {
 						(Some(source_set), Some(destination_set)) => {
 							copies.push(
