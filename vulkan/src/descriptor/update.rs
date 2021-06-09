@@ -11,7 +11,7 @@ pub struct Queue {
 
 /// A single operation to perform on a descriptor set.
 #[derive(Clone)]
-pub enum Operation { 
+pub enum Operation {
 	/// An operation which writes binding data to a descriptor.
 	/// Equivalent to [`VkWriteDescriptorSet`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkWriteDescriptorSet.html).
 	Write(WriteOp),
@@ -73,7 +73,6 @@ pub struct CopyOp {
 }
 
 impl Queue {
-
 	/// Enqueues an operation to the list to be executed when `apply` is called.
 	pub fn with(mut self, operation: Operation) -> Self {
 		self.operations.push(operation);
@@ -81,7 +80,7 @@ impl Queue {
 	}
 
 	/// Applies all enqueued operations, thereby consuming the queue.
-	/// 
+	///
 	/// While it is technically safe to copy or move the queue around between construction, enqueuing operations, and calling `apply`,
 	/// it is recommended that it all be done in the same stack so that the bound objects aren't kept around longer than needed
 	/// (because operations hold strong reference counted pointers to the objects it will bind).

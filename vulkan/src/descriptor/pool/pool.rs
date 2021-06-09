@@ -7,10 +7,10 @@ use crate::{
 use std::sync;
 
 /// A descriptor pool is what creates [`Sets`](descriptor::Set) based on [`Layouts`](SetLayout).
-/// 
+///
 /// They need to be allocated up-front with the total number of descriptor sets
 /// and total number of individual kinds of descriptors.
-/// 
+///
 /// If a pool is destroyed/dropped, all sets it created are also invalid
 /// (and dropped if the user does not have shared ownership of the set).
 pub struct Pool {
@@ -36,7 +36,7 @@ impl Pool {
 	}
 
 	/// Allocates a set of descriptors based on a provided layout.
-	/// 
+	///
 	/// The returned vector of weak-reference-counted sets should not be upgraded
 	/// into strong references until they need to be used.
 	/// Since the pool owns these references, if the pool is dropped,

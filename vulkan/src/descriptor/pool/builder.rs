@@ -2,7 +2,7 @@ use crate::{backend, descriptor::pool::Pool, device::logical, flags::DescriptorK
 use std::sync;
 
 /// Constructs a [`Pool`](Pool) with a maximum number of sets and quantity of descriptors that can be allocated.
-/// 
+///
 /// Pools need to know the total/maximum number of sets are how many sets can be created by
 /// [`allocate_descriptor_sets`](Pool::allocate_descriptor_sets) for the lifetime of the pool.
 /// Since any given set can contain multiple bindings/descriptors of different types
@@ -10,7 +10,7 @@ use std::sync;
 /// the pool also needs to know the total number of descriptors that can ever be allocated.
 /// This amount of descriptors is _shared_ between all allocated sets,
 /// so if you configure the pool with 3 sets and with 2 descriptors, you wont be able to allocate 3 sets:
-/// 
+///
 /// ```ignore
 /// let pool = Pool::builder()
 /// 	.with_total_set_count(3)
@@ -26,7 +26,7 @@ use std::sync;
 /// )?;
 /// // will fail because there each of the 3 sets needs a descriptor, but there are only 2 descriptors.
 /// ```
-/// 
+///
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
 	/// The maximum number of sets ever allowed to be allocated from the pool.

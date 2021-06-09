@@ -46,7 +46,7 @@ impl Layout {
 }
 
 /// An individual attribute field in a vertex shader.
-/// 
+///
 /// One example of a vertex shader attribute: `layout(location = 1) in vec4 in_color;`
 #[derive(Debug)]
 pub struct Attribute {
@@ -55,7 +55,7 @@ pub struct Attribute {
 }
 
 /// A description of a data struct which contains vertex data.
-/// 
+///
 /// See [`crate::vertex_object`] for a less-verbose implementation.
 pub trait Object: Sized {
 	fn attributes() -> Vec<Attribute>;
