@@ -10,8 +10,8 @@ pub fn to_cstr(name: &str) -> CStrPtr {
 	name as *const str as CStrPtr
 }
 
-pub fn make_version(major: u32, minor: u32, patch: u32) -> u32 {
-	backend::vk::make_version(major, minor, patch)
+pub fn make_version(major: u64, minor: u64, patch: u64) -> u32 {
+	backend::vk::make_version(major as u32, minor as u32, patch as u32)
 }
 
 pub fn as_version_string(version: &u32) -> String {
