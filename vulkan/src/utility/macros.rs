@@ -10,6 +10,7 @@ pub fn to_cstr(name: &str) -> CStrPtr {
 	name as *const str as CStrPtr
 }
 
+// TODO: support the semver crate
 pub fn make_version(major: u64, minor: u64, patch: u64) -> u32 {
 	backend::vk::make_version(major as u32, minor as u32, patch as u32)
 }
