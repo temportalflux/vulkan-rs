@@ -142,11 +142,6 @@ impl Buffer {
 	pub fn index_type(&self) -> &Option<IndexType> {
 		self.builder.index_type()
 	}
-
-	pub fn name(&self) -> &Option<String> {
-		use utility::NameableBuilder;
-		self.builder.name()
-	}
 }
 
 impl std::ops::Deref for Buffer {
@@ -190,5 +185,12 @@ impl utility::HandledObject for Buffer {
 	fn handle(&self) -> u64 {
 		use backend::vk::Handle;
 		self.internal.as_raw()
+	}
+}
+
+impl utility::NamedObject for Buffer {
+	fn name(&self) -> &Option<String> {
+		use utility::NameableBuilder;
+		self.builder.name()
 	}
 }

@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, image::Image, image_view::Builder};
+use crate::{backend, device::logical, image::Image, image_view::Builder, utility};
 
 use std::sync;
 
@@ -48,5 +48,16 @@ impl Drop for View {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_image_view(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for View {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::ImageView as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

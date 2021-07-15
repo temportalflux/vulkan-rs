@@ -24,7 +24,7 @@ pub trait BuildFromAllocator {
 
 pub trait BuildFromDevice {
 	type Output;
-	fn build(&mut self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output>;
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output>;
 
 	fn set_object_name(&self, device: &sync::Arc<logical::Device>, handled: &Self::Output)
 	where

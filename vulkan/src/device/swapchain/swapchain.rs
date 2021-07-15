@@ -37,16 +37,27 @@ impl Swapchain {
 		}
 	}
 
+	pub fn frame_name(&self, i: usize) -> String {
+		format!("SwapChain.Frame{}", i)
+	}
+
 	/// Creates the swapchain images from the vulkan device.
 	pub fn get_images(&self) -> Result<Vec<Image>, utility::Error> {
+		use utility::HandledObject;
 		Ok(unsafe {
 			self.device
 				.unwrap_swapchain()
 				.get_swapchain_images(self.internal)
 		}?
 		.into_iter()
+		.enumerate()
 		// no device reference is passed in because the images are a part of the swapchain
-		.map(|image| Image::from_swapchain(image, self.image_format, self.image_extent))
+		.map(|(i, image)| {
+			let name = format!("{}.Image", self.frame_name(i));
+			let image = Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
+			self.device.set_object_name_logged(&image.create_name(name));
+			image
+		})
 		.collect())
 	}
 

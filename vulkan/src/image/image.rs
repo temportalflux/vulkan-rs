@@ -3,7 +3,7 @@ use crate::{
 	flags::{format::Format, ImageUsage, MemoryProperty, MemoryUsage},
 	image::Builder,
 	structs::{Extent2D, Extent3D},
-	utility,
+	utility::{self, NameableBuilder},
 };
 use std::sync;
 
@@ -21,12 +21,14 @@ pub struct Image {
 	allocation_handle: Option<vk_mem::Allocation>,
 	internal: backend::vk::Image,
 	owner: Option<sync::Arc<dyn Owner>>, // empty for images created from the swapchain
+	name: Option<String>,
 }
 
 impl Image {
 	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::Swapchain).
 	pub(crate) fn from_swapchain(
 		internal: backend::vk::Image,
+		name: String,
 		format: Format,
 		dimensions: Extent2D,
 	) -> Image {
@@ -40,6 +42,7 @@ impl Image {
 				height: dimensions.height,
 				depth: 1,
 			},
+			name: Some(name),
 		}
 	}
 
@@ -61,6 +64,7 @@ impl Image {
 			allocation_handle,
 			dimensions: image_info.size(),
 			format: image_info.format(),
+			name: image_info.name().clone(),
 		}
 	}
 
@@ -69,11 +73,13 @@ impl Image {
 	/// with a given size & format, that can be [`transfered to`](ImageUsage::TRANSFER_DST).
 	pub fn create_gpu(
 		allocator: &sync::Arc<alloc::Allocator>,
+		name: Option<String>,
 		format: Format,
 		size: Extent3D,
 	) -> utility::Result<Self> {
 		use utility::BuildFromAllocator;
 		Ok(Self::builder()
+			.with_optname(name)
 			.with_alloc(
 				alloc::Builder::default()
 					.with_usage(MemoryUsage::GpuOnly)
@@ -122,5 +128,11 @@ impl utility::HandledObject for Image {
 	fn handle(&self) -> u64 {
 		use backend::vk::Handle;
 		self.internal.as_raw()
+	}
+}
+
+impl utility::NamedObject for Image {
+	fn name(&self) -> &Option<String> {
+		&self.name
 	}
 }

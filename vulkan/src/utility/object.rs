@@ -4,11 +4,15 @@ pub trait HandledObject {
 	fn kind(&self) -> backend::vk::ObjectType;
 	fn handle(&self) -> u64;
 
-	fn create_name(&self, name: &str) -> ObjectName {
+	fn create_name<T>(&self, name: T) -> ObjectName where T: Into<String> {
 		ObjectName::from(name)
 			.with_kind(self.kind())
 			.with_raw_handle(self.handle())
 	}
+}
+
+pub trait NamedObject {
+	fn name(&self) -> &Option<String>;
 }
 
 pub struct ObjectName {
@@ -18,11 +22,15 @@ pub struct ObjectName {
 	handle: u64,
 }
 
-impl From<&str> for ObjectName {
-	fn from(s: &str) -> Self {
+impl<T> From<T> for ObjectName
+where T: Into<String>
+{
+	fn from(s: T) -> Self {
+		let name: String = s.into();
+		let name_raw = std::ffi::CString::new(name.as_bytes()).unwrap();
 		ObjectName {
-			name: s.to_string(),
-			name_raw: std::ffi::CString::new(s.as_bytes()).unwrap(),
+			name,
+			name_raw,
 			kind: Default::default(),
 			handle: Default::default(),
 		}

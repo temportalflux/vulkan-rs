@@ -16,6 +16,7 @@ pub struct Builder {
 	view_type: ImageViewType,
 	components: ComponentMapping,
 	subresource_range: subresource::Range,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -30,6 +31,7 @@ impl Default for Builder {
 				a: ComponentSwizzle::A,
 			},
 			subresource_range: subresource::Range::default(),
+			name: None,
 		}
 	}
 }
@@ -65,10 +67,25 @@ impl Builder {
 		self
 	}
 
+}
+
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl utility::BuildFromDevice for Builder {
+	type Output = View;
 	/// Creates a [`View`] object, thereby consuming the info.
 	/// The created [`View`] will use the same format the [`Image`] uses,
 	/// to garuntee fewer user-error bugs.
-	pub fn build(&mut self, device: &sync::Arc<logical::Device>) -> utility::Result<View> {
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
 		let image = self.image.upgrade().unwrap();
 		let info = backend::vk::ImageViewCreateInfo::builder()
@@ -79,6 +96,8 @@ impl Builder {
 			.subresource_range(self.subresource_range.into())
 			.build();
 		let vk = unsafe { device.create_image_view(&info, None) }?;
-		Ok(View::from(device.clone(), image, vk))
+		let view = View::from(device.clone(), image, vk);
+		self.set_object_name(device, &view);
+		Ok(view)
 	}
 }
