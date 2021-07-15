@@ -312,3 +312,14 @@ impl Device {
 		}
 	}
 }
+
+impl utility::NamableObject for Device {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::PhysicalDevice as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self._internal.as_raw()
+	}
+}

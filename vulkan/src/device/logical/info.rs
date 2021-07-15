@@ -2,8 +2,9 @@ use crate::{
 	backend,
 	device::{logical, physical},
 	instance::Instance,
-	utility,
+	utility::{self, NamableObject},
 };
+use std::sync;
 
 #[derive(Debug)]
 pub struct DeviceQueue {
@@ -22,6 +23,8 @@ pub struct Info {
 
 	queues: Vec<DeviceQueue>,
 	features: backend::vk::PhysicalDeviceFeatures,
+
+	object_name: Option<String>,
 }
 
 impl Default for Info {
@@ -37,6 +40,8 @@ impl Default for Info {
 			features: backend::vk::PhysicalDeviceFeatures::builder()
 				.sampler_anisotropy(true)
 				.build(),
+
+			object_name: None,
 		}
 	}
 }
@@ -80,11 +85,19 @@ impl Info {
 		self
 	}
 
+	pub fn with_name<T>(mut self, name: T) -> Self
+	where
+		T: Into<String>,
+	{
+		self.object_name = Some(name.into());
+		self
+	}
+
 	/// Creates the [`Logical Device`](logical::Device) vulkan object using the provided information.
 	/// Consumes the info object data.
 	pub fn create_object(
 		&mut self,
-		instance: &Instance,
+		instance: &sync::Arc<Instance>,
 		physical_device: &physical::Device,
 	) -> utility::Result<logical::Device> {
 		use backend::version::InstanceV1_0;
@@ -123,6 +136,10 @@ impl Info {
 		info.p_enabled_features = &self.features as _;
 
 		let internal = unsafe { instance.create_device(**physical_device, &info, None) }?;
-		Ok(logical::Device::from(&instance, internal))
+		let device = logical::Device::from(&instance, internal);
+		if let Some(name_ref) = self.object_name.as_ref() {
+			device.set_object_name_logged(&device.create_name(name_ref.as_str()));
+		}
+		Ok(device)
 	}
 }

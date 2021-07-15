@@ -50,6 +50,7 @@ impl Buffer {
 	/// on [`only the GPU`](MemoryUsage::GpuOnly),
 	/// with a given size, that can be [`transfered to`](BufferUsage::TRANSFER_DST).
 	pub fn create_gpu(
+		name: Option<String>,
 		allocator: &sync::Arc<alloc::Allocator>,
 		usage: BufferUsage,
 		size: usize,
@@ -57,6 +58,7 @@ impl Buffer {
 	) -> utility::Result<sync::Arc<Self>> {
 		Ok(sync::Arc::new(
 			Self::builder()
+				.with_optname(name)
 				.with_sharing(SharingMode::EXCLUSIVE)
 				.with_usage(usage)
 				.with_usage(BufferUsage::TRANSFER_DST)
@@ -75,10 +77,12 @@ impl Buffer {
 	/// which can be written from [`CPU to GPU`](MemoryUsage::CpuToGpu),
 	/// with a given size, that can be [`transfered from`](BufferUsage::TRANSFER_SRC).
 	pub fn create_staging(
+		name: Option<String>,
 		allocator: &sync::Arc<alloc::Allocator>,
 		size: usize,
 	) -> utility::Result<Self> {
 		Self::builder()
+			.with_optname(name)
 			.with_sharing(SharingMode::EXCLUSIVE)
 			.with_usage(BufferUsage::TRANSFER_SRC)
 			.with_size(size)
@@ -136,6 +140,10 @@ impl Buffer {
 	pub fn index_type(&self) -> &Option<IndexType> {
 		self.builder.index_type()
 	}
+
+	pub fn name(&self) -> &Option<String> {
+		self.builder.name()
+	}
 }
 
 impl std::ops::Deref for Buffer {
@@ -168,5 +176,16 @@ impl alloc::Object for Buffer {
 
 	fn allocator(&self) -> &sync::Arc<alloc::Allocator> {
 		&self.allocator
+	}
+}
+
+impl utility::NamableObject for Buffer {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Buffer as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

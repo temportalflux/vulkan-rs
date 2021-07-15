@@ -1,7 +1,8 @@
 use crate::{
 	backend, command,
 	device::logical,
-	image, instance,
+	image,
+	instance::Instance,
 	utility::{self},
 };
 use std::sync;
@@ -11,13 +12,15 @@ use std::sync;
 pub struct Device {
 	swapchain: backend::extensions::khr::Swapchain,
 	internal: backend::Device,
+	instance: sync::Weak<Instance>,
 }
 
 impl Device {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
-	pub(crate) fn from(instance: &instance::Instance, internal: backend::Device) -> Device {
+	pub(crate) fn from(instance: &sync::Arc<Instance>, internal: backend::Device) -> Device {
 		Device {
-			swapchain: backend::extensions::khr::Swapchain::new(&**instance, &internal),
+			instance: sync::Arc::downgrade(&instance),
+			swapchain: backend::extensions::khr::Swapchain::new(&***instance, &internal),
 			internal,
 		}
 	}
@@ -45,6 +48,28 @@ impl Device {
 	pub fn wait_until_idle(&self) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		Ok(unsafe { self.internal.device_wait_idle() }?)
+	}
+
+	pub fn set_object_name(&self, name: &utility::ObjectName) -> utility::Result<()> {
+		if let Some(instance) = self.instance.upgrade() {
+			return Ok(unsafe {
+				instance
+					.debug_utils()
+					.debug_utils_set_object_name(self.internal.handle(), &name.as_vk())
+			}?);
+		}
+		Ok(())
+	}
+
+	pub fn set_object_name_logged(&self, name: &utility::ObjectName) {
+		if let Err(err) = self.set_object_name(name) {
+			log::error!(
+				target: crate::LOG,
+				"Failed to apply debug-utils object_name \"{}\"; {}",
+				name,
+				err
+			);
+		}
 	}
 }
 
@@ -76,5 +101,16 @@ impl image::Owner for Device {
 		use backend::version::DeviceV1_0;
 		unsafe { self.internal.destroy_image(**obj, None) };
 		Ok(())
+	}
+}
+
+impl utility::NamableObject for Device {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Device as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.handle().as_raw()
 	}
 }

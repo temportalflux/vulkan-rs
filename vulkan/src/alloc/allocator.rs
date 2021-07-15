@@ -3,10 +3,12 @@ use crate::{
 	image, instance,
 	utility::{self},
 };
+use std::sync;
 
 /// A wrapper for the [`vulkan memory allocator`](vk_mem) for handling the allocation of [`graphics objects`](crate::alloc::Object).
 pub struct Allocator {
 	internal: vk_mem::Allocator,
+	logical: sync::Weak<logical::Device>,
 }
 
 impl Allocator {
@@ -14,7 +16,7 @@ impl Allocator {
 	pub fn create(
 		instance: &instance::Instance,
 		physical: &physical::Device,
-		logical: &logical::Device,
+		logical: &sync::Arc<logical::Device>,
 	) -> utility::Result<Allocator> {
 		let info = vk_mem::AllocatorCreateInfo {
 			instance: (**instance).clone(),
@@ -27,7 +29,12 @@ impl Allocator {
 		};
 		Ok(Allocator {
 			internal: vk_mem::Allocator::new(&info)?,
+			logical: sync::Arc::downgrade(&logical),
 		})
+	}
+
+	pub fn logical(&self) -> Option<sync::Arc<logical::Device>> {
+		self.logical.upgrade()
 	}
 }
 

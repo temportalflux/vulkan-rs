@@ -97,6 +97,10 @@ impl Instance {
 			None => Err(None),
 		}
 	}
+
+	pub fn debug_utils(&self) -> &backend::extensions::ext::DebugUtils {
+		&self.debug_ext
+	}
 }
 
 impl std::ops::Deref for Instance {
@@ -115,6 +119,18 @@ impl Drop for Instance {
 			}
 			self.internal.destroy_instance(None);
 		}
+	}
+}
+
+impl utility::NamableObject for Instance {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Instance as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::version::InstanceV1_0;
+		use backend::vk::Handle;
+		self.internal.handle().as_raw()
 	}
 }
 

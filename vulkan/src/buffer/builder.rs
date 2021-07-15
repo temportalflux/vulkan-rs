@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Buffer,
 	flags::{BufferUsage, IndexType, SharingMode},
-	utility,
+	utility::{self, NamableObject},
 };
 use std::sync;
 
@@ -18,6 +18,7 @@ pub struct Builder {
 	sharing_mode: SharingMode,
 	queue_families: Vec<u32>,
 	index_type: Option<IndexType>,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -29,6 +30,7 @@ impl Default for Builder {
 			sharing_mode: SharingMode::EXCLUSIVE,
 			queue_families: Vec::new(),
 			index_type: None,
+			name: None,
 		}
 	}
 }
@@ -97,16 +99,33 @@ impl Builder {
 		self
 	}
 
+	pub fn with_name<T>(self, name: T) -> Self
+	where
+		T: Into<String>,
+	{
+		self.with_optname(Some(name.into()))
+	}
+
+	pub fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	pub fn name(&self) -> &Option<String> {
+		&self.name
+	}
+
 	/// Creates a [`Buffer`] object, thereby consuming the info.
 	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
 		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
-		Ok(Buffer::from(
-			allocator.clone(),
-			internal,
-			alloc_handle,
-			alloc_info,
-			self,
-		))
+		let name = self.name.clone();
+		let buffer = Buffer::from(allocator.clone(), internal, alloc_handle, alloc_info, self);
+		if let Some(name) = name {
+			if let Some(device) = allocator.logical() {
+				device.set_object_name_logged(&buffer.create_name(name.as_str()));
+			}
+		}
+		Ok(buffer)
 	}
 
 	/// Used by [`Buffer`] to re-allocate a buffer object when resizing/expanding the allocation.
@@ -130,6 +149,17 @@ impl Builder {
 			.queue_family_indices(&self.queue_families[..])
 			.build();
 		let alloc_create_info = self.mem_info.clone().into();
-		Ok(allocator.create_buffer(&buffer_info, &alloc_create_info)?)
+		let buffer_data = allocator.create_buffer(&buffer_info, &alloc_create_info)?;
+		if let Some(name) = self.name.as_ref() {
+			if let Some(device) = allocator.logical() {
+				use backend::vk::Handle;
+				device.set_object_name_logged(
+					&utility::ObjectName::from(name.as_str())
+						.with_kind(<backend::vk::Buffer as backend::vk::Handle>::TYPE)
+						.with_raw_handle(buffer_data.0.as_raw()),
+				);
+			}
+		}
+		Ok(buffer_data)
 	}
 }
