@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, sampler::Builder};
+use crate::{backend, device::logical, sampler::Builder, utility};
 use std::sync;
 
 pub struct Sampler {
@@ -30,5 +30,16 @@ impl Drop for Sampler {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_sampler(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Sampler {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Sampler as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

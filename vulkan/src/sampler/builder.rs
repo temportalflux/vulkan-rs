@@ -17,6 +17,7 @@ pub struct Builder {
 	max_anisotropy: Option<f32>,
 	compare_op: Option<CompareOp>,
 	uses_unnormalized_coords: bool,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -32,6 +33,7 @@ impl Default for Builder {
 			max_anisotropy: None,
 			compare_op: None,
 			uses_unnormalized_coords: false,
+			name: None,
 		}
 	}
 }
@@ -85,8 +87,19 @@ impl Builder {
 	}
 }
 
-impl Into<backend::vk::SamplerCreateInfo> for Builder {
-	fn into(self) -> backend::vk::SamplerCreateInfo {
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl Builder {
+	fn as_vk(&self) -> backend::vk::SamplerCreateInfo {
 		backend::vk::SamplerCreateInfo::builder()
 			.mag_filter(self.magnification)
 			.min_filter(self.minification)
@@ -107,10 +120,13 @@ impl Into<backend::vk::SamplerCreateInfo> for Builder {
 	}
 }
 
-impl Builder {
-	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<sampler::Sampler> {
+impl utility::BuildFromDevice for Builder {
+	type Output = sampler::Sampler;
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
-		let vk = unsafe { device.create_sampler(&self.into(), None) }?;
-		Ok(sampler::Sampler::from(device.clone(), vk))
+		let vk = unsafe { device.create_sampler(&self.as_vk(), None) }?;
+		let sampler = sampler::Sampler::from(device.clone(), vk);
+		self.set_object_name(device, &sampler);
+		Ok(sampler)
 	}
 }
