@@ -97,6 +97,7 @@ impl Into<String> for ShaderKind {
 			Self::Miss => "Miss",
 			Self::Intersection => "Intersection",
 			Self::Callable => "Callable",
-		}.to_string()
+		}
+		.to_string()
 	}
 }

@@ -25,12 +25,21 @@ impl Device {
 		}
 	}
 
-	pub fn get_queue(device: &sync::Arc<Self>, queue_family_index: usize) -> logical::Queue {
+	pub fn create_queue(
+		device: &sync::Arc<Self>,
+		name: Option<String>,
+		queue_family_index: usize,
+	) -> logical::Queue {
 		use backend::version::DeviceV1_0;
 		let vk = unsafe {
 			device.get_device_queue(queue_family_index as u32, /*queue index*/ 0)
 		};
-		logical::Queue::from(device.clone(), vk, queue_family_index)
+		let queue = logical::Queue::from(device.clone(), vk, queue_family_index);
+		if let Some(name) = name {
+			use utility::HandledObject;
+			device.set_object_name_logged(&queue.create_name(name.as_str()));
+		}
+		queue
 	}
 
 	pub fn wait_for(&self, fence: &command::Fence, timeout: u64) -> utility::Result<()> {

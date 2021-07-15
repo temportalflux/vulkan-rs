@@ -59,3 +59,14 @@ impl std::ops::Deref for Queue {
 		&self.internal
 	}
 }
+
+impl utility::HandledObject for Queue {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Queue as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
+	}
+}
