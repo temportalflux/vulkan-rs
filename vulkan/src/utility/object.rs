@@ -4,7 +4,10 @@ pub trait HandledObject {
 	fn kind(&self) -> backend::vk::ObjectType;
 	fn handle(&self) -> u64;
 
-	fn create_name<T>(&self, name: T) -> ObjectName where T: Into<String> {
+	fn create_name<T>(&self, name: T) -> ObjectName
+	where
+		T: Into<String>,
+	{
 		ObjectName::from(name)
 			.with_kind(self.kind())
 			.with_raw_handle(self.handle())
@@ -23,7 +26,8 @@ pub struct ObjectName {
 }
 
 impl<T> From<T> for ObjectName
-where T: Into<String>
+where
+	T: Into<String>,
 {
 	fn from(s: T) -> Self {
 		let name: String = s.into();

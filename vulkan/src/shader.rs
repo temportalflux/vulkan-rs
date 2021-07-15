@@ -1,7 +1,14 @@
-use crate::{backend, device::logical, flags::ShaderKind, shader, utility};
+use crate::{
+	backend,
+	device::logical,
+	flags::ShaderKind,
+	shader,
+	utility::{self, HandledObject},
+};
 use std::sync;
 
 pub struct Info {
+	pub name: Option<String>,
 	pub kind: ShaderKind,
 	pub entry_point: String,
 	pub bytes: Vec<u8>,
@@ -20,6 +27,7 @@ impl Module {
 		info: shader::Info,
 	) -> utility::Result<Module> {
 		Ok(Module::create_from_bytes(device, &info.bytes[..])?
+			.set_name(info.name)
 			.set_entry_point(info.entry_point)
 			.set_kind(info.kind))
 	}
@@ -47,6 +55,14 @@ impl Module {
 			entry_point: std::ffi::CString::default(),
 			kind: ShaderKind::Vertex,
 		})
+	}
+
+	pub fn set_name(self, name: Option<String>) -> Self {
+		if let Some(name) = name {
+			self.device
+				.set_object_name_logged(&self.create_name(name.as_str()));
+		}
+		self
 	}
 
 	pub fn set_entry_point(mut self, entry_point: String) -> Self {
@@ -79,5 +95,16 @@ impl Drop for Module {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_shader_module(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Module {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::ShaderModule as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

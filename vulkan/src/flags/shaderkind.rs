@@ -79,3 +79,24 @@ impl ShaderKind {
 		}
 	}
 }
+
+impl Into<String> for ShaderKind {
+	fn into(self) -> String {
+		match self {
+			Self::Vertex => "Vertex",
+			Self::Fragment => "Fragment",
+			Self::Geometry => "Geometry",
+			Self::Compute => "Compute",
+			Self::TessControl => "TessControl",
+			Self::TessEval => "TessEval",
+			Self::Task => "Task",
+			Self::Mesh => "Mesh",
+			Self::Raygen => "Raygen",
+			Self::AnyHit => "AnyHit",
+			Self::ClosedHit => "ClosedHit",
+			Self::Miss => "Miss",
+			Self::Intersection => "Intersection",
+			Self::Callable => "Callable",
+		}.to_string()
+	}
+}

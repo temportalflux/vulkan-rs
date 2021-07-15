@@ -66,7 +66,6 @@ impl Builder {
 		self.subresource_range = subresource_range;
 		self
 	}
-
 }
 
 impl utility::NameableBuilder for Builder {

@@ -54,7 +54,8 @@ impl Swapchain {
 		// no device reference is passed in because the images are a part of the swapchain
 		.map(|(i, image)| {
 			let name = format!("{}.Image", self.frame_name(i));
-			let image = Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
+			let image =
+				Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
 			self.device.set_object_name_logged(&image.create_name(name));
 			image
 		})
