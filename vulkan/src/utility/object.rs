@@ -1,6 +1,6 @@
 use crate::backend;
 
-pub trait NamableObject {
+pub trait HandledObject {
 	fn kind(&self) -> backend::vk::ObjectType;
 	fn handle(&self) -> u64;
 

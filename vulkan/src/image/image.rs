@@ -72,6 +72,7 @@ impl Image {
 		format: Format,
 		size: Extent3D,
 	) -> utility::Result<Self> {
+		use utility::BuildFromAllocator;
 		Ok(Self::builder()
 			.with_alloc(
 				alloc::Builder::default()

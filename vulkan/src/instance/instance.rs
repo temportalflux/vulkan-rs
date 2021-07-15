@@ -122,7 +122,7 @@ impl Drop for Instance {
 	}
 }
 
-impl utility::NamableObject for Instance {
+impl utility::HandledObject for Instance {
 	fn kind(&self) -> backend::vk::ObjectType {
 		<backend::vk::Instance as backend::vk::Handle>::TYPE
 	}

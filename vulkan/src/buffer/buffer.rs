@@ -56,6 +56,7 @@ impl Buffer {
 		size: usize,
 		index_type: Option<IndexType>,
 	) -> utility::Result<sync::Arc<Self>> {
+		use utility::{BuildFromAllocator, NameableBuilder};
 		Ok(sync::Arc::new(
 			Self::builder()
 				.with_optname(name)
@@ -81,6 +82,7 @@ impl Buffer {
 		allocator: &sync::Arc<alloc::Allocator>,
 		size: usize,
 	) -> utility::Result<Self> {
+		use utility::{BuildFromAllocator, NameableBuilder};
 		Self::builder()
 			.with_optname(name)
 			.with_sharing(SharingMode::EXCLUSIVE)
@@ -142,6 +144,7 @@ impl Buffer {
 	}
 
 	pub fn name(&self) -> &Option<String> {
+		use utility::NameableBuilder;
 		self.builder.name()
 	}
 }
@@ -179,7 +182,7 @@ impl alloc::Object for Buffer {
 	}
 }
 
-impl utility::NamableObject for Buffer {
+impl utility::HandledObject for Buffer {
 	fn kind(&self) -> backend::vk::ObjectType {
 		<backend::vk::Buffer as backend::vk::Handle>::TYPE
 	}

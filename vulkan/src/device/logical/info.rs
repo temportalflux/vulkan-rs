@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	device::{logical, physical},
 	instance::Instance,
-	utility::{self, NamableObject},
+	utility::{self, HandledObject},
 };
 use std::sync;
 

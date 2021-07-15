@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Buffer,
 	flags::{BufferUsage, IndexType, SharingMode},
-	utility::{self, NamableObject},
+	utility::{self, HandledObject},
 };
 use std::sync;
 
@@ -98,25 +98,23 @@ impl Builder {
 		self.queue_families.push(family_index as u32);
 		self
 	}
+}
 
-	pub fn with_name<T>(self, name: T) -> Self
-	where
-		T: Into<String>,
-	{
-		self.with_optname(Some(name.into()))
-	}
-
-	pub fn with_optname(mut self, name: Option<String>) -> Self {
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
 		self.name = name;
 		self
 	}
 
-	pub fn name(&self) -> &Option<String> {
+	fn name(&self) -> &Option<String> {
 		&self.name
 	}
+}
 
+impl utility::BuildFromAllocator for Builder {
+	type Output = Buffer;
 	/// Creates a [`Buffer`] object, thereby consuming the info.
-	pub fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Buffer> {
+	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
 		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
 		let name = self.name.clone();
 		let buffer = Buffer::from(allocator.clone(), internal, alloc_handle, alloc_info, self);
@@ -127,7 +125,9 @@ impl Builder {
 		}
 		Ok(buffer)
 	}
+}
 
+impl Builder {
 	/// Used by [`Buffer`] to re-allocate a buffer object when resizing/expanding the allocation.
 	pub(crate) fn rebuild(
 		&self,

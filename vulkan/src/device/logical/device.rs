@@ -104,7 +104,7 @@ impl image::Owner for Device {
 	}
 }
 
-impl utility::NamableObject for Device {
+impl utility::HandledObject for Device {
 	fn kind(&self) -> backend::vk::ObjectType {
 		<backend::vk::Device as backend::vk::Handle>::TYPE
 	}
