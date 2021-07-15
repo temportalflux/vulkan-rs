@@ -97,3 +97,14 @@ impl Drop for Swapchain {
 		};
 	}
 }
+
+impl utility::HandledObject for Swapchain {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::SwapchainKHR as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
+	}
+}

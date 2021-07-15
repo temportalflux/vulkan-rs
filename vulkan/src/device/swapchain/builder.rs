@@ -25,6 +25,7 @@ pub struct Builder {
 	composite_alpha: CompositeAlpha,
 	present_mode: PresentMode,
 	is_clipped: bool,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -41,6 +42,7 @@ impl Default for Builder {
 			composite_alpha: CompositeAlpha::OPAQUE,
 			present_mode: PresentMode::MAILBOX,
 			is_clipped: true,
+			name: None,
 		}
 	}
 }
@@ -127,6 +129,7 @@ impl Builder {
 		surface: &Surface,
 		old: Option<&Swapchain>,
 	) -> Result<Swapchain, utility::Error> {
+		use utility::{HandledObject, NameableBuilder};
 		let info = backend::vk::SwapchainCreateInfoKHR::builder()
 			.surface(**surface)
 			.min_image_count(self.image_count)
@@ -143,6 +146,21 @@ impl Builder {
 			.old_swapchain(old.map_or(backend::vk::SwapchainKHR::null(), |chain| **chain))
 			.build();
 		let vk = unsafe { device.unwrap_swapchain().create_swapchain(&info, None) }?;
-		Ok(Swapchain::from(device.clone(), vk, self))
+		let swapchain = Swapchain::from(device.clone(), vk, self.clone());
+		if let Some(name) = self.name().as_ref() {
+			device.set_object_name_logged(&swapchain.create_name(name.as_str()));
+		}
+		Ok(swapchain)
+	}
+}
+
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
 	}
 }
