@@ -2,19 +2,21 @@ use crate::{
 	backend,
 	descriptor::layout::SetLayout,
 	device::logical,
-	utility::{self},
+	utility::{self, HandledObject},
 };
 use std::sync;
 
 /// The builder for a pipeline [`Layout`].
 pub struct Builder {
 	descriptor_layouts: Vec<sync::Weak<SetLayout>>,
+	name: Option<String>,
 }
 
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			descriptor_layouts: Vec::new(),
+			name: None,
 		}
 	}
 }
@@ -24,8 +26,22 @@ impl Builder {
 		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
 		self
 	}
+}
 
-	pub fn build(self, device: sync::Arc<logical::Device>) -> utility::Result<Layout> {
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl utility::BuildFromDevice for Builder {
+	type Output = Layout;
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
 
 		let vk_descriptor_layouts = self
@@ -36,11 +52,12 @@ impl Builder {
 		let vk_info = backend::vk::PipelineLayoutCreateInfo::builder()
 			.set_layouts(&vk_descriptor_layouts[..])
 			.build();
-
-		Ok(Layout {
+		let layout = Layout {
 			internal: unsafe { device.create_pipeline_layout(&vk_info, None) }?,
-			device,
-		})
+			device: device.clone(),
+		};
+		self.set_object_name(device, &layout);
+		Ok(layout)
 	}
 }
 
@@ -71,5 +88,16 @@ impl Drop for Layout {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_pipeline_layout(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Layout {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::PipelineLayout as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

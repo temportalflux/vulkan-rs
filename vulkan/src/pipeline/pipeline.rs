@@ -1,4 +1,4 @@
-use crate::{backend, device::logical, pipeline::Builder};
+use crate::{backend, device::logical, pipeline::Builder, utility};
 
 use std::sync;
 
@@ -33,5 +33,16 @@ impl Drop for Pipeline {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_pipeline(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Pipeline {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Pipeline as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

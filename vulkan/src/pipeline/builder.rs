@@ -18,6 +18,7 @@ pub struct Builder {
 	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
 	color_blending: state::color_blend::ColorBlend,
 	dynamic_state: state::Dynamic,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -34,6 +35,7 @@ impl Default for Builder {
 				.build(),
 			color_blending: Default::default(),
 			dynamic_state: Default::default(),
+			name: None,
 		}
 	}
 }
@@ -91,6 +93,7 @@ impl Builder {
 		subpass_id: &Option<String>,
 	) -> Result<Pipeline, utility::Error> {
 		use backend::version::DeviceV1_0;
+		use utility::{HandledObject, NameableBuilder};
 
 		let shader_stages = self
 			.shaders
@@ -140,6 +143,21 @@ impl Builder {
 				_ => Err(utility::Error::VulkanError(vk_result)),
 			},
 		}?;
-		Ok(Pipeline::from(device, pipelines[0]))
+		let pipeline = Pipeline::from(device.clone(), pipelines[0]);
+		if let Some(name) = self.name().as_ref() {
+			device.set_object_name_logged(&pipeline.create_name(name.as_str()));
+		}
+		Ok(pipeline)
+	}
+}
+
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
 	}
 }
