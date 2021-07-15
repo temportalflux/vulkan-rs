@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Buffer,
 	flags::{BufferUsage, IndexType, SharingMode},
-	utility::{self, HandledObject},
+	utility,
 };
 use std::sync;
 
@@ -116,13 +116,14 @@ impl utility::BuildFromAllocator for Builder {
 	/// Creates a [`Buffer`] object, thereby consuming the info.
 	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
 		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
-		let name = self.name.clone();
-		let buffer = Buffer::from(allocator.clone(), internal, alloc_handle, alloc_info, self);
-		if let Some(name) = name {
-			if let Some(device) = allocator.logical() {
-				device.set_object_name_logged(&buffer.create_name(name.as_str()));
-			}
-		}
+		let buffer = Buffer::from(
+			allocator.clone(),
+			internal,
+			alloc_handle,
+			alloc_info,
+			self.clone(),
+		);
+		self.set_object_name(allocator, &buffer);
 		Ok(buffer)
 	}
 }

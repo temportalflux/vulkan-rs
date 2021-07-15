@@ -113,3 +113,14 @@ impl Drop for Image {
 		}
 	}
 }
+
+impl utility::HandledObject for Image {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Image as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
+	}
+}

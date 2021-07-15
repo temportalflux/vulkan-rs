@@ -24,6 +24,7 @@ pub struct Builder {
 	usage: ImageUsage,
 	sharing_mode: SharingMode,
 	initial_layout: ImageLayout,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -40,23 +41,8 @@ impl Default for Builder {
 			usage: ImageUsage::default(),
 			sharing_mode: SharingMode::EXCLUSIVE,
 			initial_layout: ImageLayout::default(),
+			name: None,
 		}
-	}
-}
-
-impl utility::BuildFromAllocator for Builder {
-	type Output = Image;
-	/// Creates an [`Image`] object, thereby consuming the info.
-	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
-		let alloc_create_info = self.mem_info.clone().into();
-		let (internal, alloc_handle, _alloc_info) =
-			allocator.create_image(&self.clone().into(), &alloc_create_info)?;
-		Ok(Image::new(
-			allocator.clone(),
-			internal,
-			Some(alloc_handle),
-			self,
-		))
 	}
 }
 
@@ -101,6 +87,35 @@ impl Builder {
 	pub fn with_usage(mut self, usage: ImageUsage) -> Self {
 		self.usage |= usage;
 		self
+	}
+}
+
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl utility::BuildFromAllocator for Builder {
+	type Output = Image;
+	/// Creates an [`Image`] object, thereby consuming the info.
+	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
+		let alloc_create_info = self.mem_info.clone().into();
+		let (internal, alloc_handle, _alloc_info) =
+			allocator.create_image(&self.clone().into(), &alloc_create_info)?;
+		let image = Image::new(
+			allocator.clone(),
+			internal,
+			Some(alloc_handle),
+			self.clone(),
+		);
+		self.set_object_name(allocator, &image);
+		Ok(image)
 	}
 }
 
