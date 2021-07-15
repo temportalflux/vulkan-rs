@@ -5,6 +5,7 @@ use std::sync;
 pub struct Builder {
 	extent: Extent2D,
 	layer_count: u32,
+	name: Option<String>,
 }
 
 impl Default for Builder {
@@ -12,6 +13,7 @@ impl Default for Builder {
 		Self {
 			extent: Extent2D::default(),
 			layer_count: 1,
+			name: None,
 		}
 	}
 }
@@ -29,6 +31,7 @@ impl Builder {
 		device: &sync::Arc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		use backend::version::DeviceV1_0;
+		use utility::{HandledObject, NameableBuilder};
 		let attachments = vec![**swapchain_image_view];
 		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
@@ -38,7 +41,22 @@ impl Builder {
 			.attachments(&attachments[..])
 			.build();
 		let vk = unsafe { device.create_framebuffer(&info, None) }?;
-		Ok(Framebuffer::from(device.clone(), vk))
+		let framebuffer = Framebuffer::from(device.clone(), vk);
+		if let Some(name) = self.name().as_ref() {
+			device.set_object_name_logged(&framebuffer.create_name(name.as_str()));
+		}
+		Ok(framebuffer)
+	}
+}
+
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
 	}
 }
 
@@ -75,5 +93,16 @@ impl Drop for Framebuffer {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_framebuffer(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Framebuffer {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::Framebuffer as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

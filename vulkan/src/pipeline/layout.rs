@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	descriptor::layout::SetLayout,
 	device::logical,
-	utility::{self, HandledObject},
+	utility,
 };
 use std::sync;
 
