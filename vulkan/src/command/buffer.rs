@@ -11,17 +11,20 @@ pub struct Buffer {
 	recording_render_pass: Option<backend::vk::RenderPass>,
 	internal: backend::vk::CommandBuffer,
 	device: sync::Arc<logical::Device>,
+	name: Option<String>,
 }
 
 /// Internal only
 impl Buffer {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
+		name: Option<String>,
 		internal: backend::vk::CommandBuffer,
 	) -> Buffer {
 		Buffer {
 			device,
 			internal,
+			name,
 			recording_render_pass: None,
 			recording_framebuffer: None,
 		}
@@ -433,4 +436,8 @@ impl utility::HandledObject for Buffer {
 		use backend::vk::Handle;
 		self.internal.as_raw()
 	}
+}
+
+impl utility::NamedObject for Buffer {
+	fn name(&self) -> &Option<String> {&self.name}
 }
