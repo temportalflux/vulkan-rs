@@ -30,7 +30,7 @@ mod context;
 pub use context::Context;
 
 /// Structures related to submitting command instructions to the GPU.
-#[path = "command/_.rs"]
+#[path = "command/mod.rs"]
 pub mod command;
 
 pub mod descriptor;

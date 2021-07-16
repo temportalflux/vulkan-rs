@@ -15,27 +15,26 @@ use std::sync;
 ///
 /// Equivalent to [VkCommandPool](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkCommandPool.html).
 pub struct Pool {
+	name: Option<String>,
 	internal: backend::vk::CommandPool,
 	device: sync::Arc<logical::Device>,
 }
 
 impl Pool {
-	/// Creates a command pool from a device, queue, and a flag indicating the kind of command pool it is.
-	pub fn create(
-		device: &sync::Arc<logical::Device>,
-		queue_family_index: usize,
-		flags: Option<flags::CommandPoolCreate>,
-	) -> utility::Result<Pool> {
-		use backend::version::DeviceV1_0;
-		let info = backend::vk::CommandPoolCreateInfo::builder()
-			.queue_family_index(queue_family_index as u32)
-			.flags(flags.unwrap_or_default())
-			.build();
-		let internal = unsafe { device.create_command_pool(&info, None) }?;
-		Ok(Pool {
-			device: device.clone(),
+	pub fn builder() -> command::PoolBuilder {
+		command::PoolBuilder::default()
+	}
+
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		name: Option<String>,
+		internal: backend::vk::CommandPool,
+	) -> Self {
+		Self {
+			name,
 			internal,
-		})
+			device,
+		}
 	}
 
 	/// Creates some amount of [`command buffers`](command::Buffer) at a given level.
@@ -44,15 +43,40 @@ impl Pool {
 		amount: usize,
 		level: flags::CommandBufferLevel,
 	) -> utility::Result<Vec<command::Buffer>> {
+		self.allocate_named_buffers(
+			(0..amount)
+				.map(|i| Some(format!("Buffer{}", i)))
+				.collect::<Vec<_>>(),
+			level,
+		)
+	}
+
+	/// Creates some amount of [`command buffers`](command::Buffer) at a given level.
+	pub fn allocate_named_buffers(
+		&self,
+		buffer_names: Vec<Option<String>>,
+		level: flags::CommandBufferLevel,
+	) -> utility::Result<Vec<command::Buffer>> {
 		use backend::version::DeviceV1_0;
+		use utility::HandledObject;
 		let info = backend::vk::CommandBufferAllocateInfo::builder()
 			.command_pool(**self)
 			.level(level)
-			.command_buffer_count(amount as u32)
+			.command_buffer_count(buffer_names.len() as u32)
 			.build();
 		Ok(unsafe { self.device.allocate_command_buffers(&info) }?
 			.into_iter()
-			.map(|vk_buffer| command::Buffer::from(self.device.clone(), vk_buffer))
+			.zip(buffer_names.iter())
+			.map(|(vk_buffer, buffer_name)| {
+				let buffer = command::Buffer::from(self.device.clone(), vk_buffer);
+				if let Some((pool_name, buffer_name)) = self.name.as_ref().zip(buffer_name.as_ref())
+				{
+					self.device.set_object_name_logged(
+						&buffer.create_name(format!("{}.{}", pool_name, buffer_name)),
+					);
+				}
+				buffer
+			})
 			.collect::<Vec<_>>())
 	}
 
@@ -81,5 +105,16 @@ impl Drop for Pool {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_command_pool(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Pool {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::CommandPool as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

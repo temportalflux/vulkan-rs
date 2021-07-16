@@ -423,3 +423,14 @@ impl Drop for Buffer {
 		// NO:OP - these are destroyed implicitly when command::Pool is destroyed
 	}
 }
+
+impl utility::HandledObject for Buffer {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::CommandBuffer as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
+	}
+}
