@@ -2,7 +2,7 @@ use crate::flags;
 
 /// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
 /// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Subpass {
 	id: String,
 	bind_point: flags::PipelineBindPoint,

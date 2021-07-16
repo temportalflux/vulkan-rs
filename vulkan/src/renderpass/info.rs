@@ -3,11 +3,12 @@ use enumset::EnumSet;
 use std::sync;
 
 /// Information used to create a [`Render Pass`](crate::renderpass::Pass).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Info {
 	attachments: Vec<renderpass::Attachment>,
 	subpass_order: Vec<renderpass::Subpass>,
 	dependencies: Vec<(Dependency, Dependency)>,
+	name: Option<String>,
 }
 
 impl Default for Info {
@@ -50,6 +51,7 @@ impl Info {
 			attachments: Vec::new(),
 			subpass_order: Vec::new(),
 			dependencies: Vec::new(),
+			name: None,
 		}
 	}
 
@@ -167,11 +169,22 @@ impl Info {
 			.position(|attachment| *attachment.id() == *id)
 			.map(|i| i as u32)
 	}
+}
 
-	pub fn create_object(
-		&self,
-		device: &sync::Arc<logical::Device>,
-	) -> utility::Result<renderpass::Pass> {
+impl utility::NameableBuilder for Info {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl utility::BuildFromDevice for Info {
+	type Output = renderpass::Pass;
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
 		let attachments = self
 			.attachments
@@ -218,10 +231,12 @@ impl Info {
 			.dependencies(&dependencies)
 			.build();
 		let vk = unsafe { device.create_render_pass(&vk_info, None) }?;
-		Ok(renderpass::Pass::from(
+		let pass = renderpass::Pass::from(
 			device.clone(),
 			vk,
 			self.subpass_order(),
-		))
+		);
+		self.set_object_name(device, &pass);
+		Ok(pass)
 	}
 }

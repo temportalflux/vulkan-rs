@@ -1,4 +1,4 @@
-use crate::{backend, device::logical};
+use crate::{backend, device::logical, utility};
 
 use std::sync;
 
@@ -47,5 +47,16 @@ impl Drop for Pass {
 	fn drop(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_render_pass(self.internal, None) };
+	}
+}
+
+impl utility::HandledObject for Pass {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::RenderPass as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

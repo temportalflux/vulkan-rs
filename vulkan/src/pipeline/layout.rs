@@ -1,9 +1,4 @@
-use crate::{
-	backend,
-	descriptor::layout::SetLayout,
-	device::logical,
-	utility,
-};
+use crate::{backend, descriptor::layout::SetLayout, device::logical, utility};
 use std::sync;
 
 /// The builder for a pipeline [`Layout`].
