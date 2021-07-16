@@ -3,7 +3,7 @@ use crate::{
 	device::{logical, swapchain::Builder},
 	flags,
 	image::Image,
-	structs, utility,
+	structs, utility::{self, NamedObject, NameableBuilder},
 };
 
 use std::sync;
@@ -15,6 +15,7 @@ pub struct Swapchain {
 	image_extent: structs::Extent2D,
 	internal: backend::vk::SwapchainKHR,
 	device: sync::Arc<logical::Device>,
+	name: Option<String>,
 }
 
 impl Swapchain {
@@ -34,11 +35,12 @@ impl Swapchain {
 			internal,
 			image_format: builder.image_format,
 			image_extent: builder.image_extent,
+			name: builder.name().clone(),
 		}
 	}
 
-	pub fn frame_name(&self, i: usize) -> String {
-		format!("SwapChain.Frame{}", i)
+	pub fn frame_name(&self, i: usize) -> Option<String> {
+		self.name().as_ref().map(|v| format!("{}.Frame{}", v, i))
 	}
 
 	/// Creates the swapchain images from the vulkan device.
@@ -53,10 +55,12 @@ impl Swapchain {
 		.enumerate()
 		// no device reference is passed in because the images are a part of the swapchain
 		.map(|(i, image)| {
-			let name = format!("{}.Image", self.frame_name(i));
+			let name = self.frame_name(i).map(|v| format!("{}.Image", v));
 			let image =
 				Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
-			self.device.set_object_name_logged(&image.create_name(name));
+			if let Some(name) = name {
+				self.device.set_object_name_logged(&image.create_name(name));
+			}
 			image
 		})
 		.collect())
@@ -107,5 +111,11 @@ impl utility::HandledObject for Swapchain {
 	fn handle(&self) -> u64 {
 		use backend::vk::Handle;
 		self.internal.as_raw()
+	}
+}
+
+impl NamedObject for Swapchain {
+	fn name(&self) -> &Option<String> {
+		&self.name
 	}
 }

@@ -28,7 +28,7 @@ impl Image {
 	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::Swapchain).
 	pub(crate) fn from_swapchain(
 		internal: backend::vk::Image,
-		name: String,
+		name: Option<String>,
 		format: Format,
 		dimensions: Extent2D,
 	) -> Image {
@@ -42,7 +42,7 @@ impl Image {
 				height: dimensions.height,
 				depth: 1,
 			},
-			name: Some(name),
+			name,
 		}
 	}
 
