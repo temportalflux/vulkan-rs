@@ -80,6 +80,110 @@ impl Device {
 			);
 		}
 	}
+
+	pub(crate) fn begin_command_label<TStr>(
+		&self,
+		buffer: &command::Buffer,
+		name: TStr,
+		color: [f32; 4],
+	) where
+		TStr: Into<String>,
+	{
+		if let Some(instance) = self.instance.upgrade() {
+			let name: String = name.into();
+			let name_raw = std::ffi::CString::new(name.as_bytes()).unwrap();
+			let label = backend::vk::DebugUtilsLabelEXT::builder()
+				.label_name(name_raw.as_c_str())
+				.color(color)
+				.build();
+			unsafe {
+				instance
+					.debug_utils()
+					.cmd_begin_debug_utils_label(**buffer, &label)
+			};
+		}
+	}
+
+	pub(crate) fn insert_command_label<TStr>(
+		&self,
+		buffer: &command::Buffer,
+		name: TStr,
+		color: [f32; 4],
+	) where
+		TStr: Into<String>,
+	{
+		if let Some(instance) = self.instance.upgrade() {
+			let name: String = name.into();
+			let name_raw = std::ffi::CString::new(name.as_bytes()).unwrap();
+			let label = backend::vk::DebugUtilsLabelEXT::builder()
+				.label_name(name_raw.as_c_str())
+				.color(color)
+				.build();
+			unsafe {
+				instance
+					.debug_utils()
+					.cmd_insert_debug_utils_label(**buffer, &label)
+			};
+		}
+	}
+
+	pub(crate) fn end_command_label(&self, buffer: &command::Buffer) {
+		if let Some(instance) = self.instance.upgrade() {
+			unsafe { instance.debug_utils().cmd_end_debug_utils_label(**buffer) };
+		}
+	}
+
+	pub(crate) fn begin_queue_label<TStr>(
+		&self,
+		queue: &logical::Queue,
+		name: TStr,
+		color: [f32; 4],
+	) where
+		TStr: Into<String>,
+	{
+		if let Some(instance) = self.instance.upgrade() {
+			let name: String = name.into();
+			let name_raw = std::ffi::CString::new(name.as_bytes()).unwrap();
+			let label = backend::vk::DebugUtilsLabelEXT::builder()
+				.label_name(name_raw.as_c_str())
+				.color(color)
+				.build();
+			unsafe {
+				instance
+					.debug_utils()
+					.queue_begin_debug_utils_label(**queue, &label)
+			};
+		}
+	}
+
+	pub(crate) fn insert_queue_label<TStr>(
+		&self,
+		queue: &logical::Queue,
+		name: TStr,
+		color: [f32; 4],
+	) where
+		TStr: Into<String>,
+	{
+		if let Some(instance) = self.instance.upgrade() {
+			let name: String = name.into();
+			let name_raw = std::ffi::CString::new(name.as_bytes()).unwrap();
+			let label = backend::vk::DebugUtilsLabelEXT::builder()
+				.label_name(name_raw.as_c_str())
+				.color(color)
+				.build();
+			unsafe {
+				instance
+					.debug_utils()
+					.queue_insert_debug_utils_label(**queue, &label)
+			};
+		}
+	}
+
+	pub(crate) fn end_queue_label(&self, queue: &logical::Queue) {
+		if let Some(instance) = self.instance.upgrade() {
+			unsafe { instance.debug_utils().queue_end_debug_utils_label(**queue) };
+		}
+	}
 }
 
 impl std::ops::Deref for Device {

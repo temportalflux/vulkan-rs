@@ -3,7 +3,8 @@ use crate::{
 	device::{logical, swapchain::Builder},
 	flags,
 	image::Image,
-	structs, utility::{self, NamedObject, NameableBuilder},
+	structs,
+	utility::{self, NameableBuilder, NamedObject},
 };
 
 use std::sync;

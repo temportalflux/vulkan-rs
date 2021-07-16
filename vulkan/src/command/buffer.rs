@@ -93,6 +93,26 @@ impl Buffer {
 	}
 }
 
+impl Buffer {
+	pub fn begin_label<TStr>(&self, name: TStr, color: [f32; 4])
+	where
+		TStr: Into<String>,
+	{
+		self.device.begin_command_label(&self, name, color);
+	}
+
+	pub fn insert_label<TStr>(&self, name: TStr, color: [f32; 4])
+	where
+		TStr: Into<String>,
+	{
+		self.device.insert_command_label(&self, name, color);
+	}
+
+	pub fn end_label(&self) {
+		self.device.end_command_label(&self);
+	}
+}
+
 /// Copying data operations!
 impl Buffer {
 	/// Adds a pipeline barrier to the buffer.

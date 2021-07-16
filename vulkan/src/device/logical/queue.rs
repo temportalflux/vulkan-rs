@@ -25,6 +25,24 @@ impl Queue {
 		self.queue_family_index
 	}
 
+	pub fn begin_label<TStr>(&self, name: TStr, color: [f32; 4])
+	where
+		TStr: Into<String>,
+	{
+		self.device.begin_queue_label(&self, name, color);
+	}
+
+	pub fn insert_label<TStr>(&self, name: TStr, color: [f32; 4])
+	where
+		TStr: Into<String>,
+	{
+		self.device.insert_queue_label(&self, name, color);
+	}
+
+	pub fn end_label(&self) {
+		self.device.end_queue_label(&self);
+	}
+
 	pub fn submit(
 		&self,
 		infos: Vec<command::SubmitInfo>,
