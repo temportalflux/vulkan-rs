@@ -10,12 +10,14 @@ use std::sync;
 /// Prepares the declarations for how descriptor sets will be created, via a [`layout`](layout::SetLayout).
 pub struct Builder {
 	bindings: Vec<backend::vk::DescriptorSetLayoutBinding>,
+	name: Option<String>,
 }
 
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			bindings: Vec::new(),
+			name: None,
 		}
 	}
 }
@@ -40,14 +42,28 @@ impl Builder {
 	}
 }
 
-impl Builder {
+impl utility::NameableBuilder for Builder {
+	fn with_optname(mut self, name: Option<String>) -> Self {
+		self.name = name;
+		self
+	}
+
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
+}
+
+impl utility::BuildFromDevice for Builder {
+	type Output = layout::SetLayout;
 	/// Creates an [`crate::descriptor::layout::SetLayout`] object, thereby consuming the info.
-	pub fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<layout::SetLayout> {
+	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
 		let create_info = backend::vk::DescriptorSetLayoutCreateInfo::builder()
 			.bindings(&self.bindings)
 			.build();
 		let internal = unsafe { device.create_descriptor_set_layout(&create_info, None) }?;
-		Ok(layout::SetLayout::from(device.clone(), internal))
+		let layout = layout::SetLayout::from(device.clone(), internal);
+		self.set_object_name(device, &layout);
+		Ok(layout)
 	}
 }

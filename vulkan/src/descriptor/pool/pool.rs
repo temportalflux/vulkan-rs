@@ -2,7 +2,7 @@ use crate::{
 	backend,
 	descriptor::{self, layout::SetLayout, pool::Builder},
 	device::logical,
-	utility,
+	utility::{self, HandledObject},
 };
 use std::sync;
 
@@ -46,8 +46,30 @@ impl Pool {
 		&mut self,
 		layouts: &Vec<sync::Arc<SetLayout>>,
 	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
+		self.allocate_named_descriptor_sets(
+			&layouts
+				.into_iter()
+				.map(|layout| (layout.clone(), None))
+				.collect::<Vec<_>>(),
+		)
+	}
+
+	/// Allocates a set of descriptors based on a provided layout.
+	///
+	/// The returned vector of weak-reference-counted sets should not be upgraded
+	/// into strong references until they need to be used.
+	/// Since the pool owns these references, if the pool is dropped,
+	/// the weak references will be invalidated unless something else is
+	/// holding onto the reference for too long.
+	pub fn allocate_named_descriptor_sets(
+		&mut self,
+		layouts: &Vec<(sync::Arc<SetLayout>, Option<String>)>,
+	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
 		use ash::version::DeviceV1_0;
-		let set_layouts = layouts.iter().map(|layout| ***layout).collect::<Vec<_>>();
+		let set_layouts = layouts
+			.iter()
+			.map(|(layout, _)| ***layout)
+			.collect::<Vec<_>>();
 		let create_info = backend::vk::DescriptorSetAllocateInfo::builder()
 			.descriptor_pool(**self)
 			.set_layouts(&set_layouts)
@@ -57,7 +79,13 @@ impl Pool {
 			.into_iter()
 			.enumerate()
 			.map(|(idx, vk_desc_set)| {
-				let set = sync::Arc::new(descriptor::Set::from(layouts[idx].clone(), vk_desc_set));
+				let (layout, name) = &layouts[idx];
+				let set = descriptor::Set::from(layout.clone(), vk_desc_set);
+				if let Some(name) = name.as_ref() {
+					self.device
+						.set_object_name_logged(&set.create_name(name.as_str()));
+				}
+				let set = sync::Arc::new(set);
 				self.owned_sets.push(set.clone());
 				sync::Arc::downgrade(&set)
 			})
@@ -78,5 +106,16 @@ impl Drop for Pool {
 		unsafe {
 			self.device.destroy_descriptor_pool(self.internal, None);
 		}
+	}
+}
+
+impl utility::HandledObject for Pool {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::DescriptorPool as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

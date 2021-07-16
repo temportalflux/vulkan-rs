@@ -1,4 +1,4 @@
-use crate::{backend, descriptor::layout::Builder, device::logical};
+use crate::{backend, descriptor::layout::Builder, device::logical, utility};
 use std::sync;
 
 /// Defines the format that descriptor sets are created in.
@@ -34,5 +34,16 @@ impl Drop for SetLayout {
 			self.device
 				.destroy_descriptor_set_layout(self.internal, None);
 		}
+	}
+}
+
+impl utility::HandledObject for SetLayout {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::DescriptorSetLayout as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }

@@ -439,5 +439,7 @@ impl utility::HandledObject for Buffer {
 }
 
 impl utility::NamedObject for Buffer {
-	fn name(&self) -> &Option<String> {&self.name}
+	fn name(&self) -> &Option<String> {
+		&self.name
+	}
 }

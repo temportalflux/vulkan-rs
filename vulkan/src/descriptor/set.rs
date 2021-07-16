@@ -1,4 +1,4 @@
-use crate::{backend, descriptor::layout::SetLayout};
+use crate::{backend, descriptor::layout::SetLayout, utility};
 use std::sync::Arc;
 
 /// A collection of descriptors as declared by a [`descriptor layout`](SetLayout).
@@ -21,5 +21,16 @@ impl std::ops::Deref for Set {
 	type Target = backend::vk::DescriptorSet;
 	fn deref(&self) -> &Self::Target {
 		&self.internal
+	}
+}
+
+impl utility::HandledObject for Set {
+	fn kind(&self) -> backend::vk::ObjectType {
+		<backend::vk::DescriptorSet as backend::vk::Handle>::TYPE
+	}
+
+	fn handle(&self) -> u64 {
+		use backend::vk::Handle;
+		self.internal.as_raw()
 	}
 }
