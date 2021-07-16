@@ -45,7 +45,7 @@ impl Pool {
 	) -> utility::Result<Vec<command::Buffer>> {
 		self.allocate_named_buffers(
 			(0..amount)
-				.map(|i| Some(format!("Buffer{}", i)))
+				.map(|i| self.name.as_ref().map(|v| format!("{}.Buffer{}", v, i)))
 				.collect::<Vec<_>>(),
 			level,
 		)
@@ -68,11 +68,6 @@ impl Pool {
 			.into_iter()
 			.zip(buffer_names.iter())
 			.map(|(vk_buffer, buffer_name)| {
-				let buffer_name = self
-					.name
-					.as_ref()
-					.zip(buffer_name.as_ref())
-					.map(|(pool_name, buffer_name)| format!("{}.{}", pool_name, buffer_name));
 				let buffer =
 					command::Buffer::from(self.device.clone(), buffer_name.clone(), vk_buffer);
 				if let Some(name) = buffer_name {
