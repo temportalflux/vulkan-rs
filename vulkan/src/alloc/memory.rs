@@ -96,7 +96,7 @@ impl Memory {
 
 impl Drop for Memory {
 	fn drop(&mut self) {
-		self.allocator.unmap_memory(&self.handle).unwrap();
+		self.allocator.unmap_memory(&self.handle);
 	}
 }
 
@@ -108,9 +108,7 @@ impl Write for Memory {
 		Ok(copy_size)
 	}
 	fn flush(&mut self) -> std::io::Result<()> {
-		self.allocator
-			.flush_allocation(&self.handle, 0, self.size)
-			.unwrap();
+		self.allocator.flush_allocation(&self.handle, 0, self.size);
 		Ok(())
 	}
 }

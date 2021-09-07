@@ -60,6 +60,6 @@ impl image::Owner for Allocator {
 		obj: &image::Image,
 		allocation: Option<&vk_mem::Allocation>,
 	) -> utility::Result<()> {
-		Ok(self.internal.destroy_image(**obj, allocation.unwrap())?)
+		Ok(self.internal.destroy_image(**obj, allocation.unwrap()))
 	}
 }
