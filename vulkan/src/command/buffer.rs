@@ -355,6 +355,29 @@ impl Buffer {
 			.collect::<Vec<_>>();
 		unsafe { self.device.cmd_set_scissor(self.internal, 0, &scissors[..]) };
 	}
+
+	pub fn push_constant<T>(
+		&self,
+		layout: &pipeline::layout::Layout,
+		stage: flags::ShaderKind,
+		offset: usize,
+		data: &T,
+	) where
+		T: Sized + bytemuck::Pod,
+	{
+		use backend::version::DeviceV1_0;
+		use bytemuck::bytes_of;
+		// TODO: add layout validation to prevent writing over push constant boundaries?
+		unsafe {
+			self.device.cmd_push_constants(
+				self.internal,
+				**layout,
+				stage.into(),
+				offset as u32,
+				bytes_of(data),
+			)
+		};
+	}
 }
 
 // Data Buffer operations

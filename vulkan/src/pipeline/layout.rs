@@ -2,8 +2,10 @@ use crate::{backend, descriptor::layout::SetLayout, device::logical, utility};
 use std::sync;
 
 /// The builder for a pipeline [`Layout`].
+#[derive(Clone)]
 pub struct Builder {
 	descriptor_layouts: Vec<sync::Weak<SetLayout>>,
+	push_constant_ranges: Vec<super::PushConstantRange>,
 	name: Option<String>,
 }
 
@@ -11,22 +13,39 @@ impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			descriptor_layouts: Vec::new(),
+			push_constant_ranges: Vec::new(),
 			name: None,
 		}
 	}
 }
 
 impl Builder {
+	pub fn clear_descriptor_layouts(&mut self) {
+		self.descriptor_layouts.clear();
+	}
+
 	pub fn with_descriptors(mut self, layout: &sync::Arc<SetLayout>) -> Self {
-		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
+		self.add_descriptor_layout(layout);
 		self
+	}
+
+	pub fn add_descriptor_layout(&mut self, layout: &sync::Arc<SetLayout>) {
+		self.descriptor_layouts.push(sync::Arc::downgrade(layout));
+	}
+
+	pub fn with_push_constant_range(mut self, range: super::PushConstantRange) -> Self {
+		self.add_push_constant_range(range);
+		self
+	}
+
+	pub fn add_push_constant_range(&mut self, range: super::PushConstantRange) {
+		self.push_constant_ranges.push(range);
 	}
 }
 
 impl utility::NameableBuilder for Builder {
-	fn with_optname(mut self, name: Option<String>) -> Self {
+	fn set_optname(&mut self, name: Option<String>) {
 		self.name = name;
-		self
 	}
 
 	fn name(&self) -> &Option<String> {
@@ -44,8 +63,15 @@ impl utility::BuildFromDevice for Builder {
 			.iter()
 			.filter_map(|layout| layout.upgrade().map(|rc| **rc))
 			.collect::<Vec<_>>();
+		let vk_ranges = self
+			.push_constant_ranges
+			.clone()
+			.into_iter()
+			.map(|range| range.into())
+			.collect::<Vec<backend::vk::PushConstantRange>>();
 		let vk_info = backend::vk::PipelineLayoutCreateInfo::builder()
 			.set_layouts(&vk_descriptor_layouts[..])
+			.push_constant_ranges(&vk_ranges[..])
 			.build();
 		let layout = Layout {
 			internal: unsafe { device.create_pipeline_layout(&vk_info, None) }?,

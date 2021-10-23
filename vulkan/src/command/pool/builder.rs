@@ -31,9 +31,8 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn with_optname(mut self, name: Option<String>) -> Self {
+	fn set_optname(&mut self, name: Option<String>) {
 		self.name = name;
-		self
 	}
 
 	fn name(&self) -> &Option<String> {

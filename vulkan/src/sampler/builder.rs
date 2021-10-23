@@ -6,6 +6,7 @@ use crate::{
 };
 use std::sync;
 
+#[derive(Clone)]
 pub struct Builder {
 	magnification: Filter,
 	minification: Filter,
@@ -40,18 +41,30 @@ impl Default for Builder {
 
 impl Builder {
 	pub fn with_magnification(mut self, filter: Filter) -> Self {
-		self.magnification = filter;
+		self.set_magnification(filter);
 		self
+	}
+
+	pub fn set_magnification(&mut self, filter: Filter) {
+		self.magnification = filter;
 	}
 
 	pub fn with_minification(mut self, filter: Filter) -> Self {
-		self.minification = filter;
+		self.set_minification(filter);
 		self
 	}
 
+	pub fn set_minification(&mut self, filter: Filter) {
+		self.minification = filter;
+	}
+
 	pub fn with_address_modes(mut self, modes: [SamplerAddressMode; 3]) -> Self {
-		self.address_mode = modes;
+		self.set_address_modes(modes);
 		self
+	}
+
+	pub fn set_address_modes(&mut self, modes: [SamplerAddressMode; 3]) {
+		self.address_mode = modes;
 	}
 
 	pub fn with_border_color(mut self, color: BorderColor) -> Self {
@@ -88,9 +101,8 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn with_optname(mut self, name: Option<String>) -> Self {
+	fn set_optname(&mut self, name: Option<String>) {
 		self.name = name;
-		self
 	}
 
 	fn name(&self) -> &Option<String> {

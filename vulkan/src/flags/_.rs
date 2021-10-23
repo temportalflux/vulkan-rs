@@ -31,6 +31,7 @@ pub use backend::vk::QueueFlags;
 pub use backend::vk::SamplerAddressMode;
 pub use backend::vk::SamplerMipmapMode;
 pub use backend::vk::SharingMode;
+pub use backend::vk::StencilOp;
 pub use backend::vk::SurfaceTransformFlagsKHR as SurfaceTransform;
 pub use backend::vk::VertexInputRate;
 pub use vk_mem::AllocationCreateFlags as CreateAllocation;

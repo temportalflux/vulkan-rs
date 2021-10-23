@@ -1,5 +1,8 @@
 pub mod color_blend;
 
+mod depth_stencil;
+pub use depth_stencil::*;
+
 mod dynamic;
 pub use dynamic::*;
 

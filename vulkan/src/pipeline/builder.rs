@@ -17,6 +17,7 @@ pub struct Builder {
 	rasterization_state: state::Rasterization,
 	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
 	color_blending: state::color_blend::ColorBlend,
+	depth_stencil: state::DepthStencil,
 	dynamic_state: state::Dynamic,
 	name: Option<String>,
 }
@@ -34,6 +35,7 @@ impl Default for Builder {
 				.rasterization_samples(crate::flags::SampleCount::_1.into())
 				.build(),
 			color_blending: Default::default(),
+			depth_stencil: Default::default(),
 			dynamic_state: Default::default(),
 			name: None,
 		}
@@ -70,6 +72,11 @@ impl Builder {
 
 	pub fn set_color_blending(mut self, info: state::color_blend::ColorBlend) -> Self {
 		self.color_blending = info;
+		self
+	}
+
+	pub fn with_depth_stencil(mut self, state: state::DepthStencil) -> Self {
+		self.depth_stencil = state;
 		self
 	}
 
@@ -114,6 +121,7 @@ impl Builder {
 		let viewport_state = self.viewport_state.as_vk();
 		let rasterizer = self.rasterization_state.clone().into();
 		let dynamic_state = self.dynamic_state.as_vk();
+		let depth_stencil = self.depth_stencil.as_vk();
 
 		let color_blending = backend::vk::PipelineColorBlendStateCreateInfo::builder()
 			.logic_op_enable(false)
@@ -128,6 +136,7 @@ impl Builder {
 			.rasterization_state(&rasterizer)
 			.multisample_state(&self.multisampling)
 			.color_blend_state(&color_blending)
+			.depth_stencil_state(&depth_stencil)
 			.dynamic_state(&dynamic_state)
 			.layout(**layout)
 			.render_pass(**render_pass)
@@ -152,9 +161,8 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn with_optname(mut self, name: Option<String>) -> Self {
+	fn set_optname(&mut self, name: Option<String>) {
 		self.name = name;
-		self
 	}
 
 	fn name(&self) -> &Option<String> {

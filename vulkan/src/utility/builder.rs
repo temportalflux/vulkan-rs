@@ -38,16 +38,34 @@ pub trait BuildFromDevice {
 }
 
 pub trait NameableBuilder {
-	fn with_name<T>(self, name: T) -> Self
+	fn with_name<T>(mut self, name: T) -> Self
 	where
 		T: Into<String>,
 		Self: Sized,
 	{
-		self.with_optname(Some(name.into()))
+		self.set_name(name);
+		self
 	}
 
-	fn with_optname(self, name: Option<String>) -> Self
+	fn set_name<T>(&mut self, name: T)
+	where
+		T: Into<String>,
+		Self: Sized,
+	{
+		self.set_optname(Some(name.into()));
+	}
+
+	fn with_optname(mut self, name: Option<String>) -> Self
+	where
+		Self: Sized,
+	{
+		self.set_optname(name);
+		self
+	}
+
+	fn set_optname(&mut self, name: Option<String>)
 	where
 		Self: Sized;
+
 	fn name(&self) -> &Option<String>;
 }
