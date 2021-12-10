@@ -71,8 +71,67 @@ impl PipelineStage {
 				set
 			})
 	}
+
 	pub fn fold(set: &enumset::EnumSet<Self>) -> VkEnum {
 		set.iter()
 			.fold(VkEnum::empty(), |vk, value| vk | value.into())
+	}
+
+	pub fn all_serialized() -> Vec<String> {
+		enumset::EnumSet::<Self>::all()
+			.iter()
+			.map(|flag| flag.to_string())
+			.collect()
+	}
+}
+
+impl ToString for PipelineStage {
+	fn to_string(&self) -> String {
+		match self {
+			Self::TopOfPipe => "TopOfPipe",
+			Self::DrawIndirect => "DrawIndirect",
+			Self::VertexInput => "VertexInput",
+			Self::VertexShader => "VertexShader",
+			Self::TessellationControlShader => "TessellationControlShader",
+			Self::TessellationEvaluationShader => "TessellationEvaluationShader",
+			Self::GeometryShader => "GeometryShader",
+			Self::FragmentShader => "FragmentShader",
+			Self::EarlyFragmentTests => "EarlyFragmentTests",
+			Self::LateFragmentTests => "LateFragmentTests",
+			Self::ColorAttachmentOutput => "ColorAttachmentOutput",
+			Self::ComputerShader => "ComputerShader",
+			Self::Transfer => "Transfer",
+			Self::BottomOfPipe => "BottomOfPipe",
+			Self::Host => "Host",
+			Self::AllGraphics => "AllGraphics",
+			Self::AllCommands => "AllCommands",
+		}
+		.to_owned()
+	}
+}
+
+impl std::convert::TryFrom<&str> for PipelineStage {
+	type Error = ();
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value {
+			"TopOfPipe" => Ok(Self::TopOfPipe),
+			"DrawIndirect" => Ok(Self::DrawIndirect),
+			"VertexInput" => Ok(Self::VertexInput),
+			"VertexShader" => Ok(Self::VertexShader),
+			"TessellationControlShader" => Ok(Self::TessellationControlShader),
+			"TessellationEvaluationShader" => Ok(Self::TessellationEvaluationShader),
+			"GeometryShader" => Ok(Self::GeometryShader),
+			"FragmentShader" => Ok(Self::FragmentShader),
+			"EarlyFragmentTests" => Ok(Self::EarlyFragmentTests),
+			"LateFragmentTests" => Ok(Self::LateFragmentTests),
+			"ColorAttachmentOutput" => Ok(Self::ColorAttachmentOutput),
+			"ComputerShader" => Ok(Self::ComputerShader),
+			"Transfer" => Ok(Self::Transfer),
+			"BottomOfPipe" => Ok(Self::BottomOfPipe),
+			"Host" => Ok(Self::Host),
+			"AllGraphics" => Ok(Self::AllGraphics),
+			"AllCommands" => Ok(Self::AllCommands),
+			_ => Err(()),
+		}
 	}
 }

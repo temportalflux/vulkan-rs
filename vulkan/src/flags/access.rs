@@ -71,8 +71,67 @@ impl Access {
 				set
 			})
 	}
+
 	pub fn fold(set: &enumset::EnumSet<Self>) -> VkEnum {
 		set.iter()
 			.fold(VkEnum::empty(), |vk, value| vk | value.into())
+	}
+
+	pub fn all_serialized() -> Vec<String> {
+		enumset::EnumSet::<Self>::all()
+			.iter()
+			.map(|flag| flag.to_string())
+			.collect()
+	}
+}
+
+impl ToString for Access {
+	fn to_string(&self) -> String {
+		match self {
+			Self::IndirectCommandRead => "IndirectCommandRead",
+			Self::IndexRead => "IndexRead",
+			Self::VertexAttributeRead => "VertexAttributeRead",
+			Self::UniformRead => "UniformRead",
+			Self::InputAttachmentRead => "InputAttachmentRead",
+			Self::ShaderRead => "ShaderRead",
+			Self::ShaderWrite => "ShaderWrite",
+			Self::ColorAttachmentRead => "ColorAttachmentRead",
+			Self::ColorAttachmentWrite => "ColorAttachmentWrite",
+			Self::DepthStencilAttachmentRead => "DepthStencilAttachmentRead",
+			Self::DepthStencilAttachmentWrite => "DepthStencilAttachmentWrite",
+			Self::TransferRead => "TransferRead",
+			Self::TransferWrite => "TransferWrite",
+			Self::HostRead => "HostRead",
+			Self::HostWrite => "HostWrite",
+			Self::MemoryRead => "MemoryRead",
+			Self::MemoryWrite => "MemoryWrite",
+		}
+		.to_owned()
+	}
+}
+
+impl std::convert::TryFrom<&str> for Access {
+	type Error = ();
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value {
+			"IndirectCommandRead" => Ok(Self::IndirectCommandRead),
+			"IndexRead" => Ok(Self::IndexRead),
+			"VertexAttributeRead" => Ok(Self::VertexAttributeRead),
+			"UniformRead" => Ok(Self::UniformRead),
+			"InputAttachmentRead" => Ok(Self::InputAttachmentRead),
+			"ShaderRead" => Ok(Self::ShaderRead),
+			"ShaderWrite" => Ok(Self::ShaderWrite),
+			"ColorAttachmentRead" => Ok(Self::ColorAttachmentRead),
+			"ColorAttachmentWrite" => Ok(Self::ColorAttachmentWrite),
+			"DepthStencilAttachmentRead" => Ok(Self::DepthStencilAttachmentRead),
+			"DepthStencilAttachmentWrite" => Ok(Self::DepthStencilAttachmentWrite),
+			"TransferRead" => Ok(Self::TransferRead),
+			"TransferWrite" => Ok(Self::TransferWrite),
+			"HostRead" => Ok(Self::HostRead),
+			"HostWrite" => Ok(Self::HostWrite),
+			"MemoryRead" => Ok(Self::MemoryRead),
+			"MemoryWrite" => Ok(Self::MemoryWrite),
+			_ => Err(()),
+		}
 	}
 }
