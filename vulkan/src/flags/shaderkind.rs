@@ -2,7 +2,7 @@ use crate::backend::vk::ShaderStageFlags as ShaderStageKind;
 use serde::{Deserialize, Serialize};
 use shaderc;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Hash, enumset::EnumSetType)]
 pub enum ShaderKind {
 	Vertex,
 	Fragment,
@@ -99,5 +99,28 @@ impl Into<String> for ShaderKind {
 			Self::Callable => "Callable",
 		}
 		.to_string()
+	}
+}
+
+impl std::convert::TryFrom<&str> for ShaderKind {
+	type Error = ();
+	fn try_from(value: &str) -> Result<Self, Self::Error> {
+		match value {
+			"Vertex" => Ok(Self::Vertex),
+			"Fragment" => Ok(Self::Fragment),
+			"Geometry" => Ok(Self::Geometry),
+			"Compute" => Ok(Self::Compute),
+			"TessControl" => Ok(Self::TessControl),
+			"TessEval" => Ok(Self::TessEval),
+			"Task" => Ok(Self::Task),
+			"Mesh" => Ok(Self::Mesh),
+			"Raygen" => Ok(Self::Raygen),
+			"AnyHit" => Ok(Self::AnyHit),
+			"ClosedHit" => Ok(Self::ClosedHit),
+			"Miss" => Ok(Self::Miss),
+			"Intersection" => Ok(Self::Intersection),
+			"Callable" => Ok(Self::Callable),
+			_ => Err(()),
+		}
 	}
 }
