@@ -16,7 +16,7 @@ pub struct AttachmentOps {
 #[derive(Debug, Clone)]
 pub struct Attachment {
 	id: String,
-	format: flags::format::Format,
+	pub(crate) format: flags::format::Format,
 	samples: flags::SampleCount,
 	general_ops: AttachmentOps,
 	stencil_ops: AttachmentOps,
@@ -74,6 +74,7 @@ impl Attachment {
 
 impl Into<backend::vk::AttachmentDescription> for Attachment {
 	fn into(self) -> backend::vk::AttachmentDescription {
+		assert_ne!(self.format, backend::vk::Format::UNDEFINED);
 		backend::vk::AttachmentDescription::builder()
 			.format(self.format)
 			.samples(self.samples.into())

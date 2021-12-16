@@ -58,6 +58,7 @@ impl Info {
 	/// Attaches an attachment to the renderpass info,
 	/// returning its numerical id in the [`Render Pass`](crate::renderpass::Pass).
 	pub fn attach(&mut self, attachment: renderpass::Attachment) -> usize {
+		assert_ne!(attachment.format, backend::vk::Format::UNDEFINED);
 		let index = self.attachments.len();
 		self.attachments.push(attachment);
 		index
