@@ -12,7 +12,7 @@ use std::sync;
 
 /// The builder for [`View`] objects.
 pub struct Builder {
-	image: sync::Weak<Image>,
+	image: Option<sync::Arc<Image>>,
 	view_type: ImageViewType,
 	components: ComponentMapping,
 	subresource_range: subresource::Range,
@@ -22,7 +22,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			image: sync::Weak::new(),
+			image: None,
 			view_type: ImageViewType::TYPE_2D,
 			components: ComponentMapping {
 				r: ComponentSwizzle::R,
@@ -43,7 +43,7 @@ impl Builder {
 	/// so if the image is dropped between `for_image` and `build`,
 	/// the builder will fail to create the [`View`].
 	pub fn for_image(mut self, image: sync::Arc<Image>) -> Self {
-		self.image = sync::Arc::downgrade(&image);
+		self.image = Some(image);
 		self
 	}
 
@@ -83,9 +83,9 @@ impl utility::BuildFromDevice for Builder {
 	/// Creates a [`View`] object, thereby consuming the info.
 	/// The created [`View`] will use the same format the [`Image`] uses,
 	/// to garuntee fewer user-error bugs.
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
+	fn build(mut self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
 		use backend::version::DeviceV1_0;
-		let image = self.image.upgrade().unwrap();
+		let image = self.image.take().unwrap();
 		let info = backend::vk::ImageViewCreateInfo::builder()
 			.image(**image)
 			.view_type(self.view_type)
