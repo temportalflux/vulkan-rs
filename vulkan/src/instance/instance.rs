@@ -1,4 +1,4 @@
-use crate::{backend, device::physical, general::Surface, utility, Context};
+use crate::{backend, device::physical, flags, general::Surface, utility, Context};
 
 use raw_window_handle;
 use std::sync;
@@ -216,6 +216,18 @@ impl Instance {
 				.get_physical_device_surface_capabilities(*device, *surface)
 		}
 		.unwrap()
+	}
+
+	pub fn get_physical_device_format_properties(
+		&self,
+		device: &backend::vk::PhysicalDevice,
+		format: flags::format::Format,
+	) -> backend::vk::FormatProperties {
+		unsafe {
+			use backend::version::InstanceV1_0;
+			self.internal
+				.get_physical_device_format_properties(*device, format)
+		}
 	}
 }
 

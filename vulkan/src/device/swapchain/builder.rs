@@ -60,6 +60,10 @@ impl Builder {
 		self
 	}
 
+	pub fn format(&self) -> Format {
+		self.image_format
+	}
+
 	/// Mutates the builder to set the color space of the frame images.
 	pub fn with_image_color_space(mut self, color_space: ColorSpace) -> Self {
 		self.image_color_space = color_space;

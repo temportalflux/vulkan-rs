@@ -118,7 +118,7 @@ impl DepthStencil {
 
 	pub(crate) fn as_vk(&self) -> backend::vk::PipelineDepthStencilStateCreateInfo {
 		backend::vk::PipelineDepthStencilStateCreateInfo::builder()
-			.depth_test_enable(self.depth_bounds_test_enable)
+			.depth_test_enable(self.depth_test_enable)
 			.depth_write_enable(self.depth_write_enable)
 			.depth_compare_op(self.depth_compare_op)
 			.depth_bounds_test_enable(self.depth_bounds_test_enable)

@@ -1,7 +1,10 @@
 use crate::{
 	backend,
 	device::physical,
-	flags::{format::Format, ColorSpace, PresentMode, QueueFlags, SurfaceTransform},
+	flags::{
+		format::Format, ColorSpace, FormatFeatureFlags, ImageTiling, PresentMode, QueueFlags,
+		SurfaceTransform,
+	},
 	instance::Instance,
 	structs::Extent2D,
 	utility, Surface,
@@ -141,6 +144,27 @@ impl Device {
 			present_modes: instance
 				.get_physical_device_surface_present_modes(&self._internal, &*surface),
 		}
+	}
+
+	pub fn query_supported_image_formats(
+		&self,
+		candidates: &Vec<Format>,
+		tiling: ImageTiling,
+		flags: FormatFeatureFlags,
+	) -> Option<Format> {
+		let instance = self.instance.upgrade().unwrap();
+		for &format in candidates.iter() {
+			let properties = instance.get_physical_device_format_properties(&self, format);
+			if tiling == ImageTiling::LINEAR && (properties.linear_tiling_features & flags) == flags
+			{
+				return Some(format);
+			} else if tiling == ImageTiling::OPTIMAL
+				&& (properties.optimal_tiling_features & flags) == flags
+			{
+				return Some(format);
+			}
+		}
+		None
 	}
 }
 

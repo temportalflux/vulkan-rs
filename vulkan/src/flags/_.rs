@@ -14,6 +14,7 @@ pub use backend::vk::DescriptorType as DescriptorKind;
 pub use backend::vk::DynamicState;
 pub use backend::vk::FenceCreateFlags as FenceState;
 pub use backend::vk::Filter;
+pub use backend::vk::FormatFeatureFlags;
 pub use backend::vk::FrontFace;
 pub use backend::vk::ImageAspectFlags as ImageAspect;
 pub use backend::vk::ImageTiling;

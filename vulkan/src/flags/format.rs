@@ -284,3 +284,13 @@ pub const fn format(comps: &[ColorComponent], bits: Bits, size: DataType) -> For
 		}
 	}
 }
+
+pub fn stencilable(format: Format) -> bool {
+	match format {
+		Format::S8_UINT => true,
+		Format::D16_UNORM_S8_UINT => true,
+		Format::D24_UNORM_S8_UINT => true,
+		Format::D32_SFLOAT_S8_UINT => true,
+		_ => false,
+	}
+}

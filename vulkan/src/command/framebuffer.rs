@@ -26,13 +26,13 @@ impl Builder {
 
 	pub fn build(
 		&self,
-		swapchain_image_view: &image_view::View,
+		attachments: Vec<&image_view::View>,
 		render_pass: &renderpass::Pass,
 		device: &sync::Arc<logical::Device>,
 	) -> utility::Result<Framebuffer> {
 		use backend::version::DeviceV1_0;
 		use utility::{HandledObject, NameableBuilder};
-		let attachments = vec![**swapchain_image_view];
+		let attachments = attachments.into_iter().map(|a| **a).collect::<Vec<_>>();
 		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
 			.height(self.extent.height)
