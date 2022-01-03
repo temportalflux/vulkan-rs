@@ -39,6 +39,10 @@ impl Memory {
 		})
 	}
 
+	pub fn amount_written(&self) -> usize {
+		self.amount_written
+	}
+
 	/// Writes a slice of any type to the object's memory,
 	/// and results in a `false` if the slice would result in
 	/// an overflow beyond the size of an object.
