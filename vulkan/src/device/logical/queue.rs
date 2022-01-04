@@ -62,6 +62,7 @@ impl Queue {
 		}?)
 	}
 	/// returns true if the swapchain is suboptimal
+	#[profiling::function]
 	pub fn present(&self, info: command::PresentInfo) -> utility::Result</*suboptimal*/ bool> {
 		Ok(unsafe {
 			self.device
