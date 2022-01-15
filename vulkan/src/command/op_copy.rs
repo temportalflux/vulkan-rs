@@ -32,6 +32,10 @@ pub struct CopyBufferRange {
 
 impl std::fmt::Debug for CopyBufferRange {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "Range({} bytes, idx-src={}, idx-dst={})", self.size, self.start_in_src, self.start_in_dst)
+		write!(
+			f,
+			"Range({} bytes, idx-src={}, idx-dst={})",
+			self.size, self.start_in_src, self.start_in_dst
+		)
 	}
 }
