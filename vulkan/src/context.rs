@@ -1,6 +1,5 @@
 use crate::backend;
 use backend::version::EntryV1_0;
-use std::error::Error;
 
 /// A user-owned singleton which holds data about allocators and api-level availability.
 pub struct Context {
@@ -10,7 +9,7 @@ pub struct Context {
 }
 
 impl Context {
-	pub fn new() -> Result<Context, Box<dyn Error>> {
+	pub fn new() -> anyhow::Result<Context> {
 		let loader = unsafe { backend::Entry::new() }?;
 		let valid_instance_extensions = Context::get_instance_extensions(&loader);
 		let valid_instance_layers = Context::get_instance_layers(&loader);

@@ -11,6 +11,7 @@ derive = ["vulkan-rs-derive"]
 
 [dependencies]
 vulkan-rs-derive = { version = "0.1.0", optional = true, path = "../derive" }
+anyhow = "1.0"
 ash = "0.32"
 ash-window = "0.6"
 bytemuck = "1.7"
