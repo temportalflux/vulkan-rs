@@ -97,38 +97,20 @@ impl Buffer {
 			.build(allocator)
 	}
 
-	/// Attempts to change the allocated memory to a new size.
-	/// Returns false if the resize failed.
-	fn resize_allocation(&mut self, _new_size: usize) -> bool {
-		// TODO: Can produce an error if resize is successful
-		// where the internal backend buffer still believes its the old size.
-		false
-		//let success = self
-		//	.allocator
-		//	.resize_allocation(&self.allocation_handle, new_size)
-		//	.is_ok();
-		//if success {
-		//	self.builder.set_size(new_size);
-		//}
-		//success
-	}
-
 	/// Expands the buffer to hold a `required_capacity`.
 	/// If the size of the buffer can already support `required_capacity`, then no changes are made.
-	/// Otherwise, an allocation resize is attempted. If the allocation cannot be extended,
+	/// Otherwise, an allocation resize is attempted. If the allocation cannot be extended
+	/// (which is always the case due to an allocator bug),
 	/// then a new buffer is allocated wih the desired capacity.
-	pub fn expand(&mut self, required_capacity: usize) -> utility::Result<()> {
+	pub fn expand(&self, required_capacity: usize) -> utility::Result<Option<Buffer>> {
 		use alloc::Object;
+		use utility::BuildFromAllocator;
 		if self.size() < required_capacity {
-			self.builder.set_size(required_capacity);
-			if !self.resize_allocation(required_capacity) {
-				let (raw, handle, info) = self.builder.rebuild(&self.allocator())?;
-				self.internal = raw;
-				self.allocation_handle = sync::Arc::new(handle);
-				self.allocation_info = info;
-			}
+			let mut builder = self.builder.clone();
+			builder.set_size(required_capacity);
+			return Ok(Some(builder.build(&self.allocator())?));
 		}
-		Ok(())
+		Ok(None)
 	}
 
 	/// Maps the memory of the buffer for writing.

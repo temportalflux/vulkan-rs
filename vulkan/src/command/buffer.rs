@@ -1,8 +1,11 @@
 use crate::{
-	backend, buffer, command, descriptor, device::logical, flags, image, pipeline, renderpass,
-	utility,
+	backend, buffer,
+	command::{self, framebuffer::Framebuffer},
+	descriptor,
+	device::logical,
+	flags, image, pipeline, renderpass, utility::{self, BoundObject},
 };
-use std::sync;
+use std::sync::Arc;
 
 /// A ordered set of commands that will be executed on the GPU when they are submitted.
 /// You can get a command buffer from [`command::Pool::allocate_buffers`](command::Pool::allocate_buffers).
@@ -10,14 +13,15 @@ pub struct Buffer {
 	recording_framebuffer: Option<backend::vk::Framebuffer>,
 	recording_render_pass: Option<backend::vk::RenderPass>,
 	internal: backend::vk::CommandBuffer,
-	device: sync::Arc<logical::Device>,
+	device: Arc<logical::Device>,
 	name: Option<String>,
+	bound_objects: Vec<BoundObject>,
 }
 
 /// Internal only
 impl Buffer {
 	pub(crate) fn from(
-		device: sync::Arc<logical::Device>,
+		device: Arc<logical::Device>,
 		name: Option<String>,
 		internal: backend::vk::CommandBuffer,
 	) -> Buffer {
@@ -27,6 +31,7 @@ impl Buffer {
 			name,
 			recording_render_pass: None,
 			recording_framebuffer: None,
+			bound_objects: Vec::new(),
 		}
 	}
 }
@@ -39,7 +44,7 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkBeginCommandBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBeginCommandBuffer.html).
 	pub fn begin(
-		&self,
+		&mut self,
 		usage: Option<flags::CommandBufferUsage>,
 		primary: Option<&command::Buffer>,
 	) -> utility::Result<()> {
@@ -65,6 +70,7 @@ impl Buffer {
 		let info = backend::vk::CommandBufferBeginInfo::builder()
 			.flags(usage.unwrap_or(flags::CommandBufferUsage::empty()))
 			.inheritance_info(&inheritance_info);
+		self.bound_objects.clear();
 		Ok(unsafe { self.device.begin_command_buffer(self.internal, &info) }?)
 	}
 
@@ -229,7 +235,7 @@ impl Buffer {
 	/// Equivalent to [`vkCmdBeginRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderPass.html).
 	pub fn start_render_pass(
 		&mut self,
-		frame_buffer: &command::framebuffer::Framebuffer,
+		frame_buffer: &Arc<Framebuffer>,
 		render_pass: &renderpass::Pass,
 		info: renderpass::RecordInstruction,
 		uses_secondary_buffers: bool,
@@ -242,7 +248,7 @@ impl Buffer {
 			.collect::<Vec<_>>();
 		let info = backend::vk::RenderPassBeginInfo::builder()
 			.render_pass(**render_pass)
-			.framebuffer(**frame_buffer)
+			.framebuffer(***frame_buffer)
 			.render_area(info.render_area)
 			.clear_values(&clear_values)
 			.build();
@@ -258,7 +264,8 @@ impl Buffer {
 			)
 		};
 		self.recording_render_pass = Some(**render_pass);
-		self.recording_framebuffer = Some(**frame_buffer);
+		self.recording_framebuffer = Some(***frame_buffer);
+		self.bound_objects.push(frame_buffer.clone());
 	}
 
 	/// Moves to the next subpass in the active render pass.
@@ -301,15 +308,16 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdBindPipeline`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindPipeline.html).
 	pub fn bind_pipeline(
-		&self,
-		pipeline: &pipeline::Pipeline,
+		&mut self,
+		pipeline: &Arc<pipeline::Pipeline>,
 		bind_point: flags::PipelineBindPoint,
 	) {
 		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device
-				.cmd_bind_pipeline(self.internal, bind_point, **pipeline)
+				.cmd_bind_pipeline(self.internal, bind_point, ***pipeline)
 		};
+		self.bound_objects.push(pipeline.clone());
 	}
 
 	/// Binds descriptors for a given pipeline layout.
@@ -321,7 +329,7 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdBindDescriptorSets`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindDescriptorSets.html).
 	pub fn bind_descriptors(
-		&self,
+		&mut self,
 		bind_point: flags::PipelineBindPoint,
 		layout: &pipeline::layout::Layout,
 		first_set_index: usize,
@@ -340,6 +348,9 @@ impl Buffer {
 				&offsets[..],
 			)
 		};
+		for set in sets.into_iter() {
+			self.bound_objects.append(&mut set.get_all_bound());
+		}
 	}
 
 	/// Sets the scissor that should be used for pipelines which use the [`DynamicState.SCISSOR`](flags::DynamicState::SCISSOR) flag.
@@ -390,13 +401,18 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdBindVertexBuffers`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindVertexBuffers.html).
 	pub fn bind_vertex_buffers(
-		&self,
+		&mut self,
 		binding_index: u32,
-		buffers: Vec<&buffer::Buffer>,
+		buffers: Vec<&Arc<buffer::Buffer>>,
 		offsets: Vec<u64>,
 	) {
 		use backend::version::DeviceV1_0;
-		let vk_buffers = buffers.iter().map(|buffer| ***buffer).collect::<Vec<_>>();
+		use std::ops::Deref;
+		let mut vk_buffers = Vec::with_capacity(buffers.len());
+		for arc in buffers.into_iter() {
+			vk_buffers.push(*arc.deref().deref());
+			self.bound_objects.push(arc.clone());
+		}
 		unsafe {
 			self.device.cmd_bind_vertex_buffers(
 				self.internal,
@@ -414,13 +430,19 @@ impl Buffer {
 	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
 	///
 	/// Equivalent to [`vkCmdBindIndexBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindIndexBuffer.html).
-	pub fn bind_index_buffer(&self, buffer: &buffer::Buffer, offset: u64) {
+	pub fn bind_index_buffer(&mut self, buffer: &Arc<buffer::Buffer>, offset: u64) {
 		use backend::version::DeviceV1_0;
+		use std::ops::Deref;
 		assert_ne!(*buffer.index_type(), None);
 		let index_type = buffer.index_type().unwrap();
+		self.bound_objects.push(buffer.clone());
 		unsafe {
-			self.device
-				.cmd_bind_index_buffer(self.internal, **buffer, offset, index_type)
+			self.device.cmd_bind_index_buffer(
+				self.internal,
+				*buffer.deref().deref(),
+				offset,
+				index_type,
+			)
 		};
 	}
 

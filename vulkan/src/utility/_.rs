@@ -17,3 +17,5 @@ mod error;
 pub use error::*;
 
 pub use memoffset::offset_of;
+
+pub type BoundObject = std::sync::Arc<dyn std::any::Any + 'static + Send + Sync>;

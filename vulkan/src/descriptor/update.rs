@@ -90,8 +90,10 @@ impl Queue {
 			Vec::with_capacity(self.operations.len());
 		let mut write_buffers_per_operation: Vec<Vec<backend::vk::DescriptorBufferInfo>> =
 			Vec::with_capacity(self.operations.len());
-		let mut writes = Vec::new();
-		let mut copies = Vec::new();
+		let mut vk_writes = Vec::new();
+		let mut rc_writes = Vec::new();
+		let mut vk_copies = Vec::new();
+		let mut rc_copies = Vec::new();
 		for (idx, operation) in self.operations.iter().enumerate() {
 			match operation {
 				Operation::Write(op) => {
@@ -101,6 +103,7 @@ impl Queue {
 							.dst_binding(op.destination.binding_index)
 							.dst_array_element(op.destination.array_element)
 							.descriptor_type(op.kind);
+						let mut object_rcs: Vec<sync::Arc<dyn std::any::Any + 'static + Send + Sync>> = Vec::new();
 						match &op.object {
 							ObjectKind::Image(infos) => {
 								let idx_ops = write_images_per_operation.len();
@@ -113,6 +116,8 @@ impl Queue {
 											.image_layout(info.layout.into())
 											.build(),
 									);
+									object_rcs.push(info.sampler.clone());
+									object_rcs.push(info.view.clone());
 								}
 								builder =
 									builder.image_info(&write_images_per_operation[idx_ops][..]);
@@ -128,12 +133,18 @@ impl Queue {
 											.range(info.range as u64)
 											.build(),
 									);
+									object_rcs.push(info.buffer.clone());
 								}
 								builder =
 									builder.buffer_info(&write_buffers_per_operation[idx_ops][..]);
 							}
 						}
-						writes.push(builder.build());
+						vk_writes.push(builder.build());
+						rc_writes.push((
+							set_rc.clone(),
+							(op.destination.binding_index, op.destination.array_element),
+							object_rcs
+						));
 					} else {
 						log::error!("Encounted invalid descriptor set for write operate, will skip operation {}", idx);
 					}
@@ -141,7 +152,7 @@ impl Queue {
 				Operation::Copy(op) => {
 					match (op.source.set.upgrade(), op.destination.set.upgrade()) {
 						(Some(source_set), Some(destination_set)) => {
-							copies.push(
+							vk_copies.push(
 								backend::vk::CopyDescriptorSet::builder()
 									.src_set(**source_set)
 									.src_binding(op.source.binding_index)
@@ -152,14 +163,26 @@ impl Queue {
 									.descriptor_count(op.descriptor_count)
 									.build(),
 							);
+							let object_rcs = source_set.get_bound((op.source.binding_index, op.source.array_element));
+							rc_copies.push((
+								destination_set.clone(),
+								(op.destination.binding_index, op.destination.array_element),
+								object_rcs
+							));
 						}
-						_ => {}
+						_ => unimplemented!(),
 					}
 				}
 			}
 		}
 		unsafe {
-			device.update_descriptor_sets(&writes[..], &copies[..]);
+			device.update_descriptor_sets(&vk_writes[..], &vk_copies[..]);
+		}
+		for (arc_set, idx, rcs) in rc_writes.into_iter() {
+			arc_set.set_bound(idx, rcs);
+		}
+		for (arc_set, idx, rcs) in rc_copies.into_iter() {
+			arc_set.set_bound(idx, rcs);
 		}
 	}
 }
