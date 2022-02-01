@@ -3,7 +3,8 @@ use crate::{
 	command::{self, framebuffer::Framebuffer},
 	descriptor,
 	device::logical,
-	flags, image, pipeline, renderpass, utility::{self, BoundObject},
+	flags, image, pipeline, renderpass,
+	utility::{self, BoundObject},
 };
 use std::sync::Arc;
 

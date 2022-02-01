@@ -1,5 +1,12 @@
-use crate::{backend, descriptor::layout::SetLayout, utility::{self, BoundObject}};
-use std::{sync::{Arc, Mutex}, collections::HashMap};
+use crate::{
+	backend,
+	descriptor::layout::SetLayout,
+	utility::{self, BoundObject},
+};
+use std::{
+	collections::HashMap,
+	sync::{Arc, Mutex},
+};
 
 /// A collection of descriptors as declared by a [`descriptor layout`](SetLayout).
 /// A given set contains a number of bindings as described by the layout.
@@ -23,14 +30,23 @@ impl Set {
 	}
 
 	pub(crate) fn get_bound(&self, idx: (u32, u32)) -> Vec<BoundObject> {
-		self.bound_objects.lock().unwrap().get(&idx).unwrap().clone()
+		self.bound_objects
+			.lock()
+			.unwrap()
+			.get(&idx)
+			.unwrap()
+			.clone()
 	}
 
 	pub(crate) fn get_all_bound(&self) -> Vec<BoundObject> {
-		self.bound_objects.lock().unwrap().iter().fold(Vec::new(), |mut vec, (_idx, objects)| {
-			vec.append(&mut objects.clone());
-			vec
-		})
+		self.bound_objects
+			.lock()
+			.unwrap()
+			.iter()
+			.fold(Vec::new(), |mut vec, (_idx, objects)| {
+				vec.append(&mut objects.clone());
+				vec
+			})
 	}
 }
 

@@ -103,7 +103,9 @@ impl Queue {
 							.dst_binding(op.destination.binding_index)
 							.dst_array_element(op.destination.array_element)
 							.descriptor_type(op.kind);
-						let mut object_rcs: Vec<sync::Arc<dyn std::any::Any + 'static + Send + Sync>> = Vec::new();
+						let mut object_rcs: Vec<
+							sync::Arc<dyn std::any::Any + 'static + Send + Sync>,
+						> = Vec::new();
 						match &op.object {
 							ObjectKind::Image(infos) => {
 								let idx_ops = write_images_per_operation.len();
@@ -143,7 +145,7 @@ impl Queue {
 						rc_writes.push((
 							set_rc.clone(),
 							(op.destination.binding_index, op.destination.array_element),
-							object_rcs
+							object_rcs,
 						));
 					} else {
 						log::error!("Encounted invalid descriptor set for write operate, will skip operation {}", idx);
@@ -163,11 +165,12 @@ impl Queue {
 									.descriptor_count(op.descriptor_count)
 									.build(),
 							);
-							let object_rcs = source_set.get_bound((op.source.binding_index, op.source.array_element));
+							let object_rcs = source_set
+								.get_bound((op.source.binding_index, op.source.array_element));
 							rc_copies.push((
 								destination_set.clone(),
 								(op.destination.binding_index, op.destination.array_element),
-								object_rcs
+								object_rcs,
 							));
 						}
 						_ => unimplemented!(),
