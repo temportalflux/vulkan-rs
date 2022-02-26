@@ -88,6 +88,11 @@ impl Builder {
 		self.usage |= usage;
 		self
 	}
+
+	pub fn with_sample_count(mut self, count: SampleCount) -> Self {
+		self.samples = count;
+		self
+	}
 }
 
 impl utility::NameableBuilder for Builder {

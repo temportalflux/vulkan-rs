@@ -54,3 +54,5 @@ mod sample_count;
 pub use sample_count::*;
 mod shaderkind;
 pub use shaderkind::*;
+mod attachment;
+pub use attachment::*;

@@ -10,6 +10,20 @@ pub struct AttachmentOps {
 	pub store: flags::StoreOp,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum SampleKind {
+	Fixed(flags::SampleCount),
+	MaxCommon,
+}
+impl SampleKind {
+	pub fn unwrap_or(self, max_common: flags::SampleCount) -> flags::SampleCount {
+		match self {
+			Self::Fixed(count) => count,
+			Self::MaxCommon => max_common,
+		}
+	}
+}
+
 /// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
 /// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
 /// images used for each frame that is shown.
@@ -17,7 +31,7 @@ pub struct AttachmentOps {
 pub struct Attachment {
 	id: String,
 	pub(crate) format: flags::format::Format,
-	samples: flags::SampleCount,
+	samples: SampleKind,
 	general_ops: AttachmentOps,
 	stencil_ops: AttachmentOps,
 	initial_layout: flags::ImageLayout,
@@ -29,7 +43,7 @@ impl Attachment {
 		Self {
 			id,
 			format: flags::format::default(),
-			samples: Default::default(),
+			samples: SampleKind::Fixed(flags::SampleCount::_1),
 			general_ops: Default::default(),
 			stencil_ops: Default::default(),
 			initial_layout: Default::default(),
@@ -47,6 +61,10 @@ impl Attachment {
 	}
 
 	pub fn with_sample_count(mut self, count: flags::SampleCount) -> Self {
+		self.with_sample_kind(SampleKind::Fixed(count))
+	}
+
+	pub fn with_sample_kind(mut self, count: SampleKind) -> Self {
 		self.samples = count;
 		self
 	}
@@ -72,12 +90,15 @@ impl Attachment {
 	}
 }
 
-impl Into<backend::vk::AttachmentDescription> for Attachment {
-	fn into(self) -> backend::vk::AttachmentDescription {
+impl Attachment {
+	pub fn into_desc(
+		self,
+		max_common_sample_count: flags::SampleCount,
+	) -> backend::vk::AttachmentDescription {
 		assert_ne!(self.format, backend::vk::Format::UNDEFINED);
 		backend::vk::AttachmentDescription::builder()
 			.format(self.format)
-			.samples(self.samples.into())
+			.samples(self.samples.unwrap_or(max_common_sample_count).into())
 			.load_op(self.general_ops.load.into())
 			.store_op(self.general_ops.store.into())
 			.stencil_load_op(self.stencil_ops.load.into())

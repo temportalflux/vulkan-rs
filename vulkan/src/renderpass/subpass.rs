@@ -1,4 +1,4 @@
-use crate::flags;
+use crate::flags::{self, AttachmentKind};
 
 /// A rendering phase of a given [`Render Pass`](crate::renderpass::Pass),
 /// which may correlate to the rendering of one or more [`Pipelines`](crate::pipeline::Pipeline).
@@ -13,6 +13,8 @@ pub struct Subpass {
 pub(crate) struct SubpassAttachments {
 	pub input: Vec<(String, flags::ImageLayout)>,
 	pub color: Vec<(String, flags::ImageLayout)>,
+	pub resolve: Vec<(String, flags::ImageLayout)>,
+	pub preserve: Vec<String>,
 	pub depth_stencil: Option<(String, flags::ImageLayout)>,
 }
 
@@ -24,9 +26,29 @@ impl Subpass {
 			attachments: SubpassAttachments {
 				color: Vec::new(),
 				input: Vec::new(),
+				resolve: Vec::new(),
+				preserve: Vec::new(),
 				depth_stencil: None,
 			},
 		}
+	}
+
+	pub fn add_attachment(
+		mut self,
+		id: String,
+		kind: AttachmentKind,
+		layout: Option<flags::ImageLayout>,
+	) -> Self {
+		match kind {
+			AttachmentKind::Input => self.attachments.input.push((id, layout.unwrap())),
+			AttachmentKind::Color => self.attachments.color.push((id, layout.unwrap())),
+			AttachmentKind::Resolve => self.attachments.resolve.push((id, layout.unwrap())),
+			AttachmentKind::Preserve => self.attachments.preserve.push(id),
+			AttachmentKind::DepthStencil => {
+				self.attachments.depth_stencil = Some((id, layout.unwrap()))
+			}
+		}
+		self
 	}
 
 	pub fn add_input_attachment(
@@ -34,8 +56,7 @@ impl Subpass {
 		attachment_id: String,
 		layout: flags::ImageLayout,
 	) -> Self {
-		self.attachments.input.push((attachment_id, layout));
-		self
+		self.add_attachment(attachment_id, AttachmentKind::Input, Some(layout))
 	}
 
 	pub fn add_color_attachment(
@@ -43,8 +64,7 @@ impl Subpass {
 		attachment_id: String,
 		layout: flags::ImageLayout,
 	) -> Self {
-		self.attachments.color.push((attachment_id, layout));
-		self
+		self.add_attachment(attachment_id, AttachmentKind::Color, Some(layout))
 	}
 
 	pub fn with_depth_stencil_attachment(
@@ -52,8 +72,7 @@ impl Subpass {
 		attachment_id: String,
 		layout: flags::ImageLayout,
 	) -> Self {
-		self.attachments.depth_stencil = Some((attachment_id, layout));
-		self
+		self.add_attachment(attachment_id, AttachmentKind::DepthStencil, Some(layout))
 	}
 
 	pub fn id(&self) -> &String {

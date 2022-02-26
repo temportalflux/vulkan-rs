@@ -2,13 +2,14 @@ use crate::{
 	backend,
 	device::physical,
 	flags::{
-		format::Format, ColorSpace, FormatFeatureFlags, ImageTiling, PresentMode, QueueFlags,
-		SurfaceTransform,
+		format::Format, ColorSpace, FormatFeatureFlags, ImageSampleKind, ImageTiling, PresentMode,
+		QueueFlags, SampleCount, SurfaceTransform,
 	},
 	instance::Instance,
 	structs::Extent2D,
 	utility, Surface,
 };
+use enumset::EnumSet;
 use std::collections::hash_map::HashMap;
 use std::sync;
 
@@ -165,6 +166,30 @@ impl Device {
 			}
 		}
 		None
+	}
+
+	pub fn sample_counts(&self, kind: ImageSampleKind) -> EnumSet<SampleCount> {
+		SampleCount::as_set(match kind {
+			ImageSampleKind::Color => self.properties.limits.framebuffer_color_sample_counts,
+			ImageSampleKind::Depth => self.properties.limits.framebuffer_depth_sample_counts,
+			ImageSampleKind::Stencil => self.properties.limits.framebuffer_stencil_sample_counts,
+		})
+	}
+
+	/// Returns the maximum sample count that is supported for all given kinds.
+	/// If the EnumSet is empty or there are no common sample counts among all provided kinds, returns None.
+	pub fn max_common_sample_count(&self, kinds: EnumSet<ImageSampleKind>) -> Option<SampleCount> {
+		kinds
+			.into_iter()
+			// Get the supported sample count limits for each kind
+			.map(|kind| self.sample_counts(kind))
+			// Reduce to only the sample counts that are supported by all given kinds
+			.reduce(|a, b| a.intersection(b))
+			// If kinds was empty, then there is no available sample count
+			.unwrap_or(EnumSet::empty())
+			.into_iter()
+			// Return the maximum (via Ord::max) sample count that is supported for all given kinds
+			.max()
 	}
 }
 

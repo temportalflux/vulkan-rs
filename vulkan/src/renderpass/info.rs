@@ -9,6 +9,7 @@ pub struct Info {
 	subpass_order: Vec<renderpass::Subpass>,
 	dependencies: Vec<(Dependency, Dependency)>,
 	name: Option<String>,
+	max_common_sample_count: flags::SampleCount,
 }
 
 impl Default for Info {
@@ -52,6 +53,7 @@ impl Info {
 			subpass_order: Vec::new(),
 			dependencies: Vec::new(),
 			name: None,
+			max_common_sample_count: flags::SampleCount::_1,
 		}
 	}
 
@@ -75,6 +77,14 @@ impl Info {
 			.iter()
 			.map(|subpass| subpass.id().clone())
 			.collect()
+	}
+
+	pub fn set_max_common_sample_count(&mut self, count: flags::SampleCount) {
+		self.max_common_sample_count = count;
+	}
+
+	pub fn max_common_sample_count(&self) -> flags::SampleCount {
+		self.max_common_sample_count
 	}
 }
 
@@ -128,6 +138,8 @@ impl Info {
 struct BackendSubpassAttachments {
 	input: Vec<backend::vk::AttachmentReference>,
 	color: Vec<backend::vk::AttachmentReference>,
+	resolve: Vec<backend::vk::AttachmentReference>,
+	preserve: Vec<u32>,
 	depth_stencil: Option<backend::vk::AttachmentReference>,
 }
 
@@ -145,6 +157,16 @@ impl BackendSubpassAttachments {
 		Self {
 			input: attachments.input.into_iter().map(map_attachment).collect(),
 			color: attachments.color.into_iter().map(map_attachment).collect(),
+			resolve: attachments
+				.resolve
+				.into_iter()
+				.map(map_attachment)
+				.collect(),
+			preserve: attachments
+				.preserve
+				.into_iter()
+				.map(|id| index_of(&id))
+				.collect(),
 			depth_stencil: attachments.depth_stencil.map(map_attachment),
 		}
 	}
@@ -189,7 +211,7 @@ impl utility::BuildFromDevice for Info {
 		let attachments = self
 			.attachments
 			.iter()
-			.map(|v| v.clone().into())
+			.map(|v| v.clone().into_desc(self.max_common_sample_count))
 			.collect::<Vec<_>>();
 		let mut subpasses = Vec::with_capacity(self.subpass_order.len());
 		let mut subpass_attachments = Vec::with_capacity(self.subpass_order.len());
@@ -204,7 +226,13 @@ impl utility::BuildFromDevice for Info {
 				let mut builder = backend::vk::SubpassDescription::builder()
 					.pipeline_bind_point(subpass.bind_point())
 					.input_attachments(&attachments.input)
-					.color_attachments(&attachments.color);
+					.color_attachments(&attachments.color)
+					.preserve_attachments(&attachments.preserve);
+				if attachments.resolve.len() > 0 {
+					// vulkan assumes that resolve attachments match the number of color attachments
+					assert_eq!(attachments.resolve.len(), attachments.color.len());
+					builder = builder.resolve_attachments(&attachments.resolve);
+				}
 				if let Some(ds_attach) = &attachments.depth_stencil {
 					builder = builder.depth_stencil_attachment(ds_attach);
 				}

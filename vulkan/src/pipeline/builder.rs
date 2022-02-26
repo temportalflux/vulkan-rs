@@ -15,7 +15,7 @@ pub struct Builder {
 	topology: state::Topology,
 	viewport_state: state::Viewport,
 	rasterization_state: state::Rasterization,
-	multisampling: backend::vk::PipelineMultisampleStateCreateInfo,
+	multisampling: state::Multisampling,
 	color_blending: state::color_blend::ColorBlend,
 	depth_stencil: state::DepthStencil,
 	dynamic_state: state::Dynamic,
@@ -30,10 +30,7 @@ impl Default for Builder {
 			topology: state::Topology::default(),
 			viewport_state: Default::default(),
 			rasterization_state: Default::default(),
-			multisampling: backend::vk::PipelineMultisampleStateCreateInfo::builder()
-				.sample_shading_enable(false)
-				.rasterization_samples(crate::flags::SampleCount::_1.into())
-				.build(),
+			multisampling: Default::default(),
 			color_blending: Default::default(),
 			depth_stencil: Default::default(),
 			dynamic_state: Default::default(),
@@ -90,6 +87,11 @@ impl Builder {
 		self
 	}
 
+	pub fn with_multisampling(mut self, multisampling: state::Multisampling) -> Self {
+		self.multisampling = multisampling;
+		self
+	}
+
 	/// Creates the actual [`Pipeline`](Pipeline) object,
 	/// with respect to a specific [`Render Pass`](crate::renderpass::Pass).
 	pub fn build(
@@ -120,6 +122,7 @@ impl Builder {
 		let input_assembly = self.topology.as_vk();
 		let viewport_state = self.viewport_state.as_vk();
 		let rasterizer = self.rasterization_state.clone().into();
+		let multisampling = self.multisampling.as_vk();
 		let dynamic_state = self.dynamic_state.as_vk();
 		let depth_stencil = self.depth_stencil.as_vk();
 
@@ -134,7 +137,7 @@ impl Builder {
 			.input_assembly_state(&input_assembly)
 			.viewport_state(&viewport_state)
 			.rasterization_state(&rasterizer)
-			.multisample_state(&self.multisampling)
+			.multisample_state(&multisampling)
 			.color_blend_state(&color_blending)
 			.depth_stencil_state(&depth_stencil)
 			.dynamic_state(&dynamic_state)

@@ -6,6 +6,9 @@ pub use depth_stencil::*;
 mod dynamic;
 pub use dynamic::*;
 
+mod multisampling;
+pub use multisampling::*;
+
 mod rasterization;
 pub use rasterization::*;
 
