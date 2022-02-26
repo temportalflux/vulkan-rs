@@ -60,7 +60,7 @@ impl Attachment {
 		self
 	}
 
-	pub fn with_sample_count(mut self, count: flags::SampleCount) -> Self {
+	pub fn with_sample_count(self, count: flags::SampleCount) -> Self {
 		self.with_sample_kind(SampleKind::Fixed(count))
 	}
 

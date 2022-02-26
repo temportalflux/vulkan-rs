@@ -51,24 +51,16 @@ impl Subpass {
 		self
 	}
 
-	pub fn add_input_attachment(
-		mut self,
-		attachment_id: String,
-		layout: flags::ImageLayout,
-	) -> Self {
+	pub fn add_input_attachment(self, attachment_id: String, layout: flags::ImageLayout) -> Self {
 		self.add_attachment(attachment_id, AttachmentKind::Input, Some(layout))
 	}
 
-	pub fn add_color_attachment(
-		mut self,
-		attachment_id: String,
-		layout: flags::ImageLayout,
-	) -> Self {
+	pub fn add_color_attachment(self, attachment_id: String, layout: flags::ImageLayout) -> Self {
 		self.add_attachment(attachment_id, AttachmentKind::Color, Some(layout))
 	}
 
 	pub fn with_depth_stencil_attachment(
-		mut self,
+		self,
 		attachment_id: String,
 		layout: flags::ImageLayout,
 	) -> Self {
