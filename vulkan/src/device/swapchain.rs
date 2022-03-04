@@ -1,4 +1,5 @@
 use crate::{command, image_view::View};
+use std::sync::Arc;
 
 #[path = "swapchain/khr.rs"]
 pub mod khr;
@@ -16,7 +17,7 @@ pub enum AcquiredImage {
 }
 
 pub trait Swapchain {
-	fn get_image_views(&self) -> anyhow::Result<Vec<View>>;
+	fn get_image_views(&self) -> anyhow::Result<Vec<Arc<View>>>;
 	fn acquire_next_image(
 		&self,
 		timeout: u64,

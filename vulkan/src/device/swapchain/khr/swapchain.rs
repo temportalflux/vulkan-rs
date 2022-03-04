@@ -51,7 +51,7 @@ impl Swapchain {
 }
 
 impl SwapchainTrait for Swapchain {
-	fn get_image_views(&self) -> anyhow::Result<Vec<View>> {
+	fn get_image_views(&self) -> anyhow::Result<Vec<sync::Arc<View>>> {
 		use utility::{BuildFromDevice, HandledObject};
 
 		let mut views = Vec::new();
@@ -80,7 +80,7 @@ impl SwapchainTrait for Swapchain {
 			});
 
 		for image in images {
-			views.push(
+			views.push(sync::Arc::new(
 				View::builder()
 					.with_optname(image.name().as_ref().map(|name| format!("{}.View", name)))
 					.for_image(sync::Arc::new(image))
@@ -90,7 +90,7 @@ impl SwapchainTrait for Swapchain {
 							.with_aspect(flags::ImageAspect::COLOR),
 					)
 					.build(&self.device)?,
-			);
+			));
 		}
 
 		Ok(views)

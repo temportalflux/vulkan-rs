@@ -1,6 +1,6 @@
 use crate::{
 	backend, buffer,
-	command::{self, framebuffer::Framebuffer},
+	command::{self, frame},
 	descriptor,
 	device::logical,
 	flags, image, pipeline, renderpass,
@@ -241,7 +241,7 @@ impl Buffer {
 	#[profiling::function]
 	pub fn start_render_pass(
 		&mut self,
-		frame_buffer: &Arc<Framebuffer>,
+		frame_buffer: &Arc<frame::Buffer>,
 		render_pass: &renderpass::Pass,
 		info: renderpass::RecordInstruction,
 		uses_secondary_buffers: bool,

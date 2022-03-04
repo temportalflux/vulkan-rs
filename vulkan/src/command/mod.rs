@@ -3,7 +3,7 @@ pub mod barrier;
 mod buffer;
 pub use buffer::*;
 
-pub mod framebuffer;
+pub mod frame;
 
 mod op_copy;
 pub use op_copy::*;
