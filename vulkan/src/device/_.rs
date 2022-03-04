@@ -6,5 +6,5 @@ pub mod physical;
 pub mod logical;
 
 /// Swapchain related structs (for being able to swap different iamges out for frames).
-#[path = "swapchain/_.rs"]
+#[path = "swapchain.rs"]
 pub mod swapchain;

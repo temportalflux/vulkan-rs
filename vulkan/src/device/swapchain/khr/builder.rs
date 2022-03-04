@@ -1,6 +1,6 @@
 use crate::{
 	backend,
-	device::{logical, physical, swapchain::*},
+	device::{logical, physical, swapchain::khr::Swapchain},
 	flags::{
 		format::Format, ColorSpace, CompositeAlpha, ImageUsageFlags, PresentMode, SharingMode,
 		SurfaceTransform,
@@ -11,7 +11,7 @@ use crate::{
 };
 use std::sync;
 
-/// Information used to construct a [`Swapchain`](crate::device::swapchain::Swapchain).
+/// Information used to construct a [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 #[derive(Clone)]
 pub struct Builder {
 	image_count: u32,

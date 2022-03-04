@@ -28,7 +28,7 @@ pub struct SurfaceSupport {
 }
 
 impl SurfaceSupport {
-	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](crate::device::swapchain::Swapchain).
+	/// Returns a range representing the minimum and maximum number of images that the surface can support for a [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 	pub fn image_count_range(&self) -> std::ops::Range<u32> {
 		self.surface_capabilities.min_image_count..self.surface_capabilities.max_image_count
 	}

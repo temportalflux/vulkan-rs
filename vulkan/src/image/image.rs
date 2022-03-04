@@ -12,7 +12,7 @@ pub(crate) trait Owner: Send + Sync {
 }
 
 /// An handle representing image data stored on the [`GPU`](crate::device::physical::Device),
-/// including any created by the [`Swapchain`](crate::device::swapchain::Swapchain).
+/// including any created by the [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 ///
 /// When an `Image` object is dropped, the allocation on the GPU is also dropped, thereby destroying the image.
 pub struct Image {
@@ -25,7 +25,7 @@ pub struct Image {
 }
 
 impl Image {
-	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::Swapchain).
+	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 	pub(crate) fn from_swapchain(
 		internal: backend::vk::Image,
 		name: Option<String>,

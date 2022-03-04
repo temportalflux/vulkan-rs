@@ -6,7 +6,7 @@ pub enum Error {
 	InstanceSymbolNotAvailable(),
 	VulkanError(backend::vk::Result),
 	AllocatorError(vk_mem::error::Error),
-	RequiresRenderChainUpdate(),
+	RequiresRenderChainUpdate,
 	General(std::io::Error),
 	InvalidBufferFormat(String),
 }
@@ -22,7 +22,7 @@ impl std::fmt::Display for Error {
 			Error::InstanceSymbolNotAvailable() => write!(f, "Instance symbol not available"),
 			Error::VulkanError(ref vk_result) => vk_result.fmt(f),
 			Error::AllocatorError(ref vk_mem_error) => vk_mem_error.fmt(f),
-			Error::RequiresRenderChainUpdate() => write!(f, "Render chain is out of date"),
+			Error::RequiresRenderChainUpdate => write!(f, "Render chain is out of date"),
 			Error::General(ref e) => e.fmt(f),
 			Error::InvalidBufferFormat(ref err) => {
 				write!(f, "Invalid buffer format: {}", err)
@@ -37,7 +37,7 @@ impl From<backend::vk::Result> for Error {
 	fn from(err: backend::vk::Result) -> Error {
 		match err {
 			backend::vk::Result::SUBOPTIMAL_KHR | backend::vk::Result::ERROR_OUT_OF_DATE_KHR => {
-				Error::RequiresRenderChainUpdate()
+				Error::RequiresRenderChainUpdate
 			}
 			_ => Error::VulkanError(err),
 		}

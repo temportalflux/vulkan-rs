@@ -44,6 +44,7 @@ impl Buffer {
 	/// Must be called before all other methods.
 	///
 	/// Equivalent to [`vkBeginCommandBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBeginCommandBuffer.html).
+	#[profiling::function]
 	pub fn begin(
 		&mut self,
 		usage: Option<flags::CommandBufferUsage>,
@@ -101,6 +102,7 @@ impl Buffer {
 }
 
 impl Buffer {
+	#[profiling::function]
 	pub fn begin_label<TStr>(&self, name: TStr, color: [f32; 4])
 	where
 		TStr: Into<String>,
@@ -108,6 +110,7 @@ impl Buffer {
 		self.device.begin_command_label(&self, name, color);
 	}
 
+	#[profiling::function]
 	pub fn insert_label<TStr>(&self, name: TStr, color: [f32; 4])
 	where
 		TStr: Into<String>,
@@ -115,6 +118,7 @@ impl Buffer {
 		self.device.insert_command_label(&self, name, color);
 	}
 
+	#[profiling::function]
 	pub fn end_label(&self) {
 		self.device.end_command_label(&self);
 	}
@@ -234,6 +238,7 @@ impl Buffer {
 	/// Can only be called after [`begin`](Buffer::begin) and before [`end`](Buffer::end).
 	///
 	/// Equivalent to [`vkCmdBeginRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderPass.html).
+	#[profiling::function]
 	pub fn start_render_pass(
 		&mut self,
 		frame_buffer: &Arc<Framebuffer>,
@@ -274,6 +279,7 @@ impl Buffer {
 	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
 	///
 	/// Equivalent to [`vkCmdNextSubpass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdNextSubpass.html).
+	#[profiling::function]
 	pub fn next_subpass(&mut self, uses_secondary_buffers: bool) {
 		use backend::version::DeviceV1_0;
 		unsafe {
@@ -293,6 +299,7 @@ impl Buffer {
 	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`end`](Buffer::end).
 	///
 	/// Equivalent to [`vkCmdEndRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndRenderPass.html).
+	#[profiling::function]
 	pub fn stop_render_pass(&mut self) {
 		use backend::version::DeviceV1_0;
 		unsafe { self.device.cmd_end_render_pass(self.internal) };
@@ -308,6 +315,7 @@ impl Buffer {
 	/// Can only be called after [`start_render_pass`](Buffer::start_render_pass) and before [`stop_render_pass`](Buffer::stop_render_pass).
 	///
 	/// Equivalent to [`vkCmdBindPipeline`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindPipeline.html).
+	#[profiling::function]
 	pub fn bind_pipeline(
 		&mut self,
 		pipeline: &Arc<pipeline::Pipeline>,
@@ -329,6 +337,7 @@ impl Buffer {
 	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
 	///
 	/// Equivalent to [`vkCmdBindDescriptorSets`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindDescriptorSets.html).
+	#[profiling::function]
 	pub fn bind_descriptors(
 		&mut self,
 		bind_point: flags::PipelineBindPoint,
@@ -401,6 +410,7 @@ impl Buffer {
 	/// If used, this should only be called after [`bind_pipeline`](Buffer::bind_pipeline).
 	///
 	/// Equivalent to [`vkCmdBindVertexBuffers`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindVertexBuffers.html).
+	#[profiling::function]
 	pub fn bind_vertex_buffers(
 		&mut self,
 		binding_index: u32,
@@ -458,6 +468,7 @@ impl Buffer {
 	/// Can only be called before [`stop_render_pass`](Buffer::stop_render_pass).
 	///
 	/// Equivalent to [`vkCmdDrawIndexed`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndexed.html).
+	#[profiling::function]
 	pub fn draw(
 		&self,
 		index_count: usize,

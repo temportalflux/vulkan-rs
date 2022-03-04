@@ -25,7 +25,7 @@ impl SampleKind {
 }
 
 /// Information about an image attached to a ['Render Pass'](crate::renderpass::Pass).
-/// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::Swapchain)
+/// Most frequent use is to describe the ['Swapchain'](crate::device::swapchain::khr::Swapchain)
 /// images used for each frame that is shown.
 #[derive(Debug, Clone)]
 pub struct Attachment {

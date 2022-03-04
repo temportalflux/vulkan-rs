@@ -1,8 +1,13 @@
+use super::{
+	super::{AcquiredImage, ImageAcquisitionBarrier, Swapchain as SwapchainTrait},
+	Builder,
+};
 use crate::{
-	backend, command,
-	device::{logical, swapchain::Builder},
+	backend,
+	device::logical,
 	flags,
 	image::Image,
+	image_view::View,
 	structs,
 	utility::{self, NameableBuilder, NamedObject},
 };
@@ -43,47 +48,78 @@ impl Swapchain {
 	pub fn frame_name(&self, i: usize) -> Option<String> {
 		self.name().as_ref().map(|v| format!("{}.Frame{}", v, i))
 	}
+}
 
-	/// Creates the swapchain images from the vulkan device.
-	pub fn get_images(&self) -> Result<Vec<Image>, utility::Error> {
-		use utility::HandledObject;
-		Ok(unsafe {
+impl SwapchainTrait for Swapchain {
+	fn get_image_views(&self) -> anyhow::Result<Vec<View>> {
+		use utility::{BuildFromDevice, HandledObject};
+
+		let mut views = Vec::new();
+
+		let images = unsafe {
 			self.device
 				.unwrap_swapchain()
 				.get_swapchain_images(self.internal)
-		}?
-		.into_iter()
-		.enumerate()
-		// no device reference is passed in because the images are a part of the swapchain
-		.map(|(i, image)| {
-			let name = self.frame_name(i).map(|v| format!("{}.Image", v));
-			let image =
-				Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
-			if let Some(name) = name {
-				self.device.set_object_name_logged(&image.create_name(name));
-			}
-			image
-		})
-		.collect())
+		}?;
+		let images = images
+			.into_iter()
+			.enumerate()
+			// no device reference is passed in because the images are a part of the swapchain
+			.map(|(i, image)| {
+				let name = self.frame_name(i).map(|v| format!("{}.Image", v));
+				let image = Image::from_swapchain(
+					image,
+					name.clone(),
+					self.image_format,
+					self.image_extent,
+				);
+				if let Some(name) = name {
+					self.device.set_object_name_logged(&image.create_name(name));
+				}
+				image
+			});
+
+		for image in images {
+			views.push(
+				View::builder()
+					.with_optname(image.name().as_ref().map(|name| format!("{}.View", name)))
+					.for_image(sync::Arc::new(image))
+					.with_view_type(flags::ImageViewType::TYPE_2D)
+					.with_range(
+						structs::subresource::Range::default()
+							.with_aspect(flags::ImageAspect::COLOR),
+					)
+					.build(&self.device)?,
+			);
+		}
+
+		Ok(views)
 	}
 
-	/// Determines the image index of [`get_images`](Swapchain::get_images)
-	/// to render the next frame to.
-	/// Returns `(<index>, true)` if the swapchain is suboptimal.
-	pub fn acquire_next_image(
+	/// Determines the index of the image to render the next frame to.
+	fn acquire_next_image(
 		&self,
 		timeout: u64,
-		semaphore: Option<&command::Semaphore>,
-		fence: Option<&command::Fence>,
-	) -> utility::Result<(/*image index*/ u32, /*is suboptimal*/ bool)> {
-		Ok(unsafe {
+		barrier: ImageAcquisitionBarrier,
+	) -> anyhow::Result<AcquiredImage> {
+		let (semaphore, fence) = match barrier {
+			ImageAcquisitionBarrier::Semaphore(semaphore) => {
+				(**semaphore, backend::vk::Fence::null())
+			}
+			ImageAcquisitionBarrier::Fence(fence) => (backend::vk::Semaphore::null(), **fence),
+		};
+		let (index, is_suboptimal) = unsafe {
 			self.device.unwrap_swapchain().acquire_next_image(
 				self.internal,
 				timeout,
-				semaphore.map_or(backend::vk::Semaphore::null(), |obj| **obj),
-				fence.map_or(backend::vk::Fence::null(), |obj| **obj),
+				semaphore,
+				fence,
 			)
-		}?)
+		}?;
+		Ok(match is_suboptimal {
+			true => AcquiredImage::Suboptimal(index as usize),
+			false => AcquiredImage::Available(index as usize),
+		})
 	}
 }
 

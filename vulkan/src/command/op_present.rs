@@ -1,4 +1,4 @@
-use crate::{backend, command, device::swapchain::Swapchain};
+use crate::{backend, command, device::swapchain::khr};
 
 /// Data used to present frames via a [`Queue`](crate::device::logical::Queue).
 ///
@@ -29,7 +29,7 @@ impl PresentInfo {
 	}
 
 	/// The swapchain used to present the command's framebuffer.
-	pub fn add_swapchain(mut self, swapchain: &Swapchain) -> Self {
+	pub fn add_swapchain(mut self, swapchain: &khr::Swapchain) -> Self {
 		self.swapchains.push(**swapchain);
 		self
 	}

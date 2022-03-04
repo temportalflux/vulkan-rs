@@ -39,6 +39,7 @@ impl Default for Info {
 			queues: Vec::new(),
 			features: backend::vk::PhysicalDeviceFeatures::builder()
 				.sampler_anisotropy(true)
+				.sample_rate_shading(true)
 				.build(),
 
 			object_name: None,
