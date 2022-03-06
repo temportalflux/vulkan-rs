@@ -7,12 +7,10 @@ use crate::{
 	device::logical,
 	flags,
 	image::Image,
-	image_view::View,
 	structs,
 	utility::{self, NameableBuilder, NamedObject},
 };
-
-use std::sync;
+use std::sync::{self, Arc};
 
 /// A wrapper struct for [`backend::vk::SwapchainKHR`] to handle swapping out
 /// displayed images on the [`Surface`](crate::Surface).
@@ -22,6 +20,7 @@ pub struct Swapchain {
 	internal: backend::vk::SwapchainKHR,
 	device: sync::Arc<logical::Device>,
 	name: Option<String>,
+	image_count: usize,
 }
 
 impl Swapchain {
@@ -36,12 +35,14 @@ impl Swapchain {
 		internal: backend::vk::SwapchainKHR,
 		builder: Builder,
 	) -> Swapchain {
+		use super::super::SwapchainBuilder;
 		Swapchain {
 			device,
 			internal,
 			image_format: builder.image_format,
 			image_extent: builder.image_extent,
 			name: builder.name().clone(),
+			image_count: builder.image_count() as usize,
 		}
 	}
 
@@ -51,49 +52,41 @@ impl Swapchain {
 }
 
 impl SwapchainTrait for Swapchain {
-	fn get_image_views(&self) -> anyhow::Result<Vec<sync::Arc<View>>> {
-		use utility::{BuildFromDevice, HandledObject};
+	fn device(&self) -> &Arc<logical::Device> {
+		&self.device
+	}
 
-		let mut views = Vec::new();
+	fn resolve_to_khr(&self) -> Option<backend::vk::SwapchainKHR> {
+		Some(self.internal)
+	}
 
+	fn image_count(&self) -> usize {
+		self.image_count
+	}
+
+	fn image_extent(&self) -> &structs::Extent2D {
+		&self.image_extent
+	}
+
+	fn create_images(&self) -> anyhow::Result<Vec<Arc<Image>>> {
+		use utility::HandledObject;
 		let images = unsafe {
 			self.device
 				.unwrap_swapchain()
 				.get_swapchain_images(self.internal)
 		}?;
-		let images = images
-			.into_iter()
-			.enumerate()
-			// no device reference is passed in because the images are a part of the swapchain
-			.map(|(i, image)| {
-				let name = self.frame_name(i).map(|v| format!("{}.Image", v));
-				let image = Image::from_swapchain(
-					image,
-					name.clone(),
-					self.image_format,
-					self.image_extent,
-				);
-				if let Some(name) = name {
-					self.device.set_object_name_logged(&image.create_name(name));
-				}
-				image
-			});
-
-		for image in images {
-			views.push(sync::Arc::new(
-				View::builder()
-					.with_optname(image.name().as_ref().map(|name| format!("{}.View", name)))
-					.for_image(sync::Arc::new(image))
-					.with_view_type(flags::ImageViewType::TYPE_2D)
-					.with_range(
-						structs::subresource::Range::default()
-							.with_aspect(flags::ImageAspect::COLOR),
-					)
-					.build(&self.device)?,
-			));
-		}
-
-		Ok(views)
+		let images = images.into_iter().enumerate();
+		// no device reference is passed in because the images are a part of the swapchain
+		let images = images.map(|(i, image)| {
+			let name = self.frame_name(i).map(|v| format!("{}.Image", v));
+			let image =
+				Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
+			if let Some(name) = name {
+				self.device.set_object_name_logged(&image.create_name(name));
+			}
+			Arc::new(image)
+		});
+		Ok(images.collect())
 	}
 
 	/// Determines the index of the image to render the next frame to.
