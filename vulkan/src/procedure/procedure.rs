@@ -50,6 +50,10 @@ impl Procedure {
 	pub fn attachments(&self) -> &attachment::Set {
 		&self.attachments
 	}
+
+	pub fn iter(&self) -> impl std::iter::Iterator<Item = &Arc<Phase>> {
+		self.phases.iter()
+	}
 }
 
 impl utility::NameableBuilder for Procedure {

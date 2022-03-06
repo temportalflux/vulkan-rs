@@ -28,8 +28,8 @@ impl SwapchainTrait for Swapchain {
 	/// Determines the index of the image to render the next frame to.
 	fn acquire_next_image(
 		&self,
-		timeout: u64,
-		barrier: ImageAcquisitionBarrier,
+		_timeout: u64,
+		_barrier: ImageAcquisitionBarrier,
 	) -> anyhow::Result<AcquiredImage> {
 		Ok(AcquiredImage::Available(0))
 	}

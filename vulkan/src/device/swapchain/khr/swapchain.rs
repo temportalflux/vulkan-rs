@@ -3,7 +3,7 @@ use super::{
 	Builder,
 };
 use crate::{
-	backend,
+	backend, command,
 	device::logical,
 	flags,
 	image::Image,
@@ -113,6 +113,18 @@ impl SwapchainTrait for Swapchain {
 			true => AcquiredImage::Suboptimal(index as usize),
 			false => AcquiredImage::Available(index as usize),
 		})
+	}
+
+	fn can_present(&self) -> bool {
+		true
+	}
+
+	fn present(
+		&self,
+		graphics_queue: &Arc<logical::Queue>,
+		present_info: command::PresentInfo,
+	) -> utility::Result<bool> {
+		graphics_queue.present(present_info.add_swapchain(&self))
 	}
 }
 

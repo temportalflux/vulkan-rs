@@ -66,4 +66,16 @@ pub trait Swapchain {
 		timeout: u64,
 		barrier: ImageAcquisitionBarrier,
 	) -> anyhow::Result<AcquiredImage>;
+
+	fn can_present(&self) -> bool {
+		false
+	}
+
+	fn present(
+		&self,
+		_graphics_queue: &Arc<logical::Queue>,
+		_present_info: command::PresentInfo,
+	) -> utility::Result<bool> {
+		Ok(false)
+	}
 }

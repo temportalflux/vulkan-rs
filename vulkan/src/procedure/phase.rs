@@ -6,18 +6,24 @@ use crate::{
 use std::sync::Arc;
 
 pub struct Phase {
+	name: String,
 	bind_point: PipelineBindPoint,
 	dependencies: Vec<Dependency>,
 	attachments: Vec<attachment::Reference>,
 }
 
 impl Phase {
-	pub fn new() -> Self {
+	pub fn new<T: Into<String>>(name: T) -> Self {
 		Self {
+			name: name.into(),
 			bind_point: PipelineBindPoint::GRAPHICS,
 			attachments: Vec::new(),
 			dependencies: Vec::new(),
 		}
+	}
+
+	pub fn name(&self) -> &String {
+		&self.name
 	}
 
 	pub fn with_bind_point(mut self, point: PipelineBindPoint) -> Self {
