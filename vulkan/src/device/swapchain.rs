@@ -21,13 +21,14 @@ pub enum AcquiredImage {
 pub trait SwapchainBuilder {
 	fn image_count(&self) -> usize;
 	fn image_format(&self) -> flags::format::Format;
+	fn image_extent(&self) -> &structs::Extent2D;
 	fn set_image_extent(&mut self, resolution: structs::Extent2D);
 	fn set_surface_transform(&mut self, transform: flags::SurfaceTransform);
 	fn set_present_mode(&mut self, mode: flags::PresentMode);
 	fn build(
 		&self,
-		old: Option<Box<dyn Swapchain + 'static>>,
-	) -> anyhow::Result<Box<dyn Swapchain + 'static>>;
+		old: Option<Box<dyn Swapchain + 'static + Send + Sync>>,
+	) -> anyhow::Result<Box<dyn Swapchain + 'static + Send + Sync>>;
 }
 
 pub trait Swapchain {
