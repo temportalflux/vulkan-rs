@@ -146,6 +146,10 @@ impl SwapchainBuilder for Builder {
 		self.image_extent = resolution;
 	}
 
+	fn image_extent(&self) -> &Extent2D {
+		&self.image_extent
+	}
+
 	fn set_surface_transform(&mut self, transform: SurfaceTransform) {
 		self.pre_transform = transform;
 	}
@@ -156,8 +160,8 @@ impl SwapchainBuilder for Builder {
 
 	fn build(
 		&self,
-		old: Option<Box<dyn SwapchainTrait + 'static>>,
-	) -> anyhow::Result<Box<dyn SwapchainTrait + 'static>> {
+		old: Option<Box<dyn SwapchainTrait + 'static + Send + Sync>>,
+	) -> anyhow::Result<Box<dyn SwapchainTrait + 'static + Send + Sync>> {
 		use utility::{HandledObject, NameableBuilder};
 		let device = self.logical_device.as_ref().unwrap().upgrade().unwrap();
 		let surface = self.surface.as_ref().unwrap().upgrade().unwrap();
