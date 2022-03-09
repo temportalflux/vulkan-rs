@@ -5,7 +5,7 @@ use crate::{
 use std::sync::{Arc, Weak};
 
 /// Represents an [`image view`](View) which is attached to a [`framebuffer`](Buffer) at a particular slot.
-/// 
+///
 /// This structure holds a strong reference to the view attachments.
 pub enum AttachedView {
 	/// This slot has a different view for each frame.

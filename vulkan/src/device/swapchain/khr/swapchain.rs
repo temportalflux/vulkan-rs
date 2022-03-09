@@ -3,7 +3,8 @@ use super::{
 	Builder,
 };
 use crate::{
-	backend, command::{self, SyncObject},
+	backend,
+	command::{self, SyncObject},
 	device::logical,
 	flags,
 	image::Image,
@@ -96,9 +97,7 @@ impl SwapchainTrait for Swapchain {
 		barrier: SyncObject,
 	) -> anyhow::Result<AcquiredImage> {
 		let (semaphore, fence) = match barrier {
-			SyncObject::Semaphore(semaphore) => {
-				(**semaphore, backend::vk::Fence::null())
-			}
+			SyncObject::Semaphore(semaphore) => (**semaphore, backend::vk::Fence::null()),
 			SyncObject::Fence(fence) => (backend::vk::Semaphore::null(), **fence),
 		};
 		let (index, is_suboptimal) = unsafe {

@@ -1,5 +1,5 @@
 use crate::{
-	command::{SyncObject}, device::logical, flags, image::Image, image_view::View, structs, utility,
+	command::SyncObject, device::logical, flags, image::Image, image_view::View, structs, utility,
 };
 use std::sync::Arc;
 
@@ -21,16 +21,16 @@ pub enum AcquiredImage {
 pub trait SwapchainBuilder {
 	/// Set the extent/resolution of the swapchain.
 	fn set_image_extent(&mut self, resolution: structs::Extent2D);
-	
+
 	/// Returns the extent/resolution of the images the swapchain creates.
 	fn image_extent(&self) -> &structs::Extent2D;
-	
+
 	/// Returns the number of images the swapchain is configured to create.
 	fn image_count(&self) -> usize;
 
 	/// Returns the format of the images the swapchain creates.
 	fn image_format(&self) -> flags::format::Format;
-	
+
 	/// Change the surface transform of the swapchain to be built.
 	fn set_surface_transform(&mut self, transform: flags::SurfaceTransform);
 
@@ -47,7 +47,6 @@ pub trait SwapchainBuilder {
 
 /// A generic API for interacting with different kinds of swapchains.
 pub trait Swapchain {
-
 	/// Returns the logical device that the swapchain was built using.
 	fn device(&self) -> &Arc<logical::Device>;
 

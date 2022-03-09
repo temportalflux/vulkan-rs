@@ -16,7 +16,6 @@ pub struct Procedure {
 }
 
 impl Procedure {
-
 	/// Apply a phase to the render order of the procedure.
 	pub fn with_phase(
 		mut self,
@@ -28,9 +27,12 @@ impl Procedure {
 
 	/// Add a phase to the render order of the procedure.
 	/// All dependencies of the provided phase must already be added.
-	/// 
+	///
 	/// Also adds the attachments for each phase as weak references to the set of attachments.
-	pub fn add_phase(&mut self, phase: Arc<Phase>) -> Result<&mut Self, PhaseAddedWithMissingDependency> {
+	pub fn add_phase(
+		&mut self,
+		phase: Arc<Phase>,
+	) -> Result<&mut Self, PhaseAddedWithMissingDependency> {
 		for (index, dependency) in phase.dependencies().iter().enumerate() {
 			if let Some(phase) = dependency.get_phase() {
 				if self.position(&phase).is_none() {

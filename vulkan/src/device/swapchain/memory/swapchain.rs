@@ -1,5 +1,5 @@
 use super::super::{AcquiredImage, Swapchain as SwapchainTrait};
-use crate::{device::logical, image::Image, structs, command::SyncObject};
+use crate::{command::SyncObject, device::logical, image::Image, structs};
 use std::sync::Arc;
 
 pub struct Swapchain {
