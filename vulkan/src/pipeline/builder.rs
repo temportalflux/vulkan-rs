@@ -99,7 +99,7 @@ impl Builder {
 		device: sync::Arc<logical::Device>,
 		layout: &layout::Layout,
 		render_pass: &renderpass::Pass,
-		subpass_id: &Option<String>,
+		subpass_index: usize,
 	) -> Result<Pipeline, utility::Error> {
 		use backend::version::DeviceV1_0;
 		use utility::{HandledObject, NameableBuilder};
@@ -143,7 +143,7 @@ impl Builder {
 			.dynamic_state(&dynamic_state)
 			.layout(**layout)
 			.render_pass(**render_pass)
-			.subpass(render_pass.subpass_index(subpass_id))
+			.subpass(subpass_index as u32)
 			.build();
 
 		let pipelines = match unsafe {

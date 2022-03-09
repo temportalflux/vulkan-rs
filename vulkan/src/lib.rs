@@ -81,3 +81,6 @@ pub mod structs;
 /// General-use traits and macros.
 #[path = "utility/_.rs"]
 pub mod utility;
+
+#[path = "procedure.rs"]
+pub mod procedure;

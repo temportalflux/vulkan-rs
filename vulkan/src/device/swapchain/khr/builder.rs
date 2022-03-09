@@ -1,6 +1,9 @@
 use crate::{
 	backend,
-	device::{logical, physical, swapchain::khr::Swapchain},
+	device::{
+		logical,
+		swapchain::{khr::Swapchain, Swapchain as SwapchainTrait, SwapchainBuilder},
+	},
 	flags::{
 		format::Format, ColorSpace, CompositeAlpha, ImageUsageFlags, PresentMode, SharingMode,
 		SurfaceTransform,
@@ -9,11 +12,13 @@ use crate::{
 	structs::Extent2D,
 	utility,
 };
-use std::sync;
+use std::sync::{self, Arc};
 
 /// Information used to construct a [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 #[derive(Clone)]
 pub struct Builder {
+	logical_device: Option<sync::Weak<logical::Device>>,
+	surface: Option<sync::Weak<Surface>>,
 	image_count: u32,
 	pub(crate) image_format: Format,
 	image_color_space: ColorSpace,
@@ -31,6 +36,8 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Self {
 		Self {
+			logical_device: None,
+			surface: None,
 			image_count: 0,
 			image_format: Format::UNDEFINED,
 			image_color_space: ColorSpace::SRGB_NONLINEAR,
@@ -48,6 +55,16 @@ impl Default for Builder {
 }
 
 impl Builder {
+	pub fn with_logical_device(mut self, device: &Arc<logical::Device>) -> Self {
+		self.logical_device = Some(Arc::downgrade(&device));
+		self
+	}
+
+	pub fn with_surface(mut self, surface: &Arc<Surface>) -> Self {
+		self.surface = Some(Arc::downgrade(&surface));
+		self
+	}
+
 	/// Mutates the builder to indicate the number of frame images to use.
 	pub fn with_image_count(mut self, count: u32) -> Self {
 		self.image_count = count;
@@ -58,10 +75,6 @@ impl Builder {
 	pub fn with_image_format(mut self, format: Format) -> Self {
 		self.image_format = format;
 		self
-	}
-
-	pub fn format(&self) -> Format {
-		self.image_format
 	}
 
 	/// Mutates the builder to set the color space of the frame images.
@@ -118,22 +131,42 @@ impl Builder {
 		self.present_mode = present_mode;
 		self
 	}
+}
 
-	pub fn fill_from_physical(&mut self, physical: &physical::Device) {
-		let surface_support = physical.query_surface_support();
-		self.image_extent = surface_support.image_extent();
-		self.pre_transform = surface_support.current_transform();
-		self.present_mode = physical.selected_present_mode;
+impl SwapchainBuilder for Builder {
+	fn image_count(&self) -> usize {
+		self.image_count as usize
 	}
 
-	/// Creates a [`Swapchain`] object, thereby consuming the info.
-	pub fn build(
-		self,
-		device: &sync::Arc<logical::Device>,
-		surface: &Surface,
-		old: Option<&Swapchain>,
-	) -> Result<Swapchain, utility::Error> {
+	fn image_format(&self) -> Format {
+		self.image_format
+	}
+
+	fn set_image_extent(&mut self, resolution: Extent2D) {
+		self.image_extent = resolution;
+	}
+
+	fn image_extent(&self) -> &Extent2D {
+		&self.image_extent
+	}
+
+	fn set_surface_transform(&mut self, transform: SurfaceTransform) {
+		self.pre_transform = transform;
+	}
+
+	fn set_present_mode(&mut self, mode: PresentMode) {
+		self.present_mode = mode;
+	}
+
+	fn build(
+		&self,
+		old: Option<Box<dyn SwapchainTrait + 'static + Send + Sync>>,
+	) -> anyhow::Result<Box<dyn SwapchainTrait + 'static + Send + Sync>> {
 		use utility::{HandledObject, NameableBuilder};
+		let device = self.logical_device.as_ref().unwrap().upgrade().unwrap();
+		let surface = self.surface.as_ref().unwrap().upgrade().unwrap();
+		let old_khr = old.as_ref().map(|chain| chain.as_khr()).flatten();
+		let old = old_khr.map(|khr| **khr).unwrap_or(backend::vk::SwapchainKHR::null());
 		let info = backend::vk::SwapchainCreateInfoKHR::builder()
 			.surface(**surface)
 			.min_image_count(self.image_count)
@@ -147,14 +180,14 @@ impl Builder {
 			.composite_alpha(self.composite_alpha)
 			.present_mode(self.present_mode)
 			.clipped(self.is_clipped)
-			.old_swapchain(old.map_or(backend::vk::SwapchainKHR::null(), |chain| **chain))
+			.old_swapchain(old)
 			.build();
 		let vk = unsafe { device.unwrap_swapchain().create_swapchain(&info, None) }?;
 		let swapchain = Swapchain::from(device.clone(), vk, self.clone());
 		if let Some(name) = self.name().as_ref() {
 			device.set_object_name_logged(&swapchain.create_name(name.as_str()));
 		}
-		Ok(swapchain)
+		Ok(Box::new(swapchain))
 	}
 }
 
