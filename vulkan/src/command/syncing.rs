@@ -7,6 +7,12 @@ use crate::{
 
 use std::sync;
 
+/// A short-term reference to a particular syncing object.
+pub enum SyncObject<'a> {
+	Semaphore(&'a Semaphore),
+	Fence(&'a Fence),
+}
+
 /// A signal on the GPU that is signaled when a set of submitted commands have completed.
 ///
 /// Used for communicating only within the GPU about the order command buffers should be executed.

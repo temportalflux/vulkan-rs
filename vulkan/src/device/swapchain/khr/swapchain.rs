@@ -1,9 +1,9 @@
 use super::{
-	super::{AcquiredImage, ImageAcquisitionBarrier, Swapchain as SwapchainTrait},
+	super::{AcquiredImage, Swapchain as SwapchainTrait},
 	Builder,
 };
 use crate::{
-	backend, command,
+	backend, command::{self, SyncObject},
 	device::logical,
 	flags,
 	image::Image,
@@ -56,8 +56,8 @@ impl SwapchainTrait for Swapchain {
 		&self.device
 	}
 
-	fn resolve_to_khr(&self) -> Option<backend::vk::SwapchainKHR> {
-		Some(self.internal)
+	fn as_khr(&self) -> Option<&Self> {
+		Some(self)
 	}
 
 	fn image_count(&self) -> usize {
@@ -93,13 +93,13 @@ impl SwapchainTrait for Swapchain {
 	fn acquire_next_image(
 		&self,
 		timeout: u64,
-		barrier: ImageAcquisitionBarrier,
+		barrier: SyncObject,
 	) -> anyhow::Result<AcquiredImage> {
 		let (semaphore, fence) = match barrier {
-			ImageAcquisitionBarrier::Semaphore(semaphore) => {
+			SyncObject::Semaphore(semaphore) => {
 				(**semaphore, backend::vk::Fence::null())
 			}
-			ImageAcquisitionBarrier::Fence(fence) => (backend::vk::Semaphore::null(), **fence),
+			SyncObject::Fence(fence) => (backend::vk::Semaphore::null(), **fence),
 		};
 		let (index, is_suboptimal) = unsafe {
 			self.device.unwrap_swapchain().acquire_next_image(
@@ -114,12 +114,11 @@ impl SwapchainTrait for Swapchain {
 			false => AcquiredImage::Available(index as usize),
 		})
 	}
+}
 
-	fn can_present(&self) -> bool {
-		true
-	}
-
-	fn present(
+impl Swapchain {
+	/// Presents the display swapchain to the window.
+	pub fn present(
 		&self,
 		graphics_queue: &Arc<logical::Queue>,
 		present_info: command::PresentInfo,

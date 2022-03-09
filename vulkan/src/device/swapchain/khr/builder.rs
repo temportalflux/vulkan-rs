@@ -165,10 +165,8 @@ impl SwapchainBuilder for Builder {
 		use utility::{HandledObject, NameableBuilder};
 		let device = self.logical_device.as_ref().unwrap().upgrade().unwrap();
 		let surface = self.surface.as_ref().unwrap().upgrade().unwrap();
-		let old = old
-			.map(|chain| chain.resolve_to_khr())
-			.flatten()
-			.unwrap_or(backend::vk::SwapchainKHR::null());
+		let old_khr = old.as_ref().map(|chain| chain.as_khr()).flatten();
+		let old = old_khr.map(|khr| **khr).unwrap_or(backend::vk::SwapchainKHR::null());
 		let info = backend::vk::SwapchainCreateInfoKHR::builder()
 			.surface(**surface)
 			.min_image_count(self.image_count)

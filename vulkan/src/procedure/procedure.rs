@@ -7,6 +7,7 @@ use crate::{
 };
 use std::sync::Arc;
 
+/// A high-level approach to building [`render passes`](renderpass::Pass).
 #[derive(Default)]
 pub struct Procedure {
 	name: Option<String>,
@@ -15,6 +16,8 @@ pub struct Procedure {
 }
 
 impl Procedure {
+
+	/// Apply a phase to the render order of the procedure.
 	pub fn with_phase(
 		mut self,
 		phase: Arc<Phase>,
@@ -23,7 +26,11 @@ impl Procedure {
 		Ok(self)
 	}
 
-	pub fn add_phase(&mut self, phase: Arc<Phase>) -> Result<(), PhaseAddedWithMissingDependency> {
+	/// Add a phase to the render order of the procedure.
+	/// All dependencies of the provided phase must already be added.
+	/// 
+	/// Also adds the attachments for each phase as weak references to the set of attachments.
+	pub fn add_phase(&mut self, phase: Arc<Phase>) -> Result<&mut Self, PhaseAddedWithMissingDependency> {
 		for (index, dependency) in phase.dependencies().iter().enumerate() {
 			if let Some(phase) = dependency.get_phase() {
 				if self.position(&phase).is_none() {
@@ -36,23 +43,27 @@ impl Procedure {
 				.insert(Arc::downgrade(&attachment_ref.attachment()));
 		}
 		self.phases.push(phase);
-		Ok(())
+		Ok(self)
 	}
 
+	/// Returns the index position of the provided phase in the list of added phases.
 	pub fn position(&self, phase: &Arc<Phase>) -> Option<usize> {
 		self.phases.iter().position(|arc| Arc::ptr_eq(arc, phase))
 	}
 
+	/// Returns the number of phases.
 	pub fn num_phases(&self) -> usize {
 		self.phases.len()
 	}
 
-	pub fn attachments(&self) -> &attachment::Set {
-		&self.attachments
-	}
-
+	/// Returns an iterator over the phases.
 	pub fn iter(&self) -> impl std::iter::Iterator<Item = &Arc<Phase>> {
 		self.phases.iter()
+	}
+
+	/// Returns a reference to the set of attachments.
+	pub fn attachments(&self) -> &attachment::Set {
+		&self.attachments
 	}
 }
 
@@ -75,6 +86,9 @@ impl std::fmt::Display for PhaseAddedWithMissingDependency {
 }
 
 impl Procedure {
+	/// Builds a render pass from the procedure.
+	/// This does not consume the procedure so that it can be use to create additional passes in the future,
+	/// as well as referenced when creating pipelines and framebuffers.
 	pub fn build(&self, device: &Arc<logical::Device>) -> anyhow::Result<renderpass::Pass> {
 		use backend::version::DeviceV1_0;
 		use utility::{HandledObject, NameableBuilder};

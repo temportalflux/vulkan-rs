@@ -1,5 +1,5 @@
 use crate::{
-	backend, command, device::logical, flags, image::Image, image_view::View, structs, utility,
+	command::{SyncObject}, device::logical, flags, image::Image, image_view::View, structs, utility,
 };
 use std::sync::Arc;
 
@@ -8,41 +8,65 @@ pub mod khr;
 #[path = "swapchain/memory.rs"]
 pub mod memory;
 
-pub enum ImageAcquisitionBarrier<'a> {
-	Semaphore(&'a command::Semaphore),
-	Fence(&'a command::Fence),
-}
-
+/// An image returned by [`acquire_next_image`](Swapchain::acquire_next_image).
 pub enum AcquiredImage {
+	/// The next image to render to has been determined.
 	Available(usize),
+	/// The next image to render to has been determined, but the swapchain is
+	/// outdated and should be recreated with an updated resolution/extent.
 	Suboptimal(usize),
 }
 
+/// Generic trait implemented by a builder which creates a particular implementation of [`Swapchain`].
 pub trait SwapchainBuilder {
-	fn image_count(&self) -> usize;
-	fn image_format(&self) -> flags::format::Format;
-	fn image_extent(&self) -> &structs::Extent2D;
+	/// Set the extent/resolution of the swapchain.
 	fn set_image_extent(&mut self, resolution: structs::Extent2D);
+	
+	/// Returns the extent/resolution of the images the swapchain creates.
+	fn image_extent(&self) -> &structs::Extent2D;
+	
+	/// Returns the number of images the swapchain is configured to create.
+	fn image_count(&self) -> usize;
+
+	/// Returns the format of the images the swapchain creates.
+	fn image_format(&self) -> flags::format::Format;
+	
+	/// Change the surface transform of the swapchain to be built.
 	fn set_surface_transform(&mut self, transform: flags::SurfaceTransform);
+
+	/// Change the presentation mode of the swapchain to be built.
 	fn set_present_mode(&mut self, mode: flags::PresentMode);
+
+	/// Build the swapchain based on current configuration data.
+	/// This is a non-consuming operation, so that swapchains can be rebuilt from the same builder.
 	fn build(
 		&self,
 		old: Option<Box<dyn Swapchain + 'static + Send + Sync>>,
 	) -> anyhow::Result<Box<dyn Swapchain + 'static + Send + Sync>>;
 }
 
+/// A generic API for interacting with different kinds of swapchains.
 pub trait Swapchain {
+
+	/// Returns the logical device that the swapchain was built using.
 	fn device(&self) -> &Arc<logical::Device>;
 
-	fn resolve_to_khr(&self) -> Option<backend::vk::SwapchainKHR> {
+	/// Downcasts the swapchain to a KHR swapchain so it can be used internally.
+	fn as_khr(&self) -> Option<&khr::Swapchain> {
 		None
 	}
 
+	/// Returns the number of images the swapchain is configured to create.
 	fn image_count(&self) -> usize;
+
+	/// Returns the extent/resolution of the images the swapchain creates.
 	fn image_extent(&self) -> &structs::Extent2D;
 
+	/// Creates a number of images equivalent to [`image_count`](Swapchain::image_count).
 	fn create_images(&self) -> anyhow::Result<Vec<Arc<Image>>>;
 
+	/// Creates a number of image views equivalent to [`image_count`](Swapchain::image_count),
+	/// delegating to [`create_images`](Swapchain::create_images) to create the actual images which are wrapped in image views.
 	fn create_image_views(&self) -> anyhow::Result<Vec<Arc<View>>> {
 		use utility::{BuildFromDevice, NameableBuilder, NamedObject};
 		let mut views = Vec::new();
@@ -62,21 +86,10 @@ pub trait Swapchain {
 		Ok(views)
 	}
 
+	/// Attempts to determine what the next available image to submit/present to would be.
 	fn acquire_next_image(
 		&self,
 		timeout: u64,
-		barrier: ImageAcquisitionBarrier,
+		barrier: SyncObject,
 	) -> anyhow::Result<AcquiredImage>;
-
-	fn can_present(&self) -> bool {
-		false
-	}
-
-	fn present(
-		&self,
-		_graphics_queue: &Arc<logical::Queue>,
-		_present_info: command::PresentInfo,
-	) -> utility::Result<bool> {
-		Ok(false)
-	}
 }

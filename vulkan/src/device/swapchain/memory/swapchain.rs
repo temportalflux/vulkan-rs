@@ -1,5 +1,5 @@
-use super::super::{AcquiredImage, ImageAcquisitionBarrier, Swapchain as SwapchainTrait};
-use crate::{device::logical, image::Image, structs};
+use super::super::{AcquiredImage, Swapchain as SwapchainTrait};
+use crate::{device::logical, image::Image, structs, command::SyncObject};
 use std::sync::Arc;
 
 pub struct Swapchain {
@@ -29,7 +29,7 @@ impl SwapchainTrait for Swapchain {
 	fn acquire_next_image(
 		&self,
 		_timeout: u64,
-		_barrier: ImageAcquisitionBarrier,
+		_barrier: SyncObject,
 	) -> anyhow::Result<AcquiredImage> {
 		Ok(AcquiredImage::Available(0))
 	}

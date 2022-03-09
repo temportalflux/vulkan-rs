@@ -45,7 +45,7 @@ impl Device {
 	/// Blocks the thread until all of the provided fences are signaled.
 	/// If all of the fences are signaled when this is called, then the function will return immediately.
 	///
-	/// https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkWaitForFences.html
+	/// `<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkWaitForFences.html>`
 	pub fn wait_for(&self, fences: Vec<&command::Fence>, timeout: u64) -> utility::Result<()> {
 		use backend::version::DeviceV1_0;
 		let fences = fences.into_iter().map(|fence| **fence).collect::<Vec<_>>();

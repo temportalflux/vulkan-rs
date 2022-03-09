@@ -5,6 +5,7 @@ use crate::{
 };
 use std::sync::Arc;
 
+/// Represents a particular phase of rendering (equivalent to a [`subpass`](crate::renderpass::Subpass)).
 pub struct Phase {
 	name: String,
 	bind_point: PipelineBindPoint,
@@ -13,6 +14,7 @@ pub struct Phase {
 }
 
 impl Phase {
+	/// Create a new phase with a particular name.
 	pub fn new<T: Into<String>>(name: T) -> Self {
 		Self {
 			name: name.into(),

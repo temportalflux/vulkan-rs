@@ -3,19 +3,27 @@ use crate::{
 	utility::NameableBuilder,
 };
 use std::sync::{Arc, Weak};
+
+/// Represents an [`image view`](View) which is attached to a [`framebuffer`](Buffer) at a particular slot.
+/// 
+/// This structure holds a strong reference to the view attachments.
 pub enum AttachedView {
 	/// This slot has a different view for each frame.
 	PerFrame(Vec<Arc<View>>),
 	/// This slot has a single view which is shared by each frame.
 	Shared(Arc<View>),
 }
+
 impl AttachedView {
+	/// Returns true if the attachment supports the provided number of frames.
 	fn has_frames(&self, count: usize) -> bool {
 		match &self {
 			Self::PerFrame(frames) => frames.len() == count,
 			Self::Shared(_) => true,
 		}
 	}
+
+	/// Returns a weak pointer to the view to attach, when provided a specific frame.
 	fn get_frame(&self, index: usize) -> Weak<View> {
 		Arc::downgrade(match &self {
 			Self::PerFrame(frames) => &frames[index],
@@ -43,13 +51,16 @@ impl NameableBuilder for MultiBuilder {
 }
 
 impl MultiBuilder {
+	/// Apply the resolution of the framebuffers.
 	pub fn with_extent(mut self, extent: Extent2D) -> Self {
 		self.set_extent(extent);
 		self
 	}
 
-	pub fn set_extent(&mut self, extent: Extent2D) {
+	/// Set the resolution of the framebuffers.
+	pub fn set_extent(&mut self, extent: Extent2D) -> &mut Self {
 		self.extent = extent;
+		self
 	}
 
 	pub fn with_sizes(mut self, frame_count: usize, attachment_count: usize) -> Self {
