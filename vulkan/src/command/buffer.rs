@@ -4,7 +4,7 @@ use crate::{
 	descriptor,
 	device::logical,
 	flags, image, pipeline, renderpass,
-	utility::{self, BoundObject},
+	utility::{self, BoundObject, Viewport},
 };
 use std::sync::Arc;
 
@@ -361,6 +361,19 @@ impl Buffer {
 		for set in sets.into_iter() {
 			self.bound_objects.append(&mut set.get_all_bound());
 		}
+	}
+
+	/// Equivalent to [`vkCmdSetViewport`](https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html).
+	pub fn set_dynamic_viewport(&self, first: usize, viewports: Vec<Viewport>) {
+		use backend::version::DeviceV1_0;
+		let vk = viewports
+			.into_iter()
+			.map(|viewport| viewport.into())
+			.collect::<Vec<_>>();
+		unsafe {
+			self.device
+				.cmd_set_viewport(self.internal, first as u32, &vk)
+		};
 	}
 
 	/// Sets the scissor that should be used for pipelines which use the [`DynamicState.SCISSOR`](flags::DynamicState::SCISSOR) flag.
