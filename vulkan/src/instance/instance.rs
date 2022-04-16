@@ -52,7 +52,7 @@ impl Instance {
 	pub fn create_surface(
 		context: &Context,
 		instance: &sync::Arc<Self>,
-		handle: &impl raw_window_handle::HasRawWindowHandle,
+		handle: &dyn raw_window_handle::HasRawWindowHandle,
 	) -> utility::Result<Surface> {
 		Ok(
 			unsafe {

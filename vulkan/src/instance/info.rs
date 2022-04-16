@@ -93,10 +93,7 @@ impl Info {
 	}
 
 	/// Sets the window
-	pub fn set_window(
-		mut self,
-		window_handle: &impl raw_window_handle::HasRawWindowHandle,
-	) -> Self {
+	pub fn set_window(mut self, window_handle: &dyn raw_window_handle::HasRawWindowHandle) -> Self {
 		let window_extensions = ash_window::enumerate_required_extensions(window_handle).unwrap();
 		self.append_raw_extensions(window_extensions.iter().map(|cstr| cstr.as_ptr()).collect());
 		self

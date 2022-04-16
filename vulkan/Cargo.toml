@@ -17,7 +17,7 @@ ash-window = "0.6"
 bytemuck = "1.7"
 log = "0.4.14"
 profiling = "1.0"
-raw-window-handle = "0.3.3"
+raw-window-handle = "0.3.4"
 # vk-mem support has been discontinued and does not support ash >=0.33
 # https://github.com/gwihlidal/vk-mem-rs/issues/54
 # https://github.com/adrien-ben/imgui-rs-vulkan-renderer/issues/16
