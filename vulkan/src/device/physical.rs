@@ -21,6 +21,7 @@ struct QueueFamily {
 	supports_surface: bool,
 }
 
+#[derive(Debug)]
 pub struct SurfaceSupport {
 	surface_capabilities: backend::vk::SurfaceCapabilitiesKHR,
 	surface_formats: Vec<backend::vk::SurfaceFormatKHR>,
