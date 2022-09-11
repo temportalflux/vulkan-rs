@@ -70,17 +70,13 @@ impl Viewport {
 		let mut info = backend::vk::PipelineViewportStateCreateInfo::default();
 
 		info.viewport_count = self.viewports.count() as u32;
-		let _vk_viewports: Vec<backend::vk::Viewport>;
 		if let Entries::Fixed(vec) = &self.viewports {
-			_vk_viewports = vec.clone();
-			info.p_viewports = _vk_viewports.as_ptr() as _;
+			info.p_viewports = vec.as_ptr() as _;
 		}
 
 		info.scissor_count = self.scissors.count() as u32;
-		let _vk_scissors: Vec<backend::vk::Rect2D>;
 		if let Entries::Fixed(vec) = &self.scissors {
-			_vk_scissors = vec.clone();
-			info.p_scissors = _vk_scissors.as_ptr() as _;
+			info.p_scissors = vec.as_ptr() as _;
 		}
 
 		info
