@@ -3,7 +3,7 @@ use crate::{backend, device::logical, flags, utility};
 use std::sync;
 
 pub struct Builder {
-	name: Option<String>,
+	name: String,
 	queue_family_index: usize,
 	flags: Option<flags::CommandPoolCreate>,
 }
@@ -11,7 +11,7 @@ pub struct Builder {
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			name: None,
+			name: String::new(),
 			queue_family_index: 0,
 			flags: None,
 		}
@@ -31,11 +31,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -43,8 +43,7 @@ impl utility::NameableBuilder for Builder {
 impl utility::BuildFromDevice for Builder {
 	type Output = Pool;
 	/// Creates a command pool from a device, queue, and a flag indicating the kind of command pool it is.
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		use utility::NameableBuilder;
 		let info = backend::vk::CommandPoolCreateInfo::builder()
 			.queue_family_index(self.queue_family_index as u32)

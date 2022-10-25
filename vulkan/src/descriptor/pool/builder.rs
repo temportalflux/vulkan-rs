@@ -32,7 +32,7 @@ pub struct Builder {
 	/// The maximum number of sets ever allowed to be allocated from the pool.
 	max_sets: u32,
 	descriptors: Vec<backend::vk::DescriptorPoolSize>,
-	name: Option<String>,
+	name: String,
 }
 
 impl Builder {
@@ -54,11 +54,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -66,8 +66,7 @@ impl utility::NameableBuilder for Builder {
 impl utility::BuildFromDevice for Builder {
 	type Output = Pool;
 	/// Creates an [`Pool`] object, thereby consuming the info.
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let create_info = backend::vk::DescriptorPoolCreateInfo::builder()
 			.max_sets(self.max_sets)
 			.pool_sizes(&self.descriptors)

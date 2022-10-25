@@ -15,7 +15,7 @@ use std::sync;
 ///
 /// Equivalent to [VkCommandPool](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkCommandPool.html).
 pub struct Pool {
-	name: Option<String>,
+	name: String,
 	internal: backend::vk::CommandPool,
 	device: sync::Arc<logical::Device>,
 }
@@ -27,7 +27,7 @@ impl Pool {
 
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
-		name: Option<String>,
+		name: String,
 		internal: backend::vk::CommandPool,
 	) -> Self {
 		Self {
@@ -45,7 +45,7 @@ impl Pool {
 	) -> utility::Result<Vec<command::Buffer>> {
 		self.allocate_named_buffers(
 			(0..amount)
-				.map(|i| self.name.as_ref().map(|v| format!("{}.Buffer{}", v, i)))
+				.map(|i| format!("{}.Buffer{}", self.name, i))
 				.collect::<Vec<_>>(),
 			level,
 		)
@@ -54,10 +54,9 @@ impl Pool {
 	/// Creates some amount of [`command buffers`](command::Buffer) at a given level.
 	pub fn allocate_named_buffers(
 		&self,
-		buffer_names: Vec<Option<String>>,
+		buffer_names: Vec<String>,
 		level: flags::CommandBufferLevel,
 	) -> utility::Result<Vec<command::Buffer>> {
-		use backend::version::DeviceV1_0;
 		use utility::HandledObject;
 		let info = backend::vk::CommandBufferAllocateInfo::builder()
 			.command_pool(**self)
@@ -70,10 +69,8 @@ impl Pool {
 			.map(|(vk_buffer, buffer_name)| {
 				let buffer =
 					command::Buffer::from(self.device.clone(), buffer_name.clone(), vk_buffer);
-				if let Some(name) = buffer_name {
-					self.device
-						.set_object_name_logged(&buffer.create_name(name));
-				}
+				self.device
+					.set_object_name_logged(&buffer.create_name(buffer_name));
 				buffer
 			})
 			.collect::<Vec<_>>())
@@ -84,7 +81,6 @@ impl Pool {
 	/// Use with caution, as the buffers being destroyed will not longer be accessible
 	/// (which is why this function consumes ownership of the buffers).
 	pub fn free_buffers(&self, buffers: Vec<command::Buffer>) {
-		use backend::version::DeviceV1_0;
 		let vk_buffers = buffers.iter().map(|cmd_buf| **cmd_buf).collect::<Vec<_>>();
 		unsafe {
 			self.device
@@ -102,7 +98,6 @@ impl std::ops::Deref for Pool {
 
 impl Drop for Pool {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_command_pool(self.internal, None) };
 	}
 }

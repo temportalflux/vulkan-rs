@@ -22,17 +22,11 @@ pub struct Semaphore {
 }
 
 impl Semaphore {
-	pub fn new(
-		device: &sync::Arc<logical::Device>,
-		name: Option<String>,
-	) -> utility::Result<Semaphore> {
-		use backend::version::DeviceV1_0;
+	pub fn new(device: &sync::Arc<logical::Device>, name: &str) -> utility::Result<Semaphore> {
 		let info = backend::vk::SemaphoreCreateInfo::builder().build();
 		let vk = unsafe { device.create_semaphore(&info, None) }?;
 		let semaphore = Semaphore::from(device.clone(), vk);
-		if let Some(name) = name {
-			device.set_object_name_logged(&semaphore.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&semaphore.create_name(name));
 		Ok(semaphore)
 	}
 
@@ -53,7 +47,6 @@ impl std::ops::Deref for Semaphore {
 
 impl Drop for Semaphore {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_semaphore(self.internal, None) };
 	}
 }
@@ -80,16 +73,13 @@ pub struct Fence {
 impl Fence {
 	pub fn new(
 		device: &sync::Arc<logical::Device>,
-		name: Option<String>,
+		name: &str,
 		state: flags::FenceState,
 	) -> utility::Result<Fence> {
-		use backend::version::DeviceV1_0;
 		let info = backend::vk::FenceCreateInfo::builder().flags(state).build();
 		let vk = unsafe { device.create_fence(&info, None) }?;
 		let fence = Fence::from(device.clone(), vk);
-		if let Some(name) = name {
-			device.set_object_name_logged(&fence.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&fence.create_name(name));
 		Ok(fence)
 	}
 
@@ -107,7 +97,6 @@ impl std::ops::Deref for Fence {
 
 impl Drop for Fence {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_fence(self.internal, None) };
 	}
 }

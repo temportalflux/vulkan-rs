@@ -31,7 +31,6 @@ impl std::ops::Deref for Pipeline {
 
 impl Drop for Pipeline {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_pipeline(self.internal, None) };
 	}
 }

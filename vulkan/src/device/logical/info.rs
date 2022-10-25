@@ -101,7 +101,6 @@ impl Info {
 		instance: &sync::Arc<Instance>,
 		physical_device: &physical::Device,
 	) -> utility::Result<logical::Device> {
-		use backend::version::InstanceV1_0;
 		self.extension_names_raw = self
 			.extension_names
 			.iter()

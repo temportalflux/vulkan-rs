@@ -19,7 +19,7 @@ pub struct Builder {
 	color_blending: state::color_blend::ColorBlend,
 	depth_stencil: state::DepthStencil,
 	dynamic_state: state::Dynamic,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
@@ -34,7 +34,7 @@ impl Default for Builder {
 			color_blending: Default::default(),
 			depth_stencil: Default::default(),
 			dynamic_state: Default::default(),
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -101,8 +101,7 @@ impl Builder {
 		render_pass: &renderpass::Pass,
 		subpass_index: usize,
 	) -> Result<Pipeline, utility::Error> {
-		use backend::version::DeviceV1_0;
-		use utility::{HandledObject, NameableBuilder};
+		use utility::HandledObject;
 
 		let shader_stages = self
 			.shaders
@@ -156,19 +155,17 @@ impl Builder {
 			},
 		}?;
 		let pipeline = Pipeline::from(device.clone(), pipelines[0]);
-		if let Some(name) = self.name().as_ref() {
-			device.set_object_name_logged(&pipeline.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&pipeline.create_name(self.name.as_str()));
 		Ok(pipeline)
 	}
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }

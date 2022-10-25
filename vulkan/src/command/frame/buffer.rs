@@ -36,7 +36,6 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_framebuffer(self.internal, None) };
 	}
 }

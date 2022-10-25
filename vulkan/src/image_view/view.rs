@@ -46,7 +46,6 @@ impl std::ops::Deref for View {
 
 impl Drop for View {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_image_view(self.internal, None) };
 	}
 }

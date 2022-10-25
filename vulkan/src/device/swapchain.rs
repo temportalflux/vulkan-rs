@@ -72,7 +72,7 @@ pub trait Swapchain {
 		for image in self.create_images()?.into_iter() {
 			views.push(Arc::new(
 				View::builder()
-					.with_optname(image.name().as_ref().map(|name| format!("{}.View", name)))
+					.with_name(format!("{}.View", image.name()))
 					.for_image(image)
 					.with_view_type(flags::ImageViewType::TYPE_2D)
 					.with_range(

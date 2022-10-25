@@ -1,6 +1,6 @@
 use crate::{
 	alloc, backend,
-	flags::{format::Format, ImageUsage, MemoryProperty, MemoryUsage},
+	flags::{format::Format, ImageUsage, MemoryLocation},
 	image::Builder,
 	structs::{Extent2D, Extent3D},
 	utility::{self, NameableBuilder},
@@ -8,7 +8,11 @@ use crate::{
 use std::sync;
 
 pub(crate) trait Owner: Send + Sync {
-	fn destroy(&self, obj: &Image, allocation: Option<&vk_mem::Allocation>) -> utility::Result<()>;
+	fn destroy(
+		&self,
+		obj: &Image,
+		allocation: Option<gpu_allocator::vulkan::Allocation>,
+	) -> anyhow::Result<()>;
 }
 
 /// An handle representing image data stored on the [`GPU`](crate::device::physical::Device),
@@ -18,17 +22,17 @@ pub(crate) trait Owner: Send + Sync {
 pub struct Image {
 	dimensions: Extent3D,
 	format: Format,
-	allocation_handle: Option<vk_mem::Allocation>,
+	allocation_handle: Option<gpu_allocator::vulkan::Allocation>,
 	internal: backend::vk::Image,
 	owner: Option<sync::Arc<dyn Owner>>, // empty for images created from the swapchain
-	name: Option<String>,
+	name: String,
 }
 
 impl Image {
 	/// Internal method for creating the image from a provided vulkan image from the [`Swapchain`](crate::device::swapchain::khr::Swapchain).
 	pub(crate) fn from_swapchain(
 		internal: backend::vk::Image,
-		name: Option<String>,
+		name: String,
 		format: Format,
 		dimensions: Extent2D,
 	) -> Image {
@@ -55,7 +59,7 @@ impl Image {
 	pub(crate) fn new(
 		owner: sync::Arc<dyn Owner>,
 		internal: backend::vk::Image,
-		allocation_handle: Option<vk_mem::Allocation>,
+		allocation_handle: Option<gpu_allocator::vulkan::Allocation>,
 		image_info: Builder,
 	) -> Image {
 		Image {
@@ -69,22 +73,18 @@ impl Image {
 	}
 
 	/// Creates a [`samplable`](ImageUsage::SAMPLED) image,
-	/// on [`only the GPU`](MemoryUsage::GpuOnly),
+	/// on [`only the GPU`](MemoryLocation::GpuOnly),
 	/// with a given size & format, that can be [`transfered to`](ImageUsage::TRANSFER_DST).
 	pub fn create_gpu(
 		allocator: &sync::Arc<alloc::Allocator>,
-		name: Option<String>,
+		name: String,
 		format: Format,
 		size: Extent3D,
-	) -> utility::Result<Self> {
+	) -> anyhow::Result<Self> {
 		use utility::BuildFromAllocator;
 		Ok(Self::builder()
-			.with_optname(name)
-			.with_alloc(
-				alloc::Builder::default()
-					.with_usage(MemoryUsage::GpuOnly)
-					.requires(MemoryProperty::DEVICE_LOCAL),
-			)
+			.with_name(name)
+			.with_location(MemoryLocation::GpuOnly)
 			.with_format(format)
 			.with_size(size)
 			.with_usage(ImageUsage::TRANSFER_DST)
@@ -113,9 +113,8 @@ impl std::ops::Deref for Image {
 impl Drop for Image {
 	fn drop(&mut self) {
 		if let Some(owner) = &self.owner {
-			owner
-				.destroy(self, self.allocation_handle.as_ref())
-				.unwrap();
+			let allocation = self.allocation_handle.take();
+			owner.destroy(self, allocation).unwrap();
 		}
 	}
 }
@@ -132,7 +131,7 @@ impl utility::HandledObject for Image {
 }
 
 impl utility::NamedObject for Image {
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }

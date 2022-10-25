@@ -8,7 +8,7 @@ pub struct Info {
 	attachments: Vec<renderpass::Attachment>,
 	subpass_order: Vec<renderpass::Subpass>,
 	dependencies: Vec<(Dependency, Dependency)>,
-	name: Option<String>,
+	name: String,
 	max_common_sample_count: flags::SampleCount,
 }
 
@@ -52,7 +52,7 @@ impl Info {
 			attachments: Vec::new(),
 			subpass_order: Vec::new(),
 			dependencies: Vec::new(),
-			name: None,
+			name: String::new(),
 			max_common_sample_count: flags::SampleCount::_1,
 		}
 	}
@@ -195,19 +195,18 @@ impl Info {
 }
 
 impl utility::NameableBuilder for Info {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
 
 impl utility::BuildFromDevice for Info {
 	type Output = renderpass::Pass;
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let attachments = self
 			.attachments
 			.iter()

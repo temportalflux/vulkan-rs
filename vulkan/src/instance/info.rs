@@ -36,9 +36,9 @@ impl Info {
 	}
 
 	#[doc(hidden)]
-	fn append_raw_extensions(&mut self, exts: Vec<utility::CStrPtr>) {
-		for ext in exts.into_iter() {
-			self.add_raw_extension(ext);
+	fn append_raw_extensions(&mut self, exts: &'static [utility::CStrPtr]) {
+		for ext in exts.iter() {
+			self.add_raw_extension(*ext);
 		}
 	}
 
@@ -93,9 +93,9 @@ impl Info {
 	}
 
 	/// Sets the window
-	pub fn set_window(mut self, window_handle: &dyn raw_window_handle::HasRawWindowHandle) -> Self {
+	pub fn set_window(mut self, window_handle: raw_window_handle::RawDisplayHandle) -> Self {
 		let window_extensions = ash_window::enumerate_required_extensions(window_handle).unwrap();
-		self.append_raw_extensions(window_extensions.iter().map(|cstr| cstr.as_ptr()).collect());
+		self.append_raw_extensions(window_extensions);
 		self
 	}
 
@@ -110,8 +110,7 @@ impl Info {
 	}
 
 	/// Creates the vulkan instance object, thereby consuming the info.
-	pub fn create_object(mut self, ctx: &Context) -> utility::Result<instance::Instance> {
-		use backend::version::EntryV1_0;
+	pub fn create_object(mut self, ctx: &Context) -> anyhow::Result<instance::Instance> {
 		log::info!(target: crate::LOG, "Initializing {}", self.description());
 		log::debug!(
 			target: crate::LOG,
@@ -124,21 +123,15 @@ impl Info {
 			ctx.valid_instance_layers
 		);
 		if let Some(layer) = self.has_invalid_layer(&ctx) {
-			return Err(utility::Error::InvalidInstanceLayer(layer));
+			return Err(utility::Error::InvalidInstanceLayer(layer))?;
 		}
 		let create_info = self.create_vk();
-		let internal = match unsafe { ctx.loader.create_instance(&create_info, None) } {
-			Ok(inst) => inst,
-			Err(err) => match err {
-				backend::InstanceError::VkError(res) => {
-					return Err(utility::Error::VulkanError(res))
-				}
-				backend::InstanceError::LoadError(_items) => {
-					return Err(utility::Error::InstanceSymbolNotAvailable())
-				}
-			},
-		};
-		instance::Instance::from(internal, &ctx, self.validation_enabled)
+		let internal = unsafe { ctx.loader.create_instance(&create_info, None)? };
+		Ok(instance::Instance::from(
+			internal,
+			&ctx,
+			self.validation_enabled,
+		)?)
 	}
 
 	fn create_vk(&mut self) -> backend::vk::InstanceCreateInfo {

@@ -30,7 +30,6 @@ impl Device {
 		name: Option<String>,
 		queue_family_index: usize,
 	) -> logical::Queue {
-		use backend::version::DeviceV1_0;
 		let vk = unsafe {
 			device.get_device_queue(queue_family_index as u32, /*queue index*/ 0)
 		};
@@ -47,19 +46,16 @@ impl Device {
 	///
 	/// `<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkWaitForFences.html>`
 	pub fn wait_for(&self, fences: Vec<&command::Fence>, timeout: u64) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		let fences = fences.into_iter().map(|fence| **fence).collect::<Vec<_>>();
 		Ok(unsafe { self.internal.wait_for_fences(&fences, true, timeout) }?)
 	}
 
 	pub fn reset_fences(&self, fences: &[&command::Fence]) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		let fences = fences.iter().map(|f| ***f).collect::<Vec<_>>();
 		Ok(unsafe { self.internal.reset_fences(&fences[..]) }?)
 	}
 
 	pub fn wait_until_idle(&self) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		Ok(unsafe { self.internal.device_wait_idle() }?)
 	}
 
@@ -205,7 +201,6 @@ impl Device {
 
 impl Drop for Device {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.internal.destroy_device(None);
 		}
@@ -214,8 +209,11 @@ impl Drop for Device {
 
 #[doc(hidden)]
 impl image::Owner for Device {
-	fn destroy(&self, obj: &image::Image, _: Option<&vk_mem::Allocation>) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
+	fn destroy(
+		&self,
+		obj: &image::Image,
+		_: Option<gpu_allocator::vulkan::Allocation>,
+	) -> anyhow::Result<()> {
 		unsafe { self.internal.destroy_image(**obj, None) };
 		Ok(())
 	}

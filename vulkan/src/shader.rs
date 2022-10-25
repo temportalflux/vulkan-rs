@@ -8,7 +8,7 @@ use crate::{
 use std::sync;
 
 pub struct Info {
-	pub name: Option<String>,
+	pub name: String,
 	pub kind: ShaderKind,
 	pub entry_point: String,
 	pub bytes: Vec<u8>,
@@ -38,8 +38,6 @@ impl Module {
 		device: sync::Arc<logical::Device>,
 		bytes: &[u8],
 	) -> utility::Result<Module> {
-		use backend::version::DeviceV1_0;
-
 		let decoded_bytes = match backend::util::read_spv(&mut std::io::Cursor::new(bytes)) {
 			Ok(bytes) => bytes,
 			Err(e) => return Err(utility::Error::General(e)),
@@ -57,11 +55,9 @@ impl Module {
 		})
 	}
 
-	pub fn set_name(self, name: Option<String>) -> Self {
-		if let Some(name) = name {
-			self.device
-				.set_object_name_logged(&self.create_name(name.as_str()));
-		}
+	pub fn set_name(self, name: String) -> Self {
+		self.device
+			.set_object_name_logged(&self.create_name(name.as_str()));
 		self
 	}
 
@@ -93,7 +89,6 @@ impl std::ops::Deref for Module {
 
 impl Drop for Module {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_shader_module(self.internal, None) };
 	}
 }

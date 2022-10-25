@@ -6,7 +6,7 @@ use std::sync;
 pub struct SingleBuilder {
 	extent: Extent2D,
 	layer_count: u32,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for SingleBuilder {
@@ -14,7 +14,7 @@ impl Default for SingleBuilder {
 		Self {
 			extent: Extent2D::default(),
 			layer_count: 1,
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -31,8 +31,7 @@ impl SingleBuilder {
 		render_pass: &renderpass::Pass,
 		device: &sync::Arc<logical::Device>,
 	) -> utility::Result<Buffer> {
-		use backend::version::DeviceV1_0;
-		use utility::{HandledObject, NameableBuilder};
+		use utility::HandledObject;
 		let attachments = attachments.into_iter().map(|a| **a).collect::<Vec<_>>();
 		let info = backend::vk::FramebufferCreateInfo::builder()
 			.width(self.extent.width)
@@ -43,19 +42,17 @@ impl SingleBuilder {
 			.build();
 		let vk = unsafe { device.create_framebuffer(&info, None) }?;
 		let framebuffer = Buffer::from(device.clone(), vk);
-		if let Some(name) = self.name().as_ref() {
-			device.set_object_name_logged(&framebuffer.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&framebuffer.create_name(self.name.as_str()));
 		Ok(framebuffer)
 	}
 }
 
 impl utility::NameableBuilder for SingleBuilder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }

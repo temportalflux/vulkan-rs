@@ -49,7 +49,8 @@ impl Pool {
 		self.allocate_named_descriptor_sets(
 			&layouts
 				.into_iter()
-				.map(|layout| (layout.clone(), None))
+				.enumerate()
+				.map(|(idx, layout)| (layout.clone(), format!("DescriptorSet.{}", idx)))
 				.collect::<Vec<_>>(),
 		)
 	}
@@ -63,9 +64,8 @@ impl Pool {
 	/// holding onto the reference for too long.
 	pub fn allocate_named_descriptor_sets(
 		&mut self,
-		layouts: &Vec<(sync::Arc<SetLayout>, Option<String>)>,
+		layouts: &Vec<(sync::Arc<SetLayout>, String)>,
 	) -> utility::Result<Vec<sync::Weak<descriptor::Set>>> {
-		use ash::version::DeviceV1_0;
 		let set_layouts = layouts
 			.iter()
 			.map(|(layout, _)| ***layout)
@@ -81,10 +81,8 @@ impl Pool {
 			.map(|(idx, vk_desc_set)| {
 				let (layout, name) = &layouts[idx];
 				let set = descriptor::Set::from(layout.clone(), vk_desc_set);
-				if let Some(name) = name.as_ref() {
-					self.device
-						.set_object_name_logged(&set.create_name(name.as_str()));
-				}
+				self.device
+					.set_object_name_logged(&set.create_name(name.as_str()));
 				let set = sync::Arc::new(set);
 				self.owned_sets.push(set.clone());
 				sync::Arc::downgrade(&set)
@@ -102,7 +100,6 @@ impl std::ops::Deref for Pool {
 
 impl Drop for Pool {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device.destroy_descriptor_pool(self.internal, None);
 		}

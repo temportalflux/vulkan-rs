@@ -18,7 +18,7 @@ impl AppInfo {
 	/// Creates an application info struct based on the current context.
 	pub fn new() -> AppInfo {
 		AppInfo {
-			api_version: backend::vk::make_version(1, 2, 0),
+			api_version: backend::vk::make_api_version(0, 1, 2, 0),
 			engine_name: String::new(),
 			engine_name_c: std::ffi::CString::default(),
 			engine_version: 0,

@@ -28,7 +28,6 @@ impl std::ops::Deref for Sampler {
 
 impl Drop for Sampler {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_sampler(self.internal, None) };
 	}
 }

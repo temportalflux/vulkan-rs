@@ -1,7 +1,7 @@
 use crate::{
 	alloc, backend,
 	buffer::Builder,
-	flags::{BufferUsage, IndexType, MemoryProperty, MemoryUsage, SharingMode},
+	flags::{BufferUsage, IndexType, MemoryLocation, SharingMode},
 	utility::{self},
 };
 use std::sync;
@@ -17,8 +17,7 @@ pub struct Buffer {
 	/// If it is dropped, the buffer wont actually be destroyed
 	/// (which is why this object has a handle to the allocator and alloc info).
 	internal: backend::vk::Buffer,
-	allocation_handle: sync::Arc<vk_mem::Allocation>,
-	allocation_info: vk_mem::AllocationInfo,
+	allocation_handle: Option<sync::Mutex<gpu_allocator::vulkan::Allocation>>,
 	allocator: sync::Arc<alloc::Allocator>,
 	builder: Builder,
 }
@@ -33,67 +32,56 @@ impl Buffer {
 	pub(crate) fn from(
 		allocator: sync::Arc<alloc::Allocator>,
 		internal: backend::vk::Buffer,
-		allocation_handle: vk_mem::Allocation,
-		allocation_info: vk_mem::AllocationInfo,
+		allocation_handle: gpu_allocator::vulkan::Allocation,
 		builder: Builder,
 	) -> Buffer {
 		Buffer {
 			allocator,
 			internal,
-			allocation_handle: sync::Arc::new(allocation_handle),
-			allocation_info,
+			allocation_handle: Some(sync::Mutex::new(allocation_handle)),
 			builder,
 		}
 	}
 
 	/// Creates an [`exclusive`](SharingMode::EXCLUSIVE) buffer,
-	/// on [`only the GPU`](MemoryUsage::GpuOnly),
+	/// on [`only the GPU`](MemoryLocation::GpuOnly),
 	/// with a given size, that can be [`transfered to`](BufferUsage::TRANSFER_DST).
 	pub fn create_gpu(
-		name: Option<String>,
+		name: String,
 		allocator: &sync::Arc<alloc::Allocator>,
 		usage: BufferUsage,
 		size: usize,
 		index_type: Option<IndexType>,
-	) -> utility::Result<sync::Arc<Self>> {
+	) -> anyhow::Result<sync::Arc<Self>> {
 		use utility::{BuildFromAllocator, NameableBuilder};
 		Ok(sync::Arc::new(
 			Self::builder()
-				.with_optname(name)
+				.with_name(name)
 				.with_sharing(SharingMode::EXCLUSIVE)
 				.with_usage(usage)
 				.with_usage(BufferUsage::TRANSFER_DST)
 				.with_index_type(index_type)
 				.with_size(size)
-				.with_alloc(
-					alloc::Builder::default()
-						.with_usage(MemoryUsage::GpuOnly)
-						.requires(MemoryProperty::DEVICE_LOCAL),
-				)
+				.with_location(MemoryLocation::GpuOnly)
 				.build(&allocator)?,
 		))
 	}
 
 	/// Creates an [`exclusive`](SharingMode::EXCLUSIVE) buffer,
-	/// which can be written from [`CPU to GPU`](MemoryUsage::CpuToGpu),
+	/// which can be written from [`CPU to GPU`](MemoryLocation::CpuToGpu),
 	/// with a given size, that can be [`transfered from`](BufferUsage::TRANSFER_SRC).
 	pub fn create_staging(
-		name: Option<String>,
+		name: String,
 		allocator: &sync::Arc<alloc::Allocator>,
 		size: usize,
-	) -> utility::Result<Self> {
+	) -> anyhow::Result<Self> {
 		use utility::{BuildFromAllocator, NameableBuilder};
 		Self::builder()
-			.with_optname(name)
+			.with_name(name)
 			.with_sharing(SharingMode::EXCLUSIVE)
 			.with_usage(BufferUsage::TRANSFER_SRC)
 			.with_size(size)
-			.with_alloc(
-				alloc::Builder::default()
-					.with_usage(MemoryUsage::CpuToGpu)
-					.requires(MemoryProperty::HOST_VISIBLE)
-					.requires(MemoryProperty::HOST_COHERENT),
-			)
+			.with_location(MemoryLocation::CpuToGpu)
 			.build(allocator)
 	}
 
@@ -102,22 +90,29 @@ impl Buffer {
 	/// Otherwise, an allocation resize is attempted. If the allocation cannot be extended
 	/// (which is always the case due to an allocator bug),
 	/// then a new buffer is allocated wih the desired capacity.
-	pub fn expand(&self, required_capacity: usize) -> utility::Result<Option<Buffer>> {
-		use alloc::Object;
+	pub fn expand(&self, required_capacity: usize) -> anyhow::Result<Option<Buffer>> {
 		use utility::BuildFromAllocator;
-		if self.size() < required_capacity {
+		if self.builder.size() < required_capacity {
 			let mut builder = self.builder.clone();
 			builder.set_size(required_capacity);
-			return Ok(Some(builder.build(&self.allocator())?));
+			return Ok(Some(builder.build(&self.allocator)?));
 		}
 		Ok(None)
+	}
+
+	pub(crate) fn handle(&self) -> &sync::Mutex<gpu_allocator::vulkan::Allocation> {
+		self.allocation_handle.as_ref().unwrap()
+	}
+
+	pub fn size(&self) -> usize {
+		self.handle().lock().unwrap().size() as usize
 	}
 
 	/// Maps the memory of the buffer for writing.
 	/// The buffer must be CPU visibile/mappable in order for this to succeed.
 	/// Returns the [`Memory`](alloc::Memory) mapping for writing,
 	/// which will become unmapped when the memory alloc object is dropped.
-	pub fn memory(&self) -> utility::Result<alloc::Memory> {
+	pub fn memory(self: sync::Arc<Self>) -> utility::Result<alloc::Memory> {
 		alloc::Memory::new(self)
 	}
 
@@ -135,26 +130,9 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
-		self.allocator
-			.destroy_buffer(**self, &self.allocation_handle);
-	}
-}
-
-impl alloc::Object for Buffer {
-	fn size(&self) -> usize {
-		self.builder.size()
-	}
-
-	fn info(&self) -> &vk_mem::AllocationInfo {
-		&self.allocation_info
-	}
-
-	fn handle(&self) -> &sync::Arc<vk_mem::Allocation> {
-		&self.allocation_handle
-	}
-
-	fn allocator(&self) -> &sync::Arc<alloc::Allocator> {
-		&self.allocator
+		let locked_handle = self.allocation_handle.take().unwrap();
+		let allocation = locked_handle.into_inner().unwrap();
+		self.allocator.destroy_buffer(**self, allocation).unwrap();
 	}
 }
 
@@ -170,7 +148,7 @@ impl utility::HandledObject for Buffer {
 }
 
 impl utility::NamedObject for Buffer {
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		use utility::NameableBuilder;
 		self.builder.name()
 	}

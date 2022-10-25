@@ -1,5 +1,4 @@
 use crate::backend;
-use backend::version::EntryV1_0;
 
 /// A user-owned singleton which holds data about allocators and api-level availability.
 pub struct Context {
@@ -10,7 +9,7 @@ pub struct Context {
 
 impl Context {
 	pub fn new() -> anyhow::Result<Context> {
-		let loader = unsafe { backend::Entry::new() }?;
+		let loader = unsafe { backend::Entry::load() }?;
 		let valid_instance_extensions = Context::get_instance_extensions(&loader);
 		let valid_instance_layers = Context::get_instance_layers(&loader);
 		Ok(Context {
@@ -23,7 +22,9 @@ impl Context {
 	fn get_instance_extensions(loader: &backend::Entry) -> Vec<String> {
 		let mut valid_instance_extensions: Vec<String> = Vec::new();
 		unsafe {
-			let ext_props = loader.enumerate_instance_extension_properties().unwrap();
+			let ext_props = loader
+				.enumerate_instance_extension_properties(None)
+				.unwrap();
 			for prop in ext_props {
 				// Convert the os-level string to a rust string
 				valid_instance_extensions.push(

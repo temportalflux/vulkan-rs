@@ -18,7 +18,7 @@ pub struct Builder {
 	max_anisotropy: Option<f32>,
 	compare_op: Option<CompareOp>,
 	uses_unnormalized_coords: bool,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
@@ -34,7 +34,7 @@ impl Default for Builder {
 			max_anisotropy: None,
 			compare_op: None,
 			uses_unnormalized_coords: false,
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -101,11 +101,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -134,8 +134,7 @@ impl Builder {
 
 impl utility::BuildFromDevice for Builder {
 	type Output = sampler::Sampler;
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let vk = unsafe { device.create_sampler(&self.as_vk(), None) }?;
 		let sampler = sampler::Sampler::from(device.clone(), vk);
 		self.set_object_name(device, &sampler);

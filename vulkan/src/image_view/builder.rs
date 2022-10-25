@@ -16,7 +16,7 @@ pub struct Builder {
 	view_type: ImageViewType,
 	components: ComponentMapping,
 	subresource_range: subresource::Range,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
@@ -31,7 +31,7 @@ impl Default for Builder {
 				a: ComponentSwizzle::A,
 			},
 			subresource_range: subresource::Range::default(),
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -69,11 +69,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -83,8 +83,7 @@ impl utility::BuildFromDevice for Builder {
 	/// Creates a [`View`] object, thereby consuming the info.
 	/// The created [`View`] will use the same format the [`Image`] uses,
 	/// to garuntee fewer user-error bugs.
-	fn build(mut self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(mut self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let image = self.image.take().unwrap();
 		let info = backend::vk::ImageViewCreateInfo::builder()
 			.image(**image)

@@ -1,7 +1,8 @@
 use crate::{
 	alloc, backend,
 	flags::{
-		format::Format, ImageLayout, ImageTiling, ImageType, ImageUsage, SampleCount, SharingMode,
+		format::Format, ImageLayout, ImageTiling, ImageType, ImageUsage, MemoryLocation,
+		SampleCount, SharingMode,
 	},
 	image::Image,
 	structs::Extent3D,
@@ -12,8 +13,8 @@ use std::sync;
 /// The builder for [`Image`] objects.
 #[derive(Clone)]
 pub struct Builder {
-	/// The allocation information/builder for allocating the image.
-	mem_info: alloc::Builder,
+	/// The allocation information/builder for allocating the buffer.
+	location: MemoryLocation,
 	image_type: ImageType,
 	format: Format,
 	extent: Extent3D,
@@ -24,13 +25,13 @@ pub struct Builder {
 	usage: ImageUsage,
 	sharing_mode: SharingMode,
 	initial_layout: ImageLayout,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			mem_info: alloc::Builder::default(),
+			location: MemoryLocation::Unknown,
 			image_type: ImageType::TYPE_2D,
 			format: Format::UNDEFINED,
 			extent: Extent3D::default(),
@@ -41,15 +42,15 @@ impl Default for Builder {
 			usage: ImageUsage::default(),
 			sharing_mode: SharingMode::EXCLUSIVE,
 			initial_layout: ImageLayout::default(),
-			name: None,
+			name: String::new(),
 		}
 	}
 }
 
 impl Builder {
 	/// Mutates the builder to include the memory allocation information.
-	pub fn with_alloc(mut self, mem_info: alloc::Builder) -> Self {
-		self.mem_info = mem_info;
+	pub fn with_location(mut self, location: MemoryLocation) -> Self {
+		self.location = location;
 		self
 	}
 
@@ -96,11 +97,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -108,17 +109,20 @@ impl utility::NameableBuilder for Builder {
 impl utility::BuildFromAllocator for Builder {
 	type Output = Image;
 	/// Creates an [`Image`] object, thereby consuming the info.
-	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
-		let alloc_create_info = self.mem_info.clone().into();
-		let (internal, alloc_handle, _alloc_info) =
-			allocator.create_image(&self.clone().into(), &alloc_create_info)?;
+	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> anyhow::Result<Self::Output> {
+		let info = self.clone().into();
+		let (internal, alloc_handle) = allocator.create_image(
+			self.name.as_str(),
+			self.location,
+			&info,
+			/*is_tiled*/ false,
+		)?;
 		let image = Image::new(
 			allocator.clone(),
 			internal,
 			Some(alloc_handle),
 			self.clone(),
 		);
-		self.set_object_name(allocator, &image);
 		Ok(image)
 	}
 }

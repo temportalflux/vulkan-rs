@@ -10,14 +10,14 @@ use std::sync;
 /// Prepares the declarations for how descriptor sets will be created, via a [`layout`](layout::SetLayout).
 pub struct Builder {
 	bindings: Vec<backend::vk::DescriptorSetLayoutBinding>,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			bindings: Vec::new(),
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -43,11 +43,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -55,8 +55,7 @@ impl utility::NameableBuilder for Builder {
 impl utility::BuildFromDevice for Builder {
 	type Output = layout::SetLayout;
 	/// Creates an [`crate::descriptor::layout::SetLayout`] object, thereby consuming the info.
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let create_info = backend::vk::DescriptorSetLayoutCreateInfo::builder()
 			.bindings(&self.bindings)
 			.build();

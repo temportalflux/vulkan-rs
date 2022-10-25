@@ -192,6 +192,10 @@ impl Device {
 			// Return the maximum (via Ord::max) sample count that is supported for all given kinds
 			.max()
 	}
+
+	pub fn max_image_array_layers(&self) -> u32 {
+		self.properties.limits.max_image_array_layers
+	}
 }
 
 impl std::ops::Deref for Device {

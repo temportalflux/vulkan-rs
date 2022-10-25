@@ -1,7 +1,7 @@
 use crate::{
 	alloc, backend,
 	buffer::Buffer,
-	flags::{BufferUsage, IndexType, SharingMode},
+	flags::{BufferUsage, IndexType, MemoryLocation, SharingMode},
 	utility,
 };
 use std::sync;
@@ -9,8 +9,9 @@ use std::sync;
 /// The builder for [`Buffer`] objects.
 #[derive(Clone)]
 pub struct Builder {
+	name: String,
 	/// The allocation information/builder for allocating the buffer.
-	mem_info: alloc::Builder,
+	location: MemoryLocation,
 	/// The desired size of the buffer.
 	size: usize,
 	/// What kind of buffer to create / how the buffer will be used.
@@ -18,27 +19,26 @@ pub struct Builder {
 	sharing_mode: SharingMode,
 	queue_families: Vec<u32>,
 	index_type: Option<IndexType>,
-	name: Option<String>,
 }
 
 impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
-			mem_info: alloc::Builder::default(),
+			name: String::new(),
+			location: MemoryLocation::Unknown,
 			size: 0,
 			usage: BufferUsage::empty(),
 			sharing_mode: SharingMode::EXCLUSIVE,
 			queue_families: Vec::new(),
 			index_type: None,
-			name: None,
 		}
 	}
 }
 
 impl Builder {
 	/// Mutates the builder to include the memory allocation information.
-	pub fn with_alloc(mut self, mem_info: alloc::Builder) -> Self {
-		self.mem_info = mem_info;
+	pub fn with_location(mut self, location: MemoryLocation) -> Self {
+		self.location = location;
 		self
 	}
 
@@ -101,11 +101,11 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -113,17 +113,14 @@ impl utility::NameableBuilder for Builder {
 impl utility::BuildFromAllocator for Builder {
 	type Output = Buffer;
 	/// Creates a [`Buffer`] object, thereby consuming the info.
-	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> utility::Result<Self::Output> {
-		let (internal, alloc_handle, alloc_info) = self.rebuild(&allocator)?;
-		let buffer = Buffer::from(
+	fn build(self, allocator: &sync::Arc<alloc::Allocator>) -> anyhow::Result<Self::Output> {
+		let (internal, allocation) = self.rebuild(&allocator)?;
+		Ok(Buffer::from(
 			allocator.clone(),
 			internal,
-			alloc_handle,
-			alloc_info,
+			allocation,
 			self.clone(),
-		);
-		self.set_object_name(allocator, &buffer);
-		Ok(buffer)
+		))
 	}
 }
 
@@ -132,15 +129,15 @@ impl Builder {
 	pub(crate) fn rebuild(
 		&self,
 		allocator: &alloc::Allocator,
-	) -> utility::Result<(ash::vk::Buffer, vk_mem::Allocation, vk_mem::AllocationInfo)> {
+	) -> anyhow::Result<(ash::vk::Buffer, gpu_allocator::vulkan::Allocation)> {
 		if self.usage.contains(BufferUsage::INDEX_BUFFER) != self.index_type.is_some() {
-			return Err(utility::Error::InvalidBufferFormat(
+			Err(utility::Error::InvalidBufferFormat(
 				match self.usage.contains(BufferUsage::INDEX_BUFFER) {
 					true => "Index Buffers must have an index type",
 					false => "Non-Index Buffers cannot have an index type",
 				}
 				.to_owned(),
-			));
+			))?;
 		}
 		let buffer_info = backend::vk::BufferCreateInfo::builder()
 			.size(self.size as u64)
@@ -148,18 +145,6 @@ impl Builder {
 			.sharing_mode(self.sharing_mode)
 			.queue_family_indices(&self.queue_families[..])
 			.build();
-		let alloc_create_info = self.mem_info.clone().into();
-		let buffer_data = allocator.create_buffer(&buffer_info, &alloc_create_info)?;
-		if let Some(name) = self.name.as_ref() {
-			if let Some(device) = allocator.logical() {
-				use backend::vk::Handle;
-				device.set_object_name_logged(
-					&utility::ObjectName::from(name.as_str())
-						.with_kind(<backend::vk::Buffer as backend::vk::Handle>::TYPE)
-						.with_raw_handle(buffer_data.0.as_raw()),
-				);
-			}
-		}
-		Ok(buffer_data)
+		allocator.create_buffer(&self.name, self.location, &buffer_info)
 	}
 }

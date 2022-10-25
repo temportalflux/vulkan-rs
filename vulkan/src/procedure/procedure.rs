@@ -10,7 +10,7 @@ use std::sync::Arc;
 /// A high-level approach to building [`render passes`](renderpass::Pass).
 #[derive(Default)]
 pub struct Procedure {
-	name: Option<String>,
+	name: String,
 	phases: Vec<Arc<Phase>>,
 	attachments: attachment::Set,
 }
@@ -70,11 +70,11 @@ impl Procedure {
 }
 
 impl utility::NameableBuilder for Procedure {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -92,8 +92,7 @@ impl Procedure {
 	/// This does not consume the procedure so that it can be use to create additional passes in the future,
 	/// as well as referenced when creating pipelines and framebuffers.
 	pub fn build(&self, device: &Arc<logical::Device>) -> anyhow::Result<renderpass::Pass> {
-		use backend::version::DeviceV1_0;
-		use utility::{HandledObject, NameableBuilder};
+		use utility::HandledObject;
 
 		let vk_attachments = self
 			.attachments
@@ -142,9 +141,7 @@ impl Procedure {
 			.build();
 		let vk = unsafe { device.create_render_pass(&vk_info, None) }?;
 		let pass = renderpass::Pass::from(device.clone(), vk, vec![]);
-		if let Some(name) = self.name().as_ref() {
-			device.set_object_name_logged(&pass.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&pass.create_name(self.name.as_str()));
 		Ok(pass)
 	}
 }

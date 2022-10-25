@@ -45,7 +45,6 @@ impl std::ops::Deref for Pass {
 
 impl Drop for Pass {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_render_pass(self.internal, None) };
 	}
 }

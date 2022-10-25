@@ -6,7 +6,7 @@ use std::sync;
 pub struct Builder {
 	descriptor_layouts: Vec<sync::Weak<SetLayout>>,
 	push_constant_ranges: Vec<super::PushConstantRange>,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
@@ -14,7 +14,7 @@ impl Default for Builder {
 		Builder {
 			descriptor_layouts: Vec::new(),
 			push_constant_ranges: Vec::new(),
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -44,20 +44,18 @@ impl Builder {
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
 
 impl utility::BuildFromDevice for Builder {
 	type Output = Layout;
-	fn build(self, device: &sync::Arc<logical::Device>) -> utility::Result<Self::Output> {
-		use backend::version::DeviceV1_0;
-
+	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let vk_descriptor_layouts = self
 			.descriptor_layouts
 			.iter()
@@ -107,7 +105,6 @@ impl std::ops::Deref for Layout {
 
 impl Drop for Layout {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.destroy_pipeline_layout(self.internal, None) };
 	}
 }

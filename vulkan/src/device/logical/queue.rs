@@ -48,7 +48,6 @@ impl Queue {
 		infos: Vec<command::SubmitInfo>,
 		signal_fence_when_complete: Option<&command::Fence>,
 	) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		let infos = infos
 			.iter()
 			.map(command::SubmitInfo::as_vk)

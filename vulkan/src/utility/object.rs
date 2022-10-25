@@ -15,13 +15,7 @@ pub trait HandledObject {
 }
 
 pub trait NamedObject {
-	fn name(&self) -> &Option<String>;
-	fn wrap_name<F>(&self, f: F) -> Option<String>
-	where
-		F: Fn(&String) -> String,
-	{
-		self.name().as_ref().map(f)
-	}
+	fn name(&self) -> &String;
 }
 
 pub struct ObjectName {

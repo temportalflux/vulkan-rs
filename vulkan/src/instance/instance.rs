@@ -52,14 +52,19 @@ impl Instance {
 	pub fn create_surface(
 		context: &Context,
 		instance: &sync::Arc<Self>,
-		handle: &dyn raw_window_handle::HasRawWindowHandle,
+		display_handle: raw_window_handle::RawDisplayHandle,
+		window_handle: raw_window_handle::RawWindowHandle,
 	) -> utility::Result<Surface> {
-		Ok(
-			unsafe {
-				ash_window::create_surface(&context.loader, &instance.internal, handle, None)
-			}
-			.map(|ok| Surface::from(instance.clone(), ok))?,
-		)
+		Ok(unsafe {
+			ash_window::create_surface(
+				&context.loader,
+				&instance.internal,
+				display_handle,
+				window_handle,
+				None,
+			)
+		}
+		.map(|ok| Surface::from(instance.clone(), ok))?)
 	}
 
 	#[doc(hidden)]
@@ -75,7 +80,6 @@ impl Instance {
 		constraints: &Vec<physical::Constraint>,
 		surface: &sync::Arc<Surface>,
 	) -> Result<physical::Device, Option<physical::Constraint>> {
-		use ash::version::InstanceV1_0;
 		match unsafe { instance.internal.enumerate_physical_devices() }
 			.unwrap()
 			.into_iter()
@@ -112,7 +116,6 @@ impl std::ops::Deref for Instance {
 
 impl Drop for Instance {
 	fn drop(&mut self) {
-		use ash::version::InstanceV1_0;
 		unsafe {
 			if let Some(msgr) = self.debug_messenger {
 				self.debug_ext.destroy_debug_utils_messenger(msgr, None);
@@ -128,7 +131,6 @@ impl utility::HandledObject for Instance {
 	}
 
 	fn handle(&self) -> u64 {
-		use backend::version::InstanceV1_0;
 		use backend::vk::Handle;
 		self.internal.handle().as_raw()
 	}
@@ -140,7 +142,6 @@ impl Instance {
 		&self,
 		device: &backend::vk::PhysicalDevice,
 	) -> backend::vk::PhysicalDeviceProperties {
-		use ash::version::InstanceV1_0;
 		unsafe { self.internal.get_physical_device_properties(*device) }
 	}
 
@@ -148,7 +149,6 @@ impl Instance {
 		&self,
 		device: &backend::vk::PhysicalDevice,
 	) -> Vec<backend::vk::QueueFamilyProperties> {
-		use ash::version::InstanceV1_0;
 		unsafe {
 			self.internal
 				.get_physical_device_queue_family_properties(*device)
@@ -199,11 +199,7 @@ impl Instance {
 		&self,
 		device: &backend::vk::PhysicalDevice,
 	) -> Vec<backend::vk::ExtensionProperties> {
-		unsafe {
-			use ash::version::InstanceV1_0;
-			self.internal.enumerate_device_extension_properties(*device)
-		}
-		.unwrap()
+		unsafe { self.internal.enumerate_device_extension_properties(*device) }.unwrap()
 	}
 
 	pub fn get_physical_device_surface_capabilities(
@@ -224,7 +220,6 @@ impl Instance {
 		format: flags::format::Format,
 	) -> backend::vk::FormatProperties {
 		unsafe {
-			use backend::version::InstanceV1_0;
 			self.internal
 				.get_physical_device_format_properties(*device, format)
 		}

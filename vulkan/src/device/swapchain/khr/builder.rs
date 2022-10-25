@@ -30,7 +30,7 @@ pub struct Builder {
 	composite_alpha: CompositeAlpha,
 	present_mode: PresentMode,
 	is_clipped: bool,
-	name: Option<String>,
+	name: String,
 }
 
 impl Default for Builder {
@@ -49,7 +49,7 @@ impl Default for Builder {
 			composite_alpha: CompositeAlpha::OPAQUE,
 			present_mode: PresentMode::MAILBOX,
 			is_clipped: true,
-			name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -162,7 +162,7 @@ impl SwapchainBuilder for Builder {
 		&self,
 		old: Option<Box<dyn SwapchainTrait + 'static + Send + Sync>>,
 	) -> anyhow::Result<Box<dyn SwapchainTrait + 'static + Send + Sync>> {
-		use utility::{HandledObject, NameableBuilder};
+		use utility::HandledObject;
 		let device = self.logical_device.as_ref().unwrap().upgrade().unwrap();
 		let surface = self.surface.as_ref().unwrap().upgrade().unwrap();
 		let old_khr = old.as_ref().map(|chain| chain.as_khr()).flatten();
@@ -186,19 +186,17 @@ impl SwapchainBuilder for Builder {
 			.build();
 		let vk = unsafe { device.unwrap_swapchain().create_swapchain(&info, None) }?;
 		let swapchain = Swapchain::from(device.clone(), vk, self.clone());
-		if let Some(name) = self.name().as_ref() {
-			device.set_object_name_logged(&swapchain.create_name(name.as_str()));
-		}
+		device.set_object_name_logged(&swapchain.create_name(self.name.as_str()));
 		Ok(Box::new(swapchain))
 	}
 }
 
 impl utility::NameableBuilder for Builder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }

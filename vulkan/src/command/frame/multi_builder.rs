@@ -35,17 +35,17 @@ impl AttachedView {
 /// Information used to construct a vec/ring of [frame buffers](Buffer).
 #[derive(Default)]
 pub struct MultiBuilder {
-	name: Option<String>,
+	name: String,
 	extent: Extent2D,
 	attachments_per_frame: Vec<Vec<Weak<View>>>,
 }
 
 impl NameableBuilder for MultiBuilder {
-	fn set_optname(&mut self, name: Option<String>) {
-		self.name = name;
+	fn set_name(&mut self, name: impl Into<String>) {
+		self.name = name.into();
 	}
 
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
@@ -83,7 +83,6 @@ impl MultiBuilder {
 		device: &Arc<logical::Device>,
 		render_pass: &renderpass::Pass,
 	) -> anyhow::Result<Vec<Arc<Buffer>>> {
-		let name = self.name().clone();
 		let mut buffers = Vec::with_capacity(self.attachments_per_frame.len());
 		for (i, attachments) in self.attachments_per_frame.into_iter().enumerate() {
 			let attachments = attachments
@@ -93,7 +92,7 @@ impl MultiBuilder {
 			let deref_attachments = attachments.iter().map(|arc| &**arc).collect::<Vec<_>>();
 			buffers.push(Arc::new(
 				Buffer::builder()
-					.with_optname(name.as_ref().map(|name| format!("{}.{}", name, i)))
+					.with_name(format!("{}.{}", self.name, i))
 					.set_extent(self.extent)
 					.build(deref_attachments, &render_pass, &device)?,
 			));

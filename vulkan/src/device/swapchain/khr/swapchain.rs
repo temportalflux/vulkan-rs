@@ -20,7 +20,7 @@ pub struct Swapchain {
 	image_extent: structs::Extent2D,
 	internal: backend::vk::SwapchainKHR,
 	device: sync::Arc<logical::Device>,
-	name: Option<String>,
+	name: String,
 	image_count: usize,
 }
 
@@ -47,8 +47,8 @@ impl Swapchain {
 		}
 	}
 
-	pub fn frame_name(&self, i: usize) -> Option<String> {
-		self.name().as_ref().map(|v| format!("{}.Frame{}", v, i))
+	pub fn frame_name(&self, i: usize) -> String {
+		format!("{}.Frame{}", self.name, i)
 	}
 }
 
@@ -79,12 +79,10 @@ impl SwapchainTrait for Swapchain {
 		let images = images.into_iter().enumerate();
 		// no device reference is passed in because the images are a part of the swapchain
 		let images = images.map(|(i, image)| {
-			let name = self.frame_name(i).map(|v| format!("{}.Image", v));
+			let name = format!("{}.Image", self.frame_name(i));
 			let image =
 				Image::from_swapchain(image, name.clone(), self.image_format, self.image_extent);
-			if let Some(name) = name {
-				self.device.set_object_name_logged(&image.create_name(name));
-			}
+			self.device.set_object_name_logged(&image.create_name(name));
 			Arc::new(image)
 		});
 		Ok(images.collect())
@@ -155,7 +153,7 @@ impl utility::HandledObject for Swapchain {
 }
 
 impl NamedObject for Swapchain {
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }

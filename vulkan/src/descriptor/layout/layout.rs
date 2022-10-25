@@ -29,7 +29,6 @@ impl std::ops::Deref for SetLayout {
 
 impl Drop for SetLayout {
 	fn drop(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device
 				.destroy_descriptor_set_layout(self.internal, None);

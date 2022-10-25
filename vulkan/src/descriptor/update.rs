@@ -85,7 +85,6 @@ impl Queue {
 	/// it is recommended that it all be done in the same stack so that the bound objects aren't kept around longer than needed
 	/// (because operations hold strong reference counted pointers to the objects it will bind).
 	pub fn apply(self, device: &logical::Device) {
-		use backend::version::DeviceV1_0;
 		let mut write_images_per_operation: Vec<Vec<backend::vk::DescriptorImageInfo>> =
 			Vec::with_capacity(self.operations.len());
 		let mut write_buffers_per_operation: Vec<Vec<backend::vk::DescriptorBufferInfo>> =

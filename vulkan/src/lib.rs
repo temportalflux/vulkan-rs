@@ -1,11 +1,10 @@
 //! # Vulkan-rs
 //!
 //! A rust-safe interface for handling Vulkan structures and sending commands to / rendering on the GPU.
-//! Uses [`ash`] and [`vk_mem`] under the hood to handle the actual interfacing with the
+//! Uses [`ash`] and [`gpu-allocator`] under the hood to handle the actual interfacing with the
 //! [C/C++ Vulkan Headers Library](https://github.com/KhronosGroup/Vulkan-Headers).
 
 extern crate memoffset;
-extern crate vk_mem;
 
 pub use ash as backend;
 

@@ -15,7 +15,7 @@ pub struct Buffer {
 	recording_render_pass: Option<backend::vk::RenderPass>,
 	internal: backend::vk::CommandBuffer,
 	device: Arc<logical::Device>,
-	name: Option<String>,
+	name: String,
 	bound_objects: Vec<BoundObject>,
 }
 
@@ -23,7 +23,7 @@ pub struct Buffer {
 impl Buffer {
 	pub(crate) fn from(
 		device: Arc<logical::Device>,
-		name: Option<String>,
+		name: String,
 		internal: backend::vk::CommandBuffer,
 	) -> Buffer {
 		Buffer {
@@ -50,7 +50,6 @@ impl Buffer {
 		usage: Option<flags::CommandBufferUsage>,
 		primary: Option<&command::Buffer>,
 	) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		let inheritance_info = match primary {
 			Some(primary_buffer) => backend::vk::CommandBufferInheritanceInfo::builder()
 				.render_pass(
@@ -82,7 +81,6 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkEndCommandBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEndCommandBuffer.html).
 	pub fn end(&self) -> utility::Result<()> {
-		use backend::version::DeviceV1_0;
 		Ok(unsafe { self.device.end_command_buffer(self.internal) }?)
 	}
 
@@ -92,7 +90,6 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdExecuteCommands`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdExecuteCommands.html).
 	pub fn execute(&self, secondary_buffers: Vec<&command::Buffer>) {
-		use backend::version::DeviceV1_0;
 		let unwraped = secondary_buffers
 			.iter()
 			.map(|cmd_buffer| ***cmd_buffer)
@@ -134,7 +131,6 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdPipelineBarrier`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPipelineBarrier.html).
 	pub fn mark_pipeline_barrier(&self, barrier: command::barrier::Pipeline) {
-		use backend::version::DeviceV1_0;
 		use command::barrier::Kind::*;
 		let mut memory_barriers: Vec<backend::vk::MemoryBarrier> = Vec::new();
 		let mut buffer_barriers: Vec<backend::vk::BufferMemoryBarrier> = Vec::new();
@@ -177,7 +173,6 @@ impl Buffer {
 		layout: flags::ImageLayout,
 		regions: Vec<command::CopyBufferToImage>,
 	) {
-		use backend::version::DeviceV1_0;
 		let regions = regions
 			.into_iter()
 			.map(|region| {
@@ -213,7 +208,6 @@ impl Buffer {
 		dst: &buffer::Buffer,
 		regions: Vec<command::CopyBufferRange>,
 	) {
-		use backend::version::DeviceV1_0;
 		let regions = regions
 			.into_iter()
 			.map(|region| {
@@ -246,7 +240,6 @@ impl Buffer {
 		info: renderpass::RecordInstruction,
 		uses_secondary_buffers: bool,
 	) {
-		use backend::version::DeviceV1_0;
 		let clear_values = info
 			.clear_values
 			.iter()
@@ -281,7 +274,6 @@ impl Buffer {
 	/// Equivalent to [`vkCmdNextSubpass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdNextSubpass.html).
 	#[profiling::function]
 	pub fn next_subpass(&mut self, uses_secondary_buffers: bool) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device.cmd_next_subpass(
 				self.internal,
@@ -301,7 +293,6 @@ impl Buffer {
 	/// Equivalent to [`vkCmdEndRenderPass`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndRenderPass.html).
 	#[profiling::function]
 	pub fn stop_render_pass(&mut self) {
-		use backend::version::DeviceV1_0;
 		unsafe { self.device.cmd_end_render_pass(self.internal) };
 		self.recording_render_pass = None;
 		self.recording_framebuffer = None;
@@ -321,7 +312,6 @@ impl Buffer {
 		pipeline: &Arc<pipeline::Pipeline>,
 		bind_point: flags::PipelineBindPoint,
 	) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device
 				.cmd_bind_pipeline(self.internal, bind_point, ***pipeline)
@@ -345,7 +335,6 @@ impl Buffer {
 		first_set_index: usize,
 		sets: Vec<&descriptor::Set>,
 	) {
-		use backend::version::DeviceV1_0;
 		let vk_sets = sets.iter().map(|set| ***set).collect::<Vec<_>>();
 		let offsets = Vec::new();
 		unsafe {
@@ -365,7 +354,6 @@ impl Buffer {
 
 	/// Equivalent to [`vkCmdSetViewport`](https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCmdSetViewport.html).
 	pub fn set_dynamic_viewport(&self, first: usize, viewports: Vec<Viewport>) {
-		use backend::version::DeviceV1_0;
 		let vk = viewports
 			.into_iter()
 			.map(|viewport| viewport.into())
@@ -382,7 +370,6 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdSetScissor`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetScissor.html).
 	pub fn set_dynamic_scissors(&self, scissors: Vec<utility::Scissor>) {
-		use backend::version::DeviceV1_0;
 		let scissors = scissors
 			.into_iter()
 			.map(|scissor| scissor.into())
@@ -399,7 +386,6 @@ impl Buffer {
 	) where
 		T: Sized + bytemuck::Pod,
 	{
-		use backend::version::DeviceV1_0;
 		use bytemuck::bytes_of;
 		// TODO: add layout validation to prevent writing over push constant boundaries?
 		unsafe {
@@ -430,7 +416,6 @@ impl Buffer {
 		buffers: Vec<&Arc<buffer::Buffer>>,
 		offsets: Vec<u64>,
 	) {
-		use backend::version::DeviceV1_0;
 		use std::ops::Deref;
 		let mut vk_buffers = Vec::with_capacity(buffers.len());
 		for arc in buffers.into_iter() {
@@ -455,7 +440,6 @@ impl Buffer {
 	///
 	/// Equivalent to [`vkCmdBindIndexBuffer`](https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindIndexBuffer.html).
 	pub fn bind_index_buffer(&mut self, buffer: &Arc<buffer::Buffer>, offset: u64) {
-		use backend::version::DeviceV1_0;
 		use std::ops::Deref;
 		assert_ne!(*buffer.index_type(), None);
 		let index_type = buffer.index_type().unwrap();
@@ -490,7 +474,6 @@ impl Buffer {
 		first_instance: usize,
 		vertex_offset: usize,
 	) {
-		use backend::version::DeviceV1_0;
 		unsafe {
 			self.device.cmd_draw_indexed(
 				self.internal,
@@ -529,7 +512,7 @@ impl utility::HandledObject for Buffer {
 }
 
 impl utility::NamedObject for Buffer {
-	fn name(&self) -> &Option<String> {
+	fn name(&self) -> &String {
 		&self.name
 	}
 }
