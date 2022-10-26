@@ -17,10 +17,7 @@ impl Memory {
 	/// Starts a memory mapping to the memory for a given object.
 	/// Mapping will be unmapped when the memory wrapper is dropped.
 	pub fn new(buffer: sync::Arc<Buffer>) -> utility::Result<Memory> {
-		let size = {
-			let handle = buffer.handle().lock().unwrap();
-			handle.size() as usize
-		};
+		let size = buffer.size();
 		Ok(Memory {
 			size,
 			amount_written: 0,
@@ -44,12 +41,11 @@ impl Memory {
 			return Ok(false);
 		}
 		if let Ok(mut guard) = self.buffer.handle().lock() {
-			if let Some(mapped) = guard.mapped_slice_mut() {
-				let src = buf.as_ptr() as *const u8;
-				let dst = mapped.as_ptr() as *mut u8;
-				let dst = ((dst as usize) + self.amount_written) as *mut u8;
-				unsafe { std::ptr::copy(src, dst, buf_size) };
-			}
+			let mapped = guard.mapped_ptr().unwrap();
+			let src = buf.as_ptr() as *const u8;
+			let dst = mapped.as_ptr() as *mut u8;
+			let dst = ((dst as usize) + self.amount_written) as *mut u8;
+			unsafe { std::ptr::copy(src, dst, buf_size) };
 		}
 		self.amount_written += buf_size;
 		Ok(true)
@@ -62,7 +58,19 @@ impl Memory {
 	/// Multiple items can be written in sequence,
 	/// so long as the total memory does not overflow the object's size.
 	pub fn write_item<T: Sized>(&mut self, item: &T) -> std::io::Result<bool> {
-		self.write_slice(&[item])
+		let buf_size = std::mem::size_of::<T>();
+		if buf_size > self.size - self.amount_written {
+			return Ok(false);
+		}
+		if let Ok(mut guard) = self.buffer.handle().lock() {
+			let mapped = guard.mapped_ptr().unwrap();
+			let src = (item as *const T) as *const u8;
+			let dst = mapped.as_ptr() as *mut u8;
+			let dst = ((dst as usize) + self.amount_written) as *mut u8;
+			unsafe { std::ptr::copy(src, dst, buf_size) };
+		}
+		self.amount_written += buf_size;
+		Ok(true)
 	}
 }
 

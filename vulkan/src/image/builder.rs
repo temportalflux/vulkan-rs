@@ -6,7 +6,7 @@ use crate::{
 	},
 	image::Image,
 	structs::Extent3D,
-	utility,
+	utility::{self, HandledObject},
 };
 use std::sync;
 
@@ -123,6 +123,10 @@ impl utility::BuildFromAllocator for Builder {
 			Some(alloc_handle),
 			self.clone(),
 		);
+		allocator
+			.logical()
+			.unwrap()
+			.set_object_name_logged(&image.create_name(&self.name));
 		Ok(image)
 	}
 }

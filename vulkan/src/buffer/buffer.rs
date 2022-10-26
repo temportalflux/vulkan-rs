@@ -105,7 +105,7 @@ impl Buffer {
 	}
 
 	pub fn size(&self) -> usize {
-		self.handle().lock().unwrap().size() as usize
+		self.builder.size()
 	}
 
 	/// Maps the memory of the buffer for writing.

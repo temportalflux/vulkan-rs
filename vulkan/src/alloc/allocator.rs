@@ -23,7 +23,7 @@ impl Allocator {
 			physical_device: **physical,
 			device: (**logical).clone(),
 			debug_settings: Default::default(),
-			buffer_device_address: true, // Ideally, check the BufferDeviceAddressFeatures struct.
+			buffer_device_address: false, // Ideally, check the BufferDeviceAddressFeatures struct.
 		};
 		Ok(Allocator {
 			internal: sync::Mutex::new(gpu_allocator::vulkan::Allocator::new(&desc)?),
@@ -69,8 +69,8 @@ impl Allocator {
 		is_tiled: bool,
 	) -> anyhow::Result<(crate::backend::vk::Image, gpu_allocator::vulkan::Allocation)> {
 		let device = self.logical().unwrap();
-		let buffer = unsafe { device.create_image(info, None) }?;
-		let requirements = unsafe { device.get_image_memory_requirements(buffer) };
+		let image = unsafe { device.create_image(info, None) }?;
+		let requirements = unsafe { device.get_image_memory_requirements(image) };
 		let alloc_desc = gpu_allocator::vulkan::AllocationCreateDesc {
 			name,
 			requirements,
@@ -82,8 +82,8 @@ impl Allocator {
 			let mut allocator = self.internal.lock().unwrap();
 			allocator.allocate(&alloc_desc)?
 		};
-		unsafe { device.bind_image_memory(buffer, allocation.memory(), allocation.offset())? };
-		Ok((buffer, allocation))
+		unsafe { device.bind_image_memory(image, allocation.memory(), allocation.offset())? };
+		Ok((image, allocation))
 	}
 
 	pub fn destroy_buffer(
