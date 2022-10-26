@@ -24,7 +24,7 @@ pub struct Info {
 	queues: Vec<DeviceQueue>,
 	features: backend::vk::PhysicalDeviceFeatures,
 
-	object_name: Option<String>,
+	name: String,
 }
 
 impl Default for Info {
@@ -42,7 +42,7 @@ impl Default for Info {
 				.sample_rate_shading(true)
 				.build(),
 
-			object_name: None,
+			name: String::new(),
 		}
 	}
 }
@@ -90,7 +90,7 @@ impl Info {
 	where
 		T: Into<String>,
 	{
-		self.object_name = Some(name.into());
+		self.name = name.into();
 		self
 	}
 
@@ -99,7 +99,7 @@ impl Info {
 	pub fn create_object(
 		&mut self,
 		instance: &sync::Arc<Instance>,
-		physical_device: &physical::Device,
+		physical_device: &sync::Arc<physical::Device>,
 	) -> utility::Result<logical::Device> {
 		self.extension_names_raw = self
 			.extension_names
@@ -135,11 +135,9 @@ impl Info {
 
 		info.p_enabled_features = &self.features as _;
 
-		let internal = unsafe { instance.create_device(**physical_device, &info, None) }?;
-		let device = logical::Device::from(&instance, internal);
-		if let Some(name_ref) = self.object_name.as_ref() {
-			device.set_object_name_logged(&device.create_name(name_ref.as_str()));
-		}
+		let internal = unsafe { instance.create_device(***physical_device, &info, None) }?;
+		let device = logical::Device::from(&instance, &physical_device, internal, self.name.clone());
+		device.set_object_name_logged(&device.create_name(self.name.as_str()));
 		Ok(device)
 	}
 }

@@ -60,7 +60,7 @@ impl utility::BuildFromDevice for Builder {
 			.bindings(&self.bindings)
 			.build();
 		let internal = unsafe { device.create_descriptor_set_layout(&create_info, None) }?;
-		let layout = layout::SetLayout::from(device.clone(), internal);
+		let layout = layout::SetLayout::from(device.clone(), internal, self.name.clone());
 		self.set_object_name(device, &layout);
 		Ok(layout)
 	}

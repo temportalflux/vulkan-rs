@@ -1,6 +1,6 @@
 use crate::{
 	backend, command,
-	device::logical,
+	device::{logical, physical},
 	image,
 	instance::Instance,
 	utility::{self},
@@ -12,16 +12,26 @@ use std::sync;
 pub struct Device {
 	swapchain: backend::extensions::khr::Swapchain,
 	internal: backend::Device,
+	// Hold strong reference to ensure the physical device is dropped after logical.
+	_physical: sync::Arc<physical::Device>,
 	instance: sync::Weak<Instance>,
+	name: String,
 }
 
 impl Device {
 	/// The internal constructor. Users should use [`Info.create_object`](struct.Info.html#method.create_object) to create a vulkan instance.
-	pub(crate) fn from(instance: &sync::Arc<Instance>, internal: backend::Device) -> Device {
+	pub(crate) fn from(
+		instance: &sync::Arc<Instance>,
+		physical_device: &sync::Arc<physical::Device>,
+		internal: backend::Device,
+		name: String,
+	) -> Device {
 		Device {
 			instance: sync::Arc::downgrade(&instance),
+			_physical: physical_device.clone(),
 			swapchain: backend::extensions::khr::Swapchain::new(&***instance, &internal),
 			internal,
+			name,
 		}
 	}
 
@@ -201,6 +211,11 @@ impl Device {
 
 impl Drop for Device {
 	fn drop(&mut self) {
+		log::debug!(
+			target: crate::LOG,
+			"Dropping LogicalDevice: {:?}",
+			self.name
+		);
 		unsafe {
 			self.internal.destroy_device(None);
 		}

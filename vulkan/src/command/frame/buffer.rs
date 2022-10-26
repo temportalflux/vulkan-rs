@@ -8,6 +8,7 @@ use std::sync;
 pub struct Buffer {
 	internal: backend::vk::Framebuffer,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Buffer {
@@ -22,8 +23,13 @@ impl Buffer {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Framebuffer,
+		name: String,
 	) -> Self {
-		Self { device, internal }
+		Self {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -36,6 +42,7 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping FrameBuffer: {:?}", self.name);
 		unsafe { self.device.destroy_framebuffer(self.internal, None) };
 	}
 }

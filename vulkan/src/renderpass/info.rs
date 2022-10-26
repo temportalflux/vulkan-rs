@@ -258,7 +258,8 @@ impl utility::BuildFromDevice for Info {
 			.dependencies(&dependencies)
 			.build();
 		let vk = unsafe { device.create_render_pass(&vk_info, None) }?;
-		let pass = renderpass::Pass::from(device.clone(), vk, self.subpass_order());
+		let pass =
+			renderpass::Pass::from(device.clone(), vk, self.subpass_order(), self.name.clone());
 		self.set_object_name(device, &pass);
 		Ok(pass)
 	}

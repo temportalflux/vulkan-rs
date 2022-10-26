@@ -4,6 +4,7 @@ use std::sync;
 pub struct Sampler {
 	internal: backend::vk::Sampler,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Sampler {
@@ -14,8 +15,13 @@ impl Sampler {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Sampler,
+		name: String,
 	) -> Sampler {
-		Sampler { device, internal }
+		Sampler {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -28,6 +34,7 @@ impl std::ops::Deref for Sampler {
 
 impl Drop for Sampler {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Sampler: {:?}", self.name);
 		unsafe { self.device.destroy_sampler(self.internal, None) };
 	}
 }

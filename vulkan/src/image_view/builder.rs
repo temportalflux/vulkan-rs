@@ -93,7 +93,7 @@ impl utility::BuildFromDevice for Builder {
 			.subresource_range(self.subresource_range.into())
 			.build();
 		let vk = unsafe { device.create_image_view(&info, None) }?;
-		let view = View::from(device.clone(), image, vk);
+		let view = View::from(device.clone(), image, vk, self.name.clone());
 		self.set_object_name(device, &view);
 		Ok(view)
 	}

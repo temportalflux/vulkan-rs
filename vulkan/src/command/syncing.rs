@@ -19,13 +19,15 @@ pub enum SyncObject<'a> {
 pub struct Semaphore {
 	internal: backend::vk::Semaphore,
 	device: sync::Arc<logical::Device>,
+	#[allow(dead_code)]
+	name: String,
 }
 
 impl Semaphore {
 	pub fn new(device: &sync::Arc<logical::Device>, name: &str) -> utility::Result<Semaphore> {
 		let info = backend::vk::SemaphoreCreateInfo::builder().build();
 		let vk = unsafe { device.create_semaphore(&info, None) }?;
-		let semaphore = Semaphore::from(device.clone(), vk);
+		let semaphore = Semaphore::from(device.clone(), vk, name.to_owned());
 		device.set_object_name_logged(&semaphore.create_name(name));
 		Ok(semaphore)
 	}
@@ -33,8 +35,13 @@ impl Semaphore {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Semaphore,
+		name: String,
 	) -> Semaphore {
-		Semaphore { device, internal }
+		Semaphore {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -47,6 +54,13 @@ impl std::ops::Deref for Semaphore {
 
 impl Drop for Semaphore {
 	fn drop(&mut self) {
+		/*
+		log::debug!(
+			target: crate::LOG,
+			"Dropping Semaphore: {:?}",
+			self.name
+		);
+		*/
 		unsafe { self.device.destroy_semaphore(self.internal, None) };
 	}
 }
@@ -68,6 +82,8 @@ impl HandledObject for Semaphore {
 pub struct Fence {
 	internal: backend::vk::Fence,
 	device: sync::Arc<logical::Device>,
+	#[allow(dead_code)]
+	name: String,
 }
 
 impl Fence {
@@ -78,13 +94,21 @@ impl Fence {
 	) -> utility::Result<Fence> {
 		let info = backend::vk::FenceCreateInfo::builder().flags(state).build();
 		let vk = unsafe { device.create_fence(&info, None) }?;
-		let fence = Fence::from(device.clone(), vk);
+		let fence = Fence::from(device.clone(), vk, name.to_owned());
 		device.set_object_name_logged(&fence.create_name(name));
 		Ok(fence)
 	}
 
-	pub(crate) fn from(device: sync::Arc<logical::Device>, internal: backend::vk::Fence) -> Fence {
-		Fence { device, internal }
+	pub(crate) fn from(
+		device: sync::Arc<logical::Device>,
+		internal: backend::vk::Fence,
+		name: String,
+	) -> Fence {
+		Fence {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -97,6 +121,13 @@ impl std::ops::Deref for Fence {
 
 impl Drop for Fence {
 	fn drop(&mut self) {
+		/*
+		log::debug!(
+			target: crate::LOG,
+			"Dropping Fence: {:?}",
+			self.name
+		);
+		*/
 		unsafe { self.device.destroy_fence(self.internal, None) };
 	}
 }

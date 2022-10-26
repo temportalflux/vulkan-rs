@@ -52,19 +52,21 @@ impl Buffer {
 		usage: BufferUsage,
 		size: usize,
 		index_type: Option<IndexType>,
+		supress_log_on_drop: bool,
 	) -> anyhow::Result<sync::Arc<Self>> {
 		use utility::{BuildFromAllocator, NameableBuilder};
-		Ok(sync::Arc::new(
-			Self::builder()
-				.with_name(name)
-				.with_sharing(SharingMode::EXCLUSIVE)
-				.with_usage(usage)
-				.with_usage(BufferUsage::TRANSFER_DST)
-				.with_index_type(index_type)
-				.with_size(size)
-				.with_location(MemoryLocation::GpuOnly)
-				.build(&allocator)?,
-		))
+		let mut builder = Self::builder()
+			.with_name(name)
+			.with_sharing(SharingMode::EXCLUSIVE)
+			.with_usage(usage)
+			.with_usage(BufferUsage::TRANSFER_DST)
+			.with_index_type(index_type)
+			.with_size(size)
+			.with_location(MemoryLocation::GpuOnly);
+		if supress_log_on_drop {
+			builder = builder.supress_log_on_drop();
+		}
+		Ok(sync::Arc::new(builder.build(&allocator)?))
 	}
 
 	/// Creates an [`exclusive`](SharingMode::EXCLUSIVE) buffer,
@@ -82,6 +84,7 @@ impl Buffer {
 			.with_usage(BufferUsage::TRANSFER_SRC)
 			.with_size(size)
 			.with_location(MemoryLocation::CpuToGpu)
+			.supress_log_on_drop()
 			.build(allocator)
 	}
 
@@ -130,6 +133,14 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
+		if !self.builder.supress_drop_log {
+			use utility::NameableBuilder;
+			log::debug!(
+				target: crate::LOG,
+				"Dropping Buffer: {:?}",
+				self.builder.name()
+			);
+		}
 		let allocation = self.allocation_handle.take().unwrap();
 		self.allocator.destroy_buffer(**self, allocation).unwrap();
 	}

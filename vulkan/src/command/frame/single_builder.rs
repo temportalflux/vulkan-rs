@@ -41,7 +41,7 @@ impl SingleBuilder {
 			.attachments(&attachments[..])
 			.build();
 		let vk = unsafe { device.create_framebuffer(&info, None) }?;
-		let framebuffer = Buffer::from(device.clone(), vk);
+		let framebuffer = Buffer::from(device.clone(), vk, self.name.clone());
 		device.set_object_name_logged(&framebuffer.create_name(self.name.as_str()));
 		Ok(framebuffer)
 	}

@@ -133,6 +133,7 @@ impl std::ops::Deref for Swapchain {
 
 impl Drop for Swapchain {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Swapchain: {:?}", self.name);
 		unsafe {
 			self.device
 				.unwrap_swapchain()

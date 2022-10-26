@@ -5,6 +5,7 @@ use std::sync;
 pub struct SetLayout {
 	internal: backend::vk::DescriptorSetLayout,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl SetLayout {
@@ -15,8 +16,13 @@ impl SetLayout {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::DescriptorSetLayout,
+		name: String,
 	) -> SetLayout {
-		SetLayout { device, internal }
+		SetLayout {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -29,6 +35,11 @@ impl std::ops::Deref for SetLayout {
 
 impl Drop for SetLayout {
 	fn drop(&mut self) {
+		log::debug!(
+			target: crate::LOG,
+			"Dropping DescriptorSetLayout: {:?}",
+			self.name
+		);
 		unsafe {
 			self.device
 				.destroy_descriptor_set_layout(self.internal, None);

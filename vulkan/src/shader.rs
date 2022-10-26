@@ -19,6 +19,7 @@ pub struct Module {
 	kind: ShaderKind,
 	internal: backend::vk::ShaderModule,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Module {
@@ -52,12 +53,14 @@ impl Module {
 			internal,
 			entry_point: std::ffi::CString::default(),
 			kind: ShaderKind::Vertex,
+			name: String::new(),
 		})
 	}
 
-	pub fn set_name(self, name: String) -> Self {
-		self.device
-			.set_object_name_logged(&self.create_name(name.as_str()));
+	pub fn set_name(mut self, name: String) -> Self {
+		let obj_name = self.create_name(name.as_str());
+		self.device.set_object_name_logged(&obj_name);
+		self.name = name;
 		self
 	}
 
@@ -89,6 +92,7 @@ impl std::ops::Deref for Module {
 
 impl Drop for Module {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Shader: {:?}", self.name);
 		unsafe { self.device.destroy_shader_module(self.internal, None) };
 	}
 }

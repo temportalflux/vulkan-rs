@@ -10,6 +10,7 @@ pub struct View {
 	internal: backend::vk::ImageView,
 	image: sync::Arc<Image>,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl View {
@@ -23,11 +24,13 @@ impl View {
 		device: sync::Arc<logical::Device>,
 		image: sync::Arc<Image>,
 		internal: backend::vk::ImageView,
+		name: String,
 	) -> View {
 		View {
 			device,
 			image,
 			internal,
+			name,
 		}
 	}
 
@@ -46,6 +49,7 @@ impl std::ops::Deref for View {
 
 impl Drop for View {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping ImageView: {:?}", self.name);
 		unsafe { self.device.destroy_image_view(self.internal, None) };
 	}
 }

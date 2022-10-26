@@ -154,7 +154,7 @@ impl Builder {
 				_ => Err(utility::Error::VulkanError(vk_result)),
 			},
 		}?;
-		let pipeline = Pipeline::from(device.clone(), pipelines[0]);
+		let pipeline = Pipeline::from(device.clone(), pipelines[0], self.name.clone());
 		device.set_object_name_logged(&pipeline.create_name(self.name.as_str()));
 		Ok(pipeline)
 	}

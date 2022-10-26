@@ -112,6 +112,7 @@ impl std::ops::Deref for Image {
 
 impl Drop for Image {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Image: {:?}", self.name);
 		if let Some(owner) = &self.owner {
 			let allocation = self.allocation_handle.take();
 			owner.destroy(self, allocation).unwrap();

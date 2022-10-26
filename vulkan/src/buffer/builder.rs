@@ -10,6 +10,7 @@ use std::sync;
 #[derive(Clone)]
 pub struct Builder {
 	name: String,
+	pub(crate) supress_drop_log: bool,
 	/// The allocation information/builder for allocating the buffer.
 	location: MemoryLocation,
 	/// The desired size of the buffer.
@@ -25,6 +26,7 @@ impl Default for Builder {
 	fn default() -> Builder {
 		Builder {
 			name: String::new(),
+			supress_drop_log: false,
 			location: MemoryLocation::Unknown,
 			size: 0,
 			usage: BufferUsage::empty(),
@@ -96,6 +98,11 @@ impl Builder {
 	/// Can be called multiple times to support multiple queue families.
 	pub fn with_queue(mut self, family_index: usize) -> Self {
 		self.queue_families.push(family_index as u32);
+		self
+	}
+
+	pub fn supress_log_on_drop(mut self) -> Self {
+		self.supress_drop_log = true;
 		self
 	}
 }

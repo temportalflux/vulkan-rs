@@ -28,6 +28,7 @@ impl std::ops::Deref for Surface {
 
 impl Drop for Surface {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Surface");
 		self.instance.destroy_surface(self.internal);
 	}
 }

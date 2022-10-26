@@ -140,7 +140,7 @@ impl Procedure {
 			.dependencies(&dependencies)
 			.build();
 		let vk = unsafe { device.create_render_pass(&vk_info, None) }?;
-		let pass = renderpass::Pass::from(device.clone(), vk, vec![]);
+		let pass = renderpass::Pass::from(device.clone(), vk, vec![], self.name.clone());
 		device.set_object_name_logged(&pass.create_name(self.name.as_str()));
 		Ok(pass)
 	}

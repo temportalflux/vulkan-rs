@@ -53,8 +53,8 @@ pub struct Device {
 	extension_properties: HashMap<String, backend::vk::ExtensionProperties>,
 
 	_internal: backend::vk::PhysicalDevice,
-	surface: sync::Weak<Surface>,
-	instance: sync::Weak<Instance>,
+	surface: sync::Arc<Surface>,
+	instance: sync::Arc<Instance>,
 }
 
 impl Device {
@@ -65,8 +65,8 @@ impl Device {
 		surface: &sync::Arc<Surface>,
 	) -> Device {
 		Device {
-			instance: sync::Arc::downgrade(&instance),
-			surface: sync::Arc::downgrade(&surface),
+			instance: instance.clone(),
+			surface: surface.clone(),
 			_internal: vk,
 			properties: instance.get_physical_device_properties(&vk),
 			queue_families: instance
@@ -136,15 +136,13 @@ impl Device {
 	}
 
 	pub fn query_surface_support(&self) -> SurfaceSupport {
-		let instance = self.instance.upgrade().unwrap();
-		let surface = self.surface.upgrade().unwrap();
 		SurfaceSupport {
-			surface_capabilities: instance
-				.get_physical_device_surface_capabilities(&self._internal, &*surface),
-			surface_formats: instance
-				.get_physical_device_surface_formats(&self._internal, &*surface),
-			present_modes: instance
-				.get_physical_device_surface_present_modes(&self._internal, &*surface),
+			surface_capabilities: self.instance
+				.get_physical_device_surface_capabilities(&self._internal, &*self.surface),
+			surface_formats: self.instance
+				.get_physical_device_surface_formats(&self._internal, &*self.surface),
+			present_modes: self.instance
+				.get_physical_device_surface_present_modes(&self._internal, &*self.surface),
 		}
 	}
 
@@ -154,9 +152,8 @@ impl Device {
 		tiling: ImageTiling,
 		flags: FormatFeatureFlags,
 	) -> Option<Format> {
-		let instance = self.instance.upgrade().unwrap();
 		for &format in candidates.iter() {
-			let properties = instance.get_physical_device_format_properties(&self, format);
+			let properties = self.instance.get_physical_device_format_properties(&self, format);
 			if tiling == ImageTiling::LINEAR && (properties.linear_tiling_features & flags) == flags
 			{
 				return Some(format);
@@ -220,6 +217,12 @@ impl std::fmt::Display for Device {
 			self.api_version(),
 			self.driver_version()
 		)
+	}
+}
+
+impl Drop for Device {
+	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping PhysicalDevice");
 	}
 }
 

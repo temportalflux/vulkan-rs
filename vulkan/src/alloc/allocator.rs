@@ -8,7 +8,7 @@ use std::sync;
 /// A wrapper for the [`gpu allocator`](gpu-allocator) for handling the allocation of [`graphics objects`](crate::alloc::Object).
 pub struct Allocator {
 	internal: sync::Mutex<gpu_allocator::vulkan::Allocator>,
-	logical: sync::Weak<logical::Device>,
+	logical: sync::Arc<logical::Device>,
 }
 
 impl Allocator {
@@ -27,12 +27,12 @@ impl Allocator {
 		};
 		Ok(Allocator {
 			internal: sync::Mutex::new(gpu_allocator::vulkan::Allocator::new(&desc)?),
-			logical: sync::Arc::downgrade(&logical),
+			logical: logical.clone(),
 		})
 	}
 
 	pub fn logical(&self) -> Option<sync::Arc<logical::Device>> {
-		self.logical.upgrade()
+		Some(self.logical.clone())
 	}
 
 	pub fn create_buffer(
@@ -115,5 +115,11 @@ impl image::Owner for Allocator {
 		}
 		unsafe { device.destroy_image(**obj, None) };
 		Ok(())
+	}
+}
+
+impl Drop for Allocator {
+	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Allocator");
 	}
 }

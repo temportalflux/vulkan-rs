@@ -9,6 +9,7 @@ pub struct Pass {
 	subpass_order: Vec<String>,
 	internal: backend::vk::RenderPass,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Pass {
@@ -16,11 +17,13 @@ impl Pass {
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::RenderPass,
 		subpass_order: Vec<String>,
+		name: String,
 	) -> Pass {
 		Pass {
 			device,
 			internal,
 			subpass_order,
+			name,
 		}
 	}
 
@@ -45,6 +48,7 @@ impl std::ops::Deref for Pass {
 
 impl Drop for Pass {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping RenderPass: {:?}", self.name);
 		unsafe { self.device.destroy_render_pass(self.internal, None) };
 	}
 }

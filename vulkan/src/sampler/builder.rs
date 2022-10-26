@@ -136,7 +136,7 @@ impl utility::BuildFromDevice for Builder {
 	type Output = sampler::Sampler;
 	fn build(self, device: &sync::Arc<logical::Device>) -> anyhow::Result<Self::Output> {
 		let vk = unsafe { device.create_sampler(&self.as_vk(), None) }?;
-		let sampler = sampler::Sampler::from(device.clone(), vk);
+		let sampler = sampler::Sampler::from(device.clone(), vk, self.name.clone());
 		self.set_object_name(device, &sampler);
 		Ok(sampler)
 	}

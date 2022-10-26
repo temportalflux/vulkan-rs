@@ -74,6 +74,7 @@ impl utility::BuildFromDevice for Builder {
 		let layout = Layout {
 			internal: unsafe { device.create_pipeline_layout(&vk_info, None) }?,
 			device: device.clone(),
+			name: self.name.clone(),
 		};
 		self.set_object_name(device, &layout);
 		Ok(layout)
@@ -88,6 +89,7 @@ impl utility::BuildFromDevice for Builder {
 pub struct Layout {
 	internal: backend::vk::PipelineLayout,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Layout {
@@ -105,6 +107,11 @@ impl std::ops::Deref for Layout {
 
 impl Drop for Layout {
 	fn drop(&mut self) {
+		log::debug!(
+			target: crate::LOG,
+			"Dropping PipelineLayout: {:?}",
+			self.name
+		);
 		unsafe { self.device.destroy_pipeline_layout(self.internal, None) };
 	}
 }

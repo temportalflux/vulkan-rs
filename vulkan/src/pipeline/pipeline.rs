@@ -7,6 +7,7 @@ use std::sync;
 pub struct Pipeline {
 	internal: backend::vk::Pipeline,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Pipeline {
@@ -17,8 +18,13 @@ impl Pipeline {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::Pipeline,
+		name: String,
 	) -> Pipeline {
-		Pipeline { device, internal }
+		Pipeline {
+			device,
+			internal,
+			name,
+		}
 	}
 }
 
@@ -31,6 +37,7 @@ impl std::ops::Deref for Pipeline {
 
 impl Drop for Pipeline {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping Pipeline: {:?}", self.name);
 		unsafe { self.device.destroy_pipeline(self.internal, None) };
 	}
 }

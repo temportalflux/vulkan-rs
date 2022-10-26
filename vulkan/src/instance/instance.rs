@@ -116,6 +116,7 @@ impl std::ops::Deref for Instance {
 
 impl Drop for Instance {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping instance");
 		unsafe {
 			if let Some(msgr) = self.debug_messenger {
 				self.debug_ext.destroy_debug_utils_messenger(msgr, None);

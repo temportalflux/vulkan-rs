@@ -98,6 +98,7 @@ impl std::ops::Deref for Pool {
 
 impl Drop for Pool {
 	fn drop(&mut self) {
+		log::debug!(target: crate::LOG, "Dropping CommandPool: {:?}", self.name);
 		unsafe { self.device.destroy_command_pool(self.internal, None) };
 	}
 }

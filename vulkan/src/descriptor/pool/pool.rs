@@ -17,6 +17,7 @@ pub struct Pool {
 	owned_sets: Vec<sync::Arc<descriptor::Set>>,
 	internal: backend::vk::DescriptorPool,
 	device: sync::Arc<logical::Device>,
+	name: String,
 }
 
 impl Pool {
@@ -27,11 +28,13 @@ impl Pool {
 	pub(crate) fn from(
 		device: sync::Arc<logical::Device>,
 		internal: backend::vk::DescriptorPool,
+		name: String,
 	) -> Pool {
 		Pool {
 			device,
 			internal,
 			owned_sets: Vec::new(),
+			name,
 		}
 	}
 
@@ -100,6 +103,11 @@ impl std::ops::Deref for Pool {
 
 impl Drop for Pool {
 	fn drop(&mut self) {
+		log::debug!(
+			target: crate::LOG,
+			"Dropping DescriptorPool: {:?}",
+			self.name
+		);
 		unsafe {
 			self.device.destroy_descriptor_pool(self.internal, None);
 		}

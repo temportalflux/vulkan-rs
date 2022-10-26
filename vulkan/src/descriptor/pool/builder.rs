@@ -72,7 +72,7 @@ impl utility::BuildFromDevice for Builder {
 			.pool_sizes(&self.descriptors)
 			.build();
 		let internal = unsafe { device.create_descriptor_pool(&create_info, None) }?;
-		let pool = Pool::from(device.clone(), internal);
+		let pool = Pool::from(device.clone(), internal, self.name.clone());
 		self.set_object_name(device, &pool);
 		Ok(pool)
 	}
