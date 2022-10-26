@@ -19,7 +19,7 @@ log = "0.4.14"
 profiling = "1.0"
 raw-window-handle = "0.5"
 gpu-allocator = "0.20"
-shaderc = "0.7"
+shaderc = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 memoffset = "0.7"
 enumset = { version = "1.0", features = ["serde"] }
