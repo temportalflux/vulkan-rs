@@ -17,7 +17,7 @@ pub struct Buffer {
 	/// If it is dropped, the buffer wont actually be destroyed
 	/// (which is why this object has a handle to the allocator and alloc info).
 	internal: backend::vk::Buffer,
-	allocation_handle: Option<sync::Mutex<gpu_allocator::vulkan::Allocation>>,
+	allocation_handle: Option<gpu_allocator::vulkan::Allocation>,
 	allocator: sync::Arc<alloc::Allocator>,
 	builder: Builder,
 }
@@ -38,7 +38,7 @@ impl Buffer {
 		Buffer {
 			allocator,
 			internal,
-			allocation_handle: Some(sync::Mutex::new(allocation_handle)),
+			allocation_handle: Some(allocation_handle),
 			builder,
 		}
 	}
@@ -100,7 +100,7 @@ impl Buffer {
 		Ok(None)
 	}
 
-	pub(crate) fn handle(&self) -> &sync::Mutex<gpu_allocator::vulkan::Allocation> {
+	pub(crate) fn handle(&self) -> &gpu_allocator::vulkan::Allocation {
 		self.allocation_handle.as_ref().unwrap()
 	}
 
@@ -130,8 +130,7 @@ impl std::ops::Deref for Buffer {
 
 impl Drop for Buffer {
 	fn drop(&mut self) {
-		let locked_handle = self.allocation_handle.take().unwrap();
-		let allocation = locked_handle.into_inner().unwrap();
+		let allocation = self.allocation_handle.take().unwrap();
 		self.allocator.destroy_buffer(**self, allocation).unwrap();
 	}
 }

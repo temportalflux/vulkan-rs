@@ -40,8 +40,7 @@ impl Memory {
 		if buf_size > self.size - self.amount_written {
 			return Ok(false);
 		}
-		if let Ok(mut guard) = self.buffer.handle().lock() {
-			let mapped = guard.mapped_ptr().unwrap();
+		if let Some(mapped) = self.buffer.handle().mapped_ptr() {
 			let src = buf.as_ptr() as *const u8;
 			let dst = mapped.as_ptr() as *mut u8;
 			let dst = ((dst as usize) + self.amount_written) as *mut u8;
@@ -62,8 +61,7 @@ impl Memory {
 		if buf_size > self.size - self.amount_written {
 			return Ok(false);
 		}
-		if let Ok(mut guard) = self.buffer.handle().lock() {
-			let mapped = guard.mapped_ptr().unwrap();
+		if let Some(mapped) = self.buffer.handle().mapped_ptr() {
 			let src = (item as *const T) as *const u8;
 			let dst = mapped.as_ptr() as *mut u8;
 			let dst = ((dst as usize) + self.amount_written) as *mut u8;
@@ -76,15 +74,10 @@ impl Memory {
 
 impl Write for Memory {
 	fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-		let copy_size = buf.len().min(self.size - self.amount_written);
-		{
-			let mut handle = self.buffer.handle().lock().unwrap();
-			if let Some(slice) = handle.mapped_slice_mut() {
-				slice[self.amount_written..].copy_from_slice(buf);
-			}
-		}
-		self.amount_written += copy_size;
-		Ok(copy_size)
+		Ok(match self.write_slice(buf)? {
+			true => buf.len(),
+			false => 0,
+		})
 	}
 
 	fn flush(&mut self) -> std::io::Result<()> {
