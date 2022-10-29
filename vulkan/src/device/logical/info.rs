@@ -136,7 +136,8 @@ impl Info {
 		info.p_enabled_features = &self.features as _;
 
 		let internal = unsafe { instance.create_device(***physical_device, &info, None) }?;
-		let device = logical::Device::from(&instance, &physical_device, internal, self.name.clone());
+		let device =
+			logical::Device::from(&instance, &physical_device, internal, self.name.clone());
 		device.set_object_name_logged(&device.create_name(self.name.as_str()));
 		Ok(device)
 	}

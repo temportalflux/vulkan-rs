@@ -2,7 +2,7 @@ use crate::{
 	alloc, backend,
 	buffer::Builder,
 	flags::{BufferUsage, IndexType, MemoryLocation, SharingMode},
-	utility::{self},
+	utility::{self, HandledObject},
 };
 use std::sync;
 
@@ -93,14 +93,15 @@ impl Buffer {
 	/// Otherwise, an allocation resize is attempted. If the allocation cannot be extended
 	/// (which is always the case due to an allocator bug),
 	/// then a new buffer is allocated wih the desired capacity.
-	pub fn expand(&self, required_capacity: usize) -> anyhow::Result<Option<Buffer>> {
+	/// Returns None if no new buffer is required. Otherwise, returns the result of creating the new buffer.
+	pub fn expand(&self, required_capacity: usize) -> Option<anyhow::Result<Buffer>> {
 		use utility::BuildFromAllocator;
 		if self.builder.size() < required_capacity {
 			let mut builder = self.builder.clone();
 			builder.set_size(required_capacity);
-			return Ok(Some(builder.build(&self.allocator)?));
+			return Some(builder.build(&self.allocator));
 		}
-		Ok(None)
+		None
 	}
 
 	pub(crate) fn handle(&self) -> &gpu_allocator::vulkan::Allocation {
@@ -121,6 +122,15 @@ impl Buffer {
 
 	pub fn index_type(&self) -> &Option<IndexType> {
 		self.builder.index_type()
+	}
+
+	pub fn rename(&self, name: &str) {
+		// NOTE: Intentionally does not modify the builder because that would mean marking the buffer as mutable
+		// and there is no use case for a persistent name change (rename and then expand the same buffer).
+		// When that becomes a need, the stored builder will need interiorn mutability.
+		if let Some(device) = self.allocator.logical() {
+			device.set_object_name_logged(&self.create_name(name));
+		}
 	}
 }
 

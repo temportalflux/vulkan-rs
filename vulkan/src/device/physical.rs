@@ -137,11 +137,14 @@ impl Device {
 
 	pub fn query_surface_support(&self) -> SurfaceSupport {
 		SurfaceSupport {
-			surface_capabilities: self.instance
+			surface_capabilities: self
+				.instance
 				.get_physical_device_surface_capabilities(&self._internal, &*self.surface),
-			surface_formats: self.instance
+			surface_formats: self
+				.instance
 				.get_physical_device_surface_formats(&self._internal, &*self.surface),
-			present_modes: self.instance
+			present_modes: self
+				.instance
 				.get_physical_device_surface_present_modes(&self._internal, &*self.surface),
 		}
 	}
@@ -153,7 +156,9 @@ impl Device {
 		flags: FormatFeatureFlags,
 	) -> Option<Format> {
 		for &format in candidates.iter() {
-			let properties = self.instance.get_physical_device_format_properties(&self, format);
+			let properties = self
+				.instance
+				.get_physical_device_format_properties(&self, format);
 			if tiling == ImageTiling::LINEAR && (properties.linear_tiling_features & flags) == flags
 			{
 				return Some(format);
