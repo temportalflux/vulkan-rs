@@ -1,0 +1,744 @@
+character {
+	description {
+		name "Web the Wizard"
+		pronoun "they/them"
+	}
+	setting "currency_auto_exchange" false
+	ability "Strength" 8
+	ability "Dexterity" 10
+	ability "Constitution" 14
+	ability "Intelligence" 15
+	ability "Wisdom" 12
+	ability "Charisma" 13
+	hit_points {
+		current 38
+		temp 0
+	}
+	inspiration false
+	inventory {
+		item name="Spellbook" weight=3.0 status="Equipped" {
+			source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/spell/book.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+			worth 50 (Currency)"Gold"
+			description "Essential for wizards, a spellbook is a leather-bound tome with 100 blank vellum pages suitable for recording spells."
+			kind "Equipment"
+			spells prepare_from=true {
+				spell "Object" name="Acid Arrow" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/acidArrow.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Evocation"
+					tag "Wizard"
+					rank 2
+					casting-time "Action"
+					range 90
+					component "Verbal"
+					component "Somatic"
+					component "Material" "powdered rhubarb leaf and an adder's stomach"
+					duration "Instantaneous"
+					check "AttackRoll" "Ranged"
+					damage "4d4" (DamageType)"Acid" upcast="1d4"
+					description {
+						section "A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd."
+					}
+				}
+				spell "Object" name="Counterspell" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/counterspell.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Abjuration"
+					tag "Sorcerer"
+					tag "Warlock"
+					tag "Wizard"
+					rank 3
+					casting-time "Reaction" "when you see a creature within 60 feet of you casting a spell"
+					range 60
+					component "Somatic"
+					duration "Instantaneous"
+					description {
+						section "You attempt to interrupt a creature in the process of casting a spell. If the creature is casting a spell of 3rd level or lower, its spell fails and has no effect. If it is casting a spell of 4th level or higher, make an ability check using your spellcasting ability. The DC equals 10 + the spell's level. On a success, the creature's spell fails and has no effect."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 4th level or higher, the interrupted spell has no effect if its level is less than or equal to the level of the spell slot you used."
+					}
+				}
+				spell "Object" name="Fire Bolt" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/fireBolt.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Evocation"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 0
+					casting-time "Action"
+					range 120
+					component "Verbal"
+					component "Somatic"
+					duration "Instantaneous"
+					check "AttackRoll" "Ranged"
+					damage (Scaled)"Level" (DamageType)"Fire" {
+						level 1 (Roll)"1d10"
+						level 5 (Roll)"2d10"
+						level 11 (Roll)"3d10"
+						level 17 (Roll)"4d10"
+					}
+					description {
+						section "You hurl a mote of fire at a creature or object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 fire damage. A flammable object hit by this spell ignites if it isn't being worn or carried."
+						section (Title)"At Higher Levels" "This spell's damage increases by 1d10 when you reach 5th level (2d10), 11th level (3d10), and 17th level (4d10)."
+					}
+				}
+				spell "Object" name="Fireball" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/fireball.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Evocation"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 3
+					casting-time "Action"
+					range 150
+					component "Verbal"
+					component "Somatic"
+					component "Material" "a tiny ball of bat guano and sulfur"
+					duration "Instantaneous"
+					check "SavingThrow" (Ability)"Dexterity"
+					damage "8d6" (DamageType)"Fire" upcast="1d6"
+					description {
+						section "A bright streak flashes from your pointing finger to a point you choose within range and then blossoms with a low roar into an explosion of flame. Each creature in a 20-foot-radius sphere centered on that point must make a Dexterity saving throw. A target takes 8d6 fire damage on a failed save, or half as much damage on a successful one.
+		The fire spreads around corners. It ignites flammable objects in the area that aren't being worn or carried."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 4th level or higher, the damage increases by 1d6 for each slot level above 3rd."
+					}
+				}
+				spell "Object" name="Flaming Sphere" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/flamingSphere.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Conjuration"
+					tag "Druid"
+					tag "Wizard"
+					rank 2
+					casting-time "Action"
+					range 60
+					component "Verbal"
+					component "Somatic"
+					component "Material" "a bit of tallow, a pinch of brimstone, and a dusting of powdered iron"
+					duration "Minute" 1 concentration=true
+					check "SavingThrow" (Ability)"Dexterity"
+					damage "2d6" (DamageType)"Fire" upcast="1d6"
+					description {
+						section "A 5-foot-diameter sphere of fire appears in an unoccupied space of your choice within range and lasts for the duration. Any creature that ends its turn within 5 feet of the sphere must make a Dexterity saving throw. The creature takes 2d6 fire damage on a failed save, or half as much damage on a successful one.
+		As a bonus action, you can move the sphere up to 30 feet. If you ram the sphere into a creature, that creature must make the saving throw against the sphere's damage, and the sphere stops moving this turn.
+		When you move the sphere, you can direct it over barriers up to 5 feet tall and jump it across pits up to 10 feet wide. The sphere ignites flammable objects not being worn or carried, and it sheds bright light in a 20-foot radius and dim light for an additional 20 feet."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 3rd level or higher, the damage increases by 1d6 for each slot level above 2nd."
+					}
+				}
+				spell "Object" name="Identify" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/identify.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Divination"
+					tag "Bard"
+					tag "Wizard"
+					rank 1
+					casting-time "Minute" 1 ritual=true
+					range "Touch"
+					component "Verbal"
+					component "Somatic"
+					component "Material" "a pearl worth at least 100 gp and an owl feather"
+					duration "Instantaneous"
+					description "You choose one object that you must touch throughout the casting of the spell. If it is a magic item or some other magic-imbued object, you learn its properties and how to use them, whether it requires attunement to use, and how many charges it has, if any. You learn whether any spells are affecting the item and what they are. If the item was created by a spell, you learn which spell created it.
+	If you instead touch a creature throughout the casting, you learn what spells, if any, are currently affecting it."
+				}
+				spell "Object" name="Knock" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/knock.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Transmutation"
+					tag "Bard"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 2
+					casting-time "Action"
+					range 60
+					component "Verbal"
+					duration "Instantaneous"
+					description "Choose an object that you can see within range. The object can be a door, a box, a chest, a set of manacles, a padlock, or another object that contains a mundane or magical means that prevents access.
+	A target that is held shut by a mundane lock or that is stuck or barred becomes unlocked, unstuck, or unbarred. If the object has multiple locks, only one of them is unlocked.
+	If you choose a target that is held shut with arcane lock, that spell is suppressed for 10 minutes, during which time the target can be opened and shut normally.
+	When you cast the spell, a loud knock, audible from as far away as 300 feet, emanates from the target object."
+				}
+				spell "Object" name="Magic Missile" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/magicMissile.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Evocation"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 1
+					casting-time "Action"
+					range 120
+					component "Verbal"
+					component "Somatic"
+					duration "Instantaneous"
+					damage "1d4" (DamageType)"Force" base=1
+					description {
+						section "You create three glowing darts of magical force. Each dart hits a creature of your choice that you can see within range. A dart deals 1d4 + 1 force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 2nd level or higher, the spell creates one more dart for each slot level above 1st."
+					}
+				}
+				spell "Object" name="Message" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/message.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Transmutation"
+					tag "Bard"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 0
+					casting-time "Action"
+					range 120
+					component "Verbal"
+					component "Somatic"
+					component "Material" "a short piece of copper wire"
+					duration "Round" 1
+					description "You point your finger toward a creature within range and whisper a message. The target (and only the target) hears the message and can reply in a whisper that only you can hear.
+	You can cast this spell through solid objects if you are familiar with the target and know it is beyond the barrier. Magical silence, 1 foot of stone, 1 inch of common metal, a thin sheet of lead, or 3 feet of wood blocks the spell. The spell doesn't have to follow a straight line and can travel freely around corners or through openings."
+				}
+				spell "Object" name="Misty Step" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/mistyStep.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Conjuration"
+					tag "Sorcerer"
+					tag "Warlock"
+					tag "Wizard"
+					rank 2
+					casting-time "Bonus"
+					range "Self"
+					component "Verbal"
+					duration "Instantaneous"
+					description "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space that you can see."
+				}
+				spell "Object" name="Prestidigitation" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/prestidigitation.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Transmutation"
+					tag "Bard"
+					tag "Sorcerer"
+					tag "Warlock"
+					tag "Wizard"
+					rank 0
+					casting-time "Action"
+					range 10
+					component "Verbal"
+					component "Somatic"
+					duration "Hour" 1
+					description "This spell is a minor magical trick that novice spellcasters use for practice. You create one of the following magical effects within range:
+	- You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor.
+	- You instantaneously light or snuff out a candle, a torch, or a small campfire.
+	- You instantaneously clean or soil an object no larger than 1 cubic foot.
+	- You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour.
+	- You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour.
+	- You create a nonmagical trinket or an illusory image that can fit in your hand and that lasts until the end of your next turn.
+	If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time, and you can dismiss such an effect as an action."
+				}
+				spell "Object" name="Sleep" {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/sleep.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					school "Enchantment"
+					tag "Bard"
+					tag "Sorcerer"
+					tag "Wizard"
+					rank 1
+					casting-time "Action"
+					range 90
+					component "Verbal"
+					component "Somatic"
+					component "Material" "a pinch of fine sand, rose petals, or a cricket"
+					duration "Minute" 1
+					description {
+						section "This spell sends creatures into a magical slumber. Roll 5d8; the total is how many hit points of creatures this spell can affect. Creatures within 20 feet of a point you choose within range are affected in ascending order of their current hit points (ignoring unconscious creatures).
+		Starting with the creature that has the lowest current hit points, each creature affected by this spell falls unconscious until the spell ends, the sleeper takes damage, or someone uses an action to shake or slap the sleeper awake. Subtract each creature's hit points from the total before moving on to the creature with the next lowest hit points. A creature's hit points must be equal to or less than the remaining total for that creature to be affected.
+		Undead and creatures immune to being charmed aren't affected by this spell."
+						section (Title)"At Higher Levels" "When you cast this spell using a spell slot of 2nd level or higher, roll an additional 2d8 for each slot level above 1st."
+					}
+				}
+			}
+		}
+	}
+	bundle category="Race" name="Gnome" {
+		source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/race/gnome.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+		mutator "ability_score" {
+			ability "Specific" "Intelligence"
+			bonus 2
+		}
+		mutator "extend_life_expectancy" 500
+		mutator "add_size" {
+			height base=32 bonus="2d6"
+			weight base=30 multiplier="1d4"
+		}
+		mutator "speed" "Walking" (Base)25
+		mutator "sense" "Darkvision" (Base)60
+		mutator "feature" name="Gnome Cunning" {
+			description "You have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic."
+			mutator "modify" (SavingThrow)"Specific" "Intelligence" modifier="Advantage" context="magic"
+			mutator "modify" (SavingThrow)"Specific" "Wisdom" modifier="Advantage" context="magic"
+			mutator "modify" (SavingThrow)"Specific" "Charisma" modifier="Advantage" context="magic"
+		}
+		mutator "add_proficiency" (Language)"Specific" "Common"
+		mutator "add_proficiency" (Language)"Specific" "Gnomish"
+	}
+	bundle category="Race Variant" name="Forest Gnome" {
+		source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/race/gnome/forest.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+		requirement "bundle" (Race)"Gnome"
+		description "As a forest gnome, you have a natural knack for illusion and inherent quickness and stealth. In the worlds of D&D, forest gnomes are rare and secretive. They gather in hidden communities in sylvan forests, using illusions and trickery to conceal themselves from threats or to mask their escape should they be detected. Forest gnomes tend to be friendly with other good-spirited woodland folk, and they regard elves and good fey as their most important allies. These gnomes also befriend small forest animals and rely on them for information about threats that might prowl their lands."
+		mutator "ability_score" {
+			ability "Specific" "Dexterity"
+			bonus 1
+		}
+		mutator "feature" name="Natural Illusionist" {
+			description "You know the minor illusion cantrip. Intelligence is your spellcasting ability for it."
+			mutator "spellcasting" "innate" {
+				method "AtWill"
+				spells ability="Intelligence" {
+					spell "Specific" name="Minor Illusion" {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/spells/minorIllusion.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						school "Illusion"
+						tag "Bard"
+						tag "Sorcerer"
+						tag "Warlock"
+						tag "Wizard"
+						rank 0
+						casting-time "Action"
+						range 30
+						component "Somatic"
+						component "Material" "a bit of fleece"
+						duration "Minute" 1
+						description "You create a sound or an image of an object within range that lasts for the duration. The illusion also ends if you dismiss it as an action or cast this spell again.
+	If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a lion's roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends.
+	If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, because things can pass through it.
+	If a creature uses its action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature."
+					}
+				}
+			}
+		}
+		mutator "feature" name="Speak with Small Beasts" {
+			description "Through sounds and gestures, you can communicate simple ideas with Small or smaller beasts. Forest gnomes love animals and often keep squirrels, badgers, rabbits, moles, woodpeckers, and other creatures as beloved pets."
+		}
+	}
+	class name="Wizard" level=6 {
+		source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/class/wizard.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+		description "A scholarly magic-user capable of manipulating the structures of reality"
+		die "d6"
+		mutator "add_proficiency" (SavingThrow)"Intelligence"
+		mutator "add_proficiency" (SavingThrow)"Wisdom"
+		mutator "add_proficiency" (Weapon)"Dagger"
+		mutator "add_proficiency" (Weapon)"Dart"
+		mutator "add_proficiency" (Weapon)"Sling"
+		mutator "add_proficiency" (Weapon)"Quarterstaff"
+		mutator "add_proficiency" (Weapon)"CrossbowLight"
+		mutator "add_proficiency" (Skill)"Any" id="skillA" {
+			option "Arcana"
+			option "History"
+			option "Insight"
+			option "Investigation"
+			option "Medicine"
+			option "Religion"
+			value "Arcana"
+		}
+		mutator "add_proficiency" (Skill)"Any" id="skillB" {
+			option "Arcana"
+			option "History"
+			option "Insight"
+			option "Investigation"
+			option "Medicine"
+			option "Religion"
+			value "Investigation"
+		}
+		mutator "add_starting_equipment" {
+			group pick=1 {
+				item "Specific" {
+					item "Specific" name="Quarterstaff" weight=4.0 {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/weapons/quarterstaff.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						worth 2 (Currency)"Silver"
+						kind "Equipment" {
+							weapon "Simple" class="Quarterstaff" {
+								damage "Bludgeoning" roll="1d6"
+								property "Versatile" (Roll)"1d8"
+							}
+						}
+					}
+				}
+				item "Specific" {
+					item "Specific" name="Dagger" weight=1.0 {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/weapons/dagger.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						worth 2 (Currency)"Gold"
+						kind "Equipment" {
+							weapon "Simple" class="Dagger" {
+								damage "Piercing" roll="1d4"
+								property "Finesse"
+								property "Light"
+								property "Thrown" 20 60
+							}
+						}
+					}
+				}
+			}
+			group pick=1 {
+				item "Specific" {
+					item "Specific" name="Component pouch" weight=2.0 {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/componentPouch.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						worth 25 (Currency)"Gold"
+						description "A component pouch is a small, watertight leather belt pouch that has compartments to hold all the material components and other special items you need to cast your spells, except for those components that have a specific cost (as indicated in a spell's description)."
+					}
+				}
+				item "Select" {
+					tag "Arcane Focus"
+				}
+			}
+			group pick=1 {
+				item "Specific" {
+					item "Specific" name="Scholar's Pack" weight=5.0 {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/bundle/scholar.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						worth 40 (Currency)"Gold"
+						items {
+							capacity weight=30.0 volume=1.0
+							item name="Book" weight=5.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/book.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 25 (Currency)"Gold"
+								description "A book might contain poetry, historical accounts, information pertaining to a particular field of lore, diagrams and notes on gnomish contraptions, or just about anything else that can be represented using text or pictures."
+							}
+							item name="Ink (1 ounce bottle)" {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/ink.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 10 (Currency)"Gold"
+							}
+							item name="Ink pen" {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/inkPen.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 2 (Currency)"Copper"
+							}
+							item name="Little Bag of Sand"
+							item name="Parchment (one sheet)" {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/parchment.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 1 (Currency)"Silver"
+								kind "Simple" count=10
+							}
+							item name="Small Knife"
+						}
+					}
+				}
+				item "Specific" {
+					item "Specific" name="Explorer's Pack" weight=5.0 {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/bundle/explorer.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						worth 40 (Currency)"Gold"
+						items {
+							capacity weight=30.0 volume=1.0
+							item name="Bedroll" weight=7.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/bedroll.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 1 (Currency)"Gold"
+							}
+							item name="Mess kit" weight=1.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/messKit.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 2 (Currency)"Silver"
+								description "This tin box contains a cup and simple cutlery. The box clamps together, and one side can be used as a cooking pan and the other as a plate or shallow bowl."
+							}
+							item name="Rations (1 day)" weight=20.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/rations.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 5 (Currency)"Silver"
+								description "Rations consist of dry foods suitable for extended travel, including jerky, dried fruit, hardtack, and nuts."
+								kind "Simple" count=10
+							}
+							item name="Rope (Hempen)" weight=10.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/ropeHempen.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 1 (Currency)"Gold"
+								description "Rope, whether made of hemp or silk, has 2 hit points and can be burst with a DC 17 Strength check."
+								notes "50 ft."
+							}
+							item name="Tinderbox" weight=1.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/tinderbox.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 5 (Currency)"Silver"
+								description "This small container holds flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a torch--or anything else with abundant, exposed fuel--takes an action. Lighting any other fire takes 1 minute."
+							}
+							item name="Torch" weight=10.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/torch.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 1 (Currency)"Copper"
+								description "A torch burns for 1 hour, providing bright light in a 20-foot radius and dim light for an additional 20 feet. If you make a melee attack with a burning torch and hit, it deals 1 fire damage."
+								kind "Simple" count=10
+							}
+							item name="Waterskin" weight=5.0 {
+								source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/gear/waterskin.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+								worth 2 (Currency)"Silver"
+								description "4 pints liquid"
+							}
+						}
+					}
+				}
+			}
+			item "Specific" {
+				item "Specific" name="Spellbook" weight=3.0 {
+					source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/items/spell/book.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+					worth 50 (Currency)"Gold"
+					description "Essential for wizards, a spellbook is a leather-bound tome with 100 blank vellum pages suitable for recording spells."
+					kind "Equipment"
+					spells prepare_from=true
+				}
+			}
+		}
+		level 1 hit_points=4 {
+			mutator "hit_dice" {
+				amount (Evaluator)"get_level" class="Wizard"
+				die 6
+			}
+			mutator "feature" name="Spellcasting" {
+				description {
+					short "You can cast prepared wizard spells using Intelligence as your spellcasting modifier (Spell DC {DC}, Spell Attack +{atk}) and  wizard spells as rituals if they have the ritual tag and are in your spellbook. You can use an arcane focus as a spellcasting focus."
+					section "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power."
+					section (Title)"Cantrips" "At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels."
+					section (Title)"Preparing and Casting Spells" "The Wizard table shows how many spell slots you have to cast your wizard spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest.
+
+				You prepare the list of wizard spells that are available for you to cast. To do so, choose a number of wizard spells from your spellbook equal to your Intelligence modifier + your wizard level (minimum of one spell). The spells must be of a level for which you have spell slots.
+
+				For example, if you're a 3rd-level wizard, you have four 1st-level and two 2nd-level spell slots. With an Intelligence of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination, chosen from your spellbook. If you prepare the 1st-level spell magic missile, you can cast it using a 1st-level or a 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells.
+
+				You can change your list of prepared spells when you finish a long rest. Preparing a new list of wizard spells requires time spent studying your spellbook and memorizing the incantations and gestures you must make to cast the spell: at least 1 minute per spell level for each spell on your list."
+					section (Title)"Spellcasting Ability" "Intelligence is your spellcasting ability for your wizard spells, since you learn your spells through dedicated study and memorization. You use your Intelligence whenever a spell refers to your spellcasting ability. In addition, you use your Intelligence modifier when setting the saving throw DC for a wizard spell you cast and when making an attack roll with one.
+
+				Spell save DC = 8 + your proficiency bonus + your Intelligence modifier
+
+				Spell attack modifier = your proficiency bonus + your Intelligence modifier"
+					section (Title)"Ritual Casting" "You can cast a wizard spell as a ritual if that spell has the ritual tag and you have the spell in your spellbook. You don't need to have the spell prepared."
+					section (Title)"Spellcasting Focus" "You can use an arcane focus as a spellcasting focus for your wizard spells."
+					section (Title)"Spellbook" "At 1st level, you have a spellbook containing six 1st-level wizard spells of your choice. Your spellbook is the repository of the wizard spells you know, except your cantrips, which are fixed in your mind.
+
+				Each time you gain a wizard level, you can add two wizard spells of your choice to your spellbook for free. Each of these spells must be of a level for which you have spell slots, as shown on the Wizard table. On your adventures, you might find other spells that you can add to your spellbook.
+
+				The spells that you add to your spellbook as you gain levels reflect the arcane research you conduct on your own, as well as intellectual breakthroughs you have had about the nature of the multiverse. You might find other spells during your adventures. You could discover a spell recorded on a scroll in an evil wizard's chest, for example, or in a dusty tome in an ancient library."
+					section (Title)"Copying a Spell into the Book" "When you find a wizard spell of 1st level or higher, you can add it to your spellbook if it is of a spell level you can prepare and if you can spare the time to decipher and copy it.
+
+				Copying that spell into your spellbook involves reproducing the basic form of the spell, then deciphering the unique system of notation used by the wizard who wrote it. You must practice the spell until you understand the sounds or gestures required, then transcribe it into your spellbook using your own notation.
+
+				For each level of the spell, the process takes 2 hours and costs 50 gp. The cost represents material components you expend as you experiment with the spell to master it, as well as the fine inks you need to record it. Once you have spent this time and money, you can prepare the spell just like your other spells."
+					section (Title)"Replacing the Book" "You can copy a spell from your own spellbook into another book—for example, if you want to make a backup copy of your spellbook. This is just like copying a new spell into your spellbook, but faster and easier, since you understand your own notation and already know how to cast the spell. You need spend only 1 hour and 10 gp for each level of the copied spell.
+
+				If you lose your spellbook, you can use the same procedure to transcribe the spells that you have prepared into a new spellbook. Filling out the remainder of your spellbook requires you to find new spells to do so, as normal. For this reason, many wizards keep backup spellbooks in a safe place."
+					section (Title)"The Book's Appearance" "Your spellbook is a unique compilation of spells, with its own decorative flourishes and margin notes. It might be a plain, functional leather volume that you received as a gift from your master, a finely bound gilt-edged tome you found in an ancient library, or even a loose collection of notes scrounged together after you lost your previous spellbook in a mishap."
+					format-arg "DC" "int" (Evaluator)"math" "Add" {
+						value 8
+						value (Evaluator)"get_proficiency_bonus"
+						value (Evaluator)"get_ability_modifier" (Ability)"Intelligence"
+					}
+					format-arg "atk" "int" (Evaluator)"math" "Add" {
+						value (Evaluator)"get_proficiency_bonus"
+						value (Evaluator)"get_ability_modifier" (Ability)"Intelligence"
+					}
+				}
+				mutator "spellcasting" "caster" "Wizard" ability="Intelligence" {
+					method "PreparedFromItem"
+					ritual "Selectable"
+				}
+				mutator "spellcasting" "access" caster="Wizard" {
+					tag "Wizard"
+				}
+				mutator "spellcasting" "capacity" caster="Wizard" {
+					cantrips (Evaluator)"get_level" class="Wizard" {
+						level 1 3
+						level 4 4
+						level 10 5
+					}
+					ranked (Evaluator)"math" "Add" min=1 {
+						value (Evaluator)"get_ability_modifier" (Ability)"Intelligence"
+						value (Evaluator)"get_level" class="Wizard"
+					}
+				}
+				mutator "spellcasting" "slots" "Standard" {
+					value (Evaluator)"get_level" class="Wizard"
+				}
+			}
+			mutator "feature" name="Arcane Recovery" {
+				description {
+					short "On Short Rest - recover any combination of spell slots as long as their total level is no more than {max_level} and each is 5th level or lower."
+					section "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher.
+
+				For example, if you're a 4th-level wizard, you can recover up to two levels worth of spell slots. You can recover either a 2nd-level spell slot or two 1st-level spell slots."
+					format-arg "max_level" "int" (Evaluator)"math" "Divide" {
+						value (Evaluator)"get_level" class="Wizard"
+						value 2
+					}
+				}
+			}
+		}
+		level 2 hit_points=3 {
+			mutator "feature" name="Arcane Tradition" {
+				description {
+					short "When you reach 2nd level, you choose an arcane tradition, shaping your practice of magic."
+					section "The study of wizardry is ancient, stretching back to the earliest mortal discoveries of magic. It is firmly established in the worlds of D&D, with various traditions dedicated to its complex study."
+					section "The most common arcane traditions in the multiverse revolve around the schools of magic. Wizards through the ages have cataloged thousands of spells, grouping them into eight categories called schools. In some places, these traditions are literally schools; a wizard might study at the School of Illusion while another studies across town at the School of Enchantment. In other institutions, the schools are more like academic departments, with rival faculties competing for students and funding. Even wizards who train apprentices in the solitude of their own towers use the division of magic into schools as a learning device, since the spells of each school require mastery of different techniques."
+				}
+				mutator "add_subclass" class="Wizard" {
+					value "Specific" class="Wizard" name="School of Evocation" {
+						source "github://flux-tabletop:dnd5e-basic-rules-2014@dnd5e/class/wizard/evocation.kdl?version=a6082739dba26a5b9a618a871ff0453f759af199"
+						description "You focus your study on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid. Some evokers find employment in military forces, serving as artillery to blast enemy armies from afar. Others use their spectacular power to protect the weak, while some seek their own gain as bandits, adventurers, or aspiring tyrants."
+						level 2 {
+							mutator "feature" name="Evocation Savant" {
+								description "Beginning when you select this school at 2nd level, the gold and time you must spend to copy an evocation spell into your spellbook is halved."
+							}
+							mutator "feature" name="Sculpt Spells" {
+								description "Beginning at 2nd level, you can create pockets of relative safety within the effects of your evocation spells. When you cast an evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 + the spell's level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save."
+							}
+						}
+						level 6 {
+							mutator "feature" name="Potent Cantrip" {
+								description "Starting at 6th level, your damaging cantrips affect even creatures that avoid the brunt of the effect. When a creature succeeds on a saving throw against your cantrip, the creature takes half the cantrip's damage (if any) but suffers no additional effect from the cantrip."
+							}
+						}
+						level 10 {
+							mutator "feature" name="Empowered Evocation" {
+								description "Beginning at 10th level, you can add your Intelligence modifier to one damage roll of any wizard evocation spell you cast."
+								mutator "modify" (Spell)"Damage" {
+									damage {
+										amount (Evaluator)"get_ability_modifier" (Ability)"Intelligence"
+									}
+									query {
+										school "Evocation"
+										tag "Wizard"
+									}
+								}
+							}
+						}
+						level 14 {
+							mutator "feature" name="Overchannel" {
+								description "Starting at 14th level, you can increase the power of your simpler spells. When you cast a wizard spell of 1st through 5th level that deals damage, you can deal maximum damage with that spell.
+
+			The first time you do so, you suffer no adverse effect. If you use this feature again before you finish a long rest, you take 2d12 necrotic damage for each level of the spell, immediately after you cast it. Each time you use this feature again before finishing a long rest, the necrotic damage per spell level increases by 1d12. This damage ignores resistance and immunity."
+							}
+						}
+					}
+				}
+			}
+		}
+		level 3 hit_points=6
+		level 4 hit_points=5 {
+			mutator "pick" 1 name="Ability Score Improvement" {
+				option "Ability Score Increase" selected=true {
+					mutator "ability_score" {
+						ability "Any" id="abilityA" {
+							cannot_match "abilityB" {
+								value "Constitution"
+							}
+							value "Intelligence"
+						}
+						bonus 2
+					}
+					mutator "ability_score" {
+						ability "Any" id="abilityB" {
+							cannot_match "abilityA" {
+								value "Intelligence"
+							}
+							value "Constitution"
+						}
+						bonus 1
+					}
+				}
+				option "Feat" {
+					mutator "add_bundle" category="Feat"
+				}
+			}
+		}
+		level 5 hit_points=2
+		level 6 hit_points=6
+		level 8 {
+			mutator "pick" 1 name="Ability Score Improvement" {
+				option "Ability Score Increase" {
+					mutator "ability_score" {
+						ability "Any" id="abilityA" {
+							cannot_match "abilityB"
+						}
+						bonus 2
+					}
+					mutator "ability_score" {
+						ability "Any" id="abilityB" {
+							cannot_match "abilityA"
+						}
+						bonus 1
+					}
+				}
+				option "Feat" {
+					mutator "add_bundle" category="Feat"
+				}
+			}
+		}
+		level 12 {
+			mutator "pick" 1 name="Ability Score Improvement" {
+				option "Ability Score Increase" {
+					mutator "ability_score" {
+						ability "Any" id="abilityA" {
+							cannot_match "abilityB"
+						}
+						bonus 2
+					}
+					mutator "ability_score" {
+						ability "Any" id="abilityB" {
+							cannot_match "abilityA"
+						}
+						bonus 1
+					}
+				}
+				option "Feat" {
+					mutator "add_bundle" category="Feat"
+				}
+			}
+		}
+		level 16 {
+			mutator "pick" 1 name="Ability Score Improvement" {
+				option "Ability Score Increase" {
+					mutator "ability_score" {
+						ability "Any" id="abilityA" {
+							cannot_match "abilityB"
+						}
+						bonus 2
+					}
+					mutator "ability_score" {
+						ability "Any" id="abilityB" {
+							cannot_match "abilityA"
+						}
+						bonus 1
+					}
+				}
+				option "Feat" {
+					mutator "add_bundle" category="Feat"
+				}
+			}
+		}
+		level 18 {
+			mutator "feature" name="Spell Mastery" {
+				description {
+					short "You can cast a designated 1st level and 2nd level spell at at-will (at 1st & 2nd level) as long as they are prepared."
+					section "At 18th level, you have achieved such mastery over certain spells that you can cast them at will. Choose a 1st-level wizard spell and a 2nd-level wizard spell that are in your spellbook. You can cast those spells at their lowest level without expending a spell slot when you have them prepared. If you want to cast either spell at a higher level, you must expend a spell slot as normal.
+
+				By spending 8 hours in study, you can exchange one or both of the spells you chose for different spells of the same levels."
+				}
+				mutator "spellcasting" "innate" {
+					method "AtWill"
+					spells caster="Wizard" {
+						filter {
+							rank 1
+							caster_access "Wizard" "Selectable"
+						}
+					}
+				}
+				mutator "spellcasting" "innate" {
+					method "AtWill"
+					spells caster="Wizard" {
+						filter {
+							rank 2
+							caster_access "Wizard" "Selectable"
+						}
+					}
+				}
+			}
+		}
+		level 19 {
+			mutator "pick" 1 name="Ability Score Improvement" {
+				option "Ability Score Increase" {
+					mutator "ability_score" {
+						ability "Any" id="abilityA" {
+							cannot_match "abilityB"
+						}
+						bonus 2
+					}
+					mutator "ability_score" {
+						ability "Any" id="abilityB" {
+							cannot_match "abilityA"
+						}
+						bonus 1
+					}
+				}
+				option "Feat" {
+					mutator "add_bundle" category="Feat"
+				}
+			}
+		}
+		level 20 {
+			mutator "feature" name="Signature Spells" {
+				description "When you reach 20th level, you gain mastery over two powerful spells and can cast them with little effort. Choose two 3rd-level wizard spells in your spellbook as your signature spells. You always have these spells prepared, they don't count against the number of spells you have prepared, and you can cast each of them once at 3rd level without expending a spell slot. When you do so, you can't do so again until you finish a short or long rest.
+
+			If you want to cast either spell at a higher level, you must expend a spell slot as normal."
+			}
+		}
+	}
+}
